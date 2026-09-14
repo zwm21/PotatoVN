@@ -20,8 +20,9 @@ public static class BootstrapProgram
         {
             try
             {
-                // Windows App SDK 1.8 => 0x0001_0008
-                Bootstrap.Initialize(0x00010008);
+                // 与 GalgameManager.WinApp.Base.csproj 中的 Microsoft.WindowsAppSDK 版本保持一致
+                // Microsoft.WindowsAppSDK 2.1.3 => 0x0002_0001
+                Bootstrap.Initialize(0x00020001);
                 AppDomain.CurrentDomain.ProcessExit += (_, _) =>
                 {
                     try
