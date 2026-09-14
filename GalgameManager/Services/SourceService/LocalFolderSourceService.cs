@@ -1,6 +1,4 @@
-﻿using System.Web;
-using Windows.Storage;
-using Windows.Storage.Pickers;
+using System.Web;
 using GalgameManager.Contracts.Services;
 using GalgameManager.Core.Contracts.Services;
 using GalgameManager.Enums;
@@ -237,16 +235,16 @@ public class LocalFolderSourceService : IGalgameSourceService
 
     public Task<string?> SelectPathInSourceAsync(GalgameSourceBase source) => FolderBaseSelectPathInSource(source);
 
-    public static async Task<string?> FolderBaseSelectPathInSource(GalgameSourceBase source)
+    public static Task<string?> FolderBaseSelectPathInSource(GalgameSourceBase source)
     {
-        FolderPicker folderPicker = new();
-        folderPicker.FileTypeFilter.Add("*");
-        WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, App.MainWindow!.GetWindowHandle());
-        StorageFolder? folder = await folderPicker.PickSingleFolderAsync();
-        if (folder is null) return null;
-        if (!Utils.IsChildFolder(source.Path, folder.Path))
+        PvnFolderPicker folderPicker = new();
+        PickerResult result = folderPicker.ShowDialog(App.MainWindow!.GetWindowHandle());
+        if (result != PickerResult.OK || string.IsNullOrEmpty(folderPicker.SelectedPath))
+            return Task.FromResult<string?>(null);
+        string path = folderPicker.SelectedPath;
+        if (!Utils.IsChildFolder(source.Path, path))
             throw new PvnException("LocalFolderSourceService_PathNotInSource".GetLocalized());
-        return folder.Path;
+        return Task.FromResult<string?>(path);
     }
 
     private static DriveInfo? GetDriveInfo(string path)

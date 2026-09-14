@@ -1196,18 +1196,13 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     [RelayCommand]
     private async Task SelectAutoExportPath()
     {
-        FolderPicker openPicker = new();
-        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, App.MainWindow!.GetWindowHandle());
-        openPicker.SuggestedStartLocation = PickerLocationId.HomeGroup;
-        openPicker.FileTypeFilter.Add("*");
-        StorageFolder? folder = await openPicker.PickSingleFolderAsync();
-        if (folder is not null)
-        {
-            _autoExportPath = folder.Path;
-            UpdateAutoExportDescriptions();
-            await _localSettingsService.SaveSettingAsync(KeyValues.AutoExportPath, _autoExportPath);
-            _infoService.Info(InfoBarSeverity.Success, "SettingSuccess".GetLocalized());
-        }
+        PvnFolderPicker openPicker = new();
+        if (openPicker.ShowDialog(App.MainWindow!.GetWindowHandle()) != PickerResult.OK
+            || string.IsNullOrEmpty(openPicker.SelectedPath)) return;
+        _autoExportPath = openPicker.SelectedPath;
+        UpdateAutoExportDescriptions();
+        await _localSettingsService.SaveSettingAsync(KeyValues.AutoExportPath, _autoExportPath);
+        _infoService.Info(InfoBarSeverity.Success, "SettingSuccess".GetLocalized());
     }
 
     [RelayCommand]
@@ -1221,15 +1216,11 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
                 return;
             }
 
-            FolderPicker openPicker = new();
-            WinRT.Interop.InitializeWithWindow.Initialize(openPicker, App.MainWindow!.GetWindowHandle());
-            openPicker.SuggestedStartLocation = PickerLocationId.HomeGroup;
-            openPicker.FileTypeFilter.Add("*");
-            StorageFolder? folder = await openPicker.PickSingleFolderAsync();
-            var path = folder?.Path;
-            if (path is null) return;
+            PvnFolderPicker openPicker = new();
+            if (openPicker.ShowDialog(App.MainWindow!.GetWindowHandle()) != PickerResult.OK
+                || string.IsNullOrEmpty(openPicker.SelectedPath)) return;
 
-            ExportTask task = new(path);
+            ExportTask task = new(openPicker.SelectedPath);
             await _bgTaskService.AddBgTask(task);
         }
         catch (Exception e)

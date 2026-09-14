@@ -10,8 +10,6 @@ using GalgameManager.Views.Dialog;
 using GalgameManager.WinApp.Base.Contracts.PluginUi;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Windows.Storage;
-using Windows.Storage.Pickers;
 using GalgameManager.Enums;
 using SharpCompress.Archives;
 using SharpCompress.Common;
@@ -59,12 +57,10 @@ public partial class PluginViewModel(IPluginService pluginService, IInfoService 
     {
         try
         {
-            FolderPicker folderPicker = new();
-            folderPicker.FileTypeFilter.Add("*");
-            WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, App.MainWindow!.GetWindowHandle());
-            StorageFolder? folder = await folderPicker.PickSingleFolderAsync();
-            if (folder is null) return;
-            await pluginService.AddPluginAsync(folder.Path, true);
+            PvnFolderPicker folderPicker = new();
+            PickerResult result = folderPicker.ShowDialog(App.MainWindow!.GetWindowHandle());
+            if (result != PickerResult.OK || string.IsNullOrEmpty(folderPicker.SelectedPath)) return;
+            await pluginService.AddPluginAsync(folderPicker.SelectedPath, true);
         }
         catch (Exception e)
         {

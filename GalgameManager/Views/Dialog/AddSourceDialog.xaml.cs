@@ -1,5 +1,3 @@
-using Windows.Storage;
-using Windows.Storage.Pickers;
 using GalgameManager.Helpers;
 using GalgameManager.Models.Sources;
 using Microsoft.UI.Xaml;
@@ -64,16 +62,12 @@ public sealed partial class AddSourceDialog : ContentDialog
         ManualSelectFolder = ManualSelectFolderCheckBox.IsChecked ?? false;
     }
     
-    private async void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+    private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
     {
-        FolderPicker folderPicker = new();
-        folderPicker.FileTypeFilter.Add("*");
-
-        WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, App.MainWindow!.GetWindowHandle());
-
-        StorageFolder? folder = await folderPicker.PickSingleFolderAsync();
-        if (folder is null) return;
-        Path = folder.Path;
+        PvnFolderPicker folderPicker = new();
+        PickerResult result = folderPicker.ShowDialog(App.MainWindow!.GetWindowHandle());
+        if (result != PickerResult.OK || string.IsNullOrEmpty(folderPicker.SelectedPath)) return;
+        Path = folderPicker.SelectedPath;
         UpdateMsg();
     }
 

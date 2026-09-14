@@ -261,7 +261,15 @@ public partial class HomeViewModel : ObservableObject, INavigationAware
                         }
                         else if (storageItem is StorageFolder folder)
                         {
-                            _ = AddGalgameInternal(folder.Path);
+                            string? exactPath = await StoragePathHelper.GetExactPathAsync(folder);
+                            if (exactPath is null)
+                            {
+                                _infoService.Info(InfoBarSeverity.Error, msg: "PathNotExist".GetLocalized(folder.Path));
+                                DisplayDragArea = false;
+                                return;
+                            }
+
+                            _ = AddGalgameInternal(exactPath);
                         }
                         else
                         {
