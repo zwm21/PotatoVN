@@ -195,7 +195,8 @@
             </RelativePanel>
 
             <!-- 库路径 -->
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="15">
+            <StackPanel Grid.Row="1" Spacing="6">
+                <StackPanel Orientation="Horizontal" Spacing="15">
                 <TextBlock Text="{x:Bind ViewModel.Item.Path, FallbackValue={}}"
                            VerticalAlignment="Center" />
                 <Border Background="{ThemeResource  ControlAltFillColorSecondaryBrush}"
@@ -208,6 +209,13 @@
                         MaxWidth="{x:Bind ViewModel.TitleMaxWidth, Mode=OneWay}"
                         Padding="10, 2" />
                 </Border>
+                </StackPanel>
+
+                <!-- 路径不可用提示 -->
+                <InfoBar IsOpen="{x:Bind ViewModel.IsUnavailable, Mode=OneWay}"
+                         IsClosable="False"
+                         Severity="Warning"
+                         Message="{x:Bind ViewModel.UnavailableMessage, Mode=OneWay}" />
             </StackPanel>
 
             <Grid Grid.Row="2" Margin="0 20 0 0">

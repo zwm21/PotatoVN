@@ -141,6 +141,13 @@ public partial class GalgameSourceViewModel : ObservableObject, INavigationAware
     /// </summary>
     public bool CanScan => Item is { IsAvailable: true, IsSourceScanable: true } && !Item.IsRunning;
 
+    /// <summary>
+    /// 当前库路径是否已经确认不可用。
+    /// </summary>
+    public bool IsUnavailable => Item is { IsAvailable: false };
+
+    public string UnavailableMessage => "PathNotExist_Brief".GetLocalized();
+
     #endregion
 
     public GalgameSourceBase? Item
@@ -347,6 +354,8 @@ public partial class GalgameSourceViewModel : ObservableObject, INavigationAware
         if(Item is null) return;
         CanExecute = !Item.IsRunning;
         OnPropertyChanged(nameof(CanScan));
+        OnPropertyChanged(nameof(IsUnavailable));
+        OnPropertyChanged(nameof(UnavailableMessage));
         ScanAllCommand.NotifyCanExecuteChanged();
         AddGalFromZipCommand.NotifyCanExecuteChanged();
         IsUnpacking = _bgTaskService.GetBgTask<UnpackGameTask>(Item.Path)?.IsRunning ?? false;
