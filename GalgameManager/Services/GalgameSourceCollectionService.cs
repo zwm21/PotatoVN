@@ -14,7 +14,7 @@ using Newtonsoft.Json;
 
 namespace GalgameManager.Services;
 
-public class GalgameSourceCollectionService(
+public partial class GalgameSourceCollectionService(
     ILocalSettingsService localSettingsService,
     IBgTaskService bgTaskService,
     IInfoService infoService,
@@ -60,28 +60,9 @@ public class GalgameSourceCollectionService(
         }
         foreach (Galgame game in GameService.Galgames)
             game.EnsurePreferredInstallation();
-        // 去除找不到的库（只对启用了启动检查的库进行检查）
-        // 升级 E2E 使用历史路径夹具，不应按当前机器文件系统删除这些来源。
-        if (!AppStoragePaths.IsUpgradeUiTest)
-        {
-            List<GalgameSourceBase> toRemove = _galgameSources.Where(source =>
-                source is { CheckOnStart: true, SourceType: GalgameSourceType.LocalFolder } && !Directory.Exists(source.Path)).ToList();
-            if (toRemove.Count > 0)
-            {
-                foreach (GalgameSourceBase source in toRemove)
-                {
-                    foreach (GalgameAndPath entry in source.Galgames.ToList())
-                        entry.Galgame.DetachSourceEntry(entry);
-                    _galgameSources.Remove(source);
-                    _dbSet.Delete(source.Id);
-                }
-
-                infoService.Event(EventType.GalgameEvent, InfoBarSeverity.Warning,
-                    "GalgameSourceCollectionService_RemoveNonExist_Title".GetLocalized(),
-                    msg: "GalgameSourceCollectionService_RemoveNonExist_Msg".GetLocalized(
-                        $"\n{string.Join('\n', toRemove.Select(s => s.Path))}"));
-            }
-        }
+        // 校验本地库路径：先尝试修复被 StorageFolder 截断的路径；修复不了则标记为不可用但不删除数据。
+        // 升级 E2E 使用历史路径夹具，不应按当前机器文件系统修复/删除这些来源。
+        await RepairOrMarkUnavailableSourcesAsync();
         await ImportAsync(settingStatus);
         await MetaBackupSettingsUpgrade(settingStatus);
         await RemoveableUpgrade(settingStatus);
@@ -127,9 +108,9 @@ public class GalgameSourceCollectionService(
 
     public async Task StartAsync()
     {
-        // 检查所有库中的游戏是否还在源中
+        // 检查所有可用库中的游戏是否还在源中；不可用库保留数据，交给路径修复/用户处理
         List<(Task<List<Galgame>>, GalgameSourceBase)> sourceCheckTasks = new();
-        foreach (GalgameSourceBase source in _galgameSources)
+        foreach (GalgameSourceBase source in _galgameSources.Where(s => s.IsAvailable))
             sourceCheckTasks.Add((CheckGamesInSourceAsync(source), source));
         foreach ((Task<List<Galgame>> task, GalgameSourceBase source) t in sourceCheckTasks)
         {
@@ -150,7 +131,7 @@ public class GalgameSourceCollectionService(
             }
         }
         
-        foreach (GalgameSourceBase source in _galgameSources.Where(f => f.ScanOnStart)) 
+        foreach (GalgameSourceBase source in _galgameSources.Where(f => f.ScanOnStart && f.IsAvailable)) 
             _ = bgTaskService.AddBgTask(new GetGalgameInSourceTask(source));
     }
     
@@ -415,7 +396,7 @@ public class GalgameSourceCollectionService(
     /// </summary>
     public void ScanAll()
     {
-        foreach(GalgameSourceBase b in _galgameSources)
+        foreach(GalgameSourceBase b in _galgameSources.Where(s => s.IsAvailable))
             bgTaskService.AddBgTask(new GetGalgameInSourceTask(b));
 
     }
@@ -426,6 +407,7 @@ public class GalgameSourceCollectionService(
     /// <param name="source"></param>
     public void Scan(GalgameSourceBase source)
     {
+        if (!source.IsAvailable) return;
         bgTaskService.AddBgTask(new GetGalgameInSourceTask(source));
     }
     
@@ -464,6 +446,9 @@ public class GalgameSourceCollectionService(
     /// 检查某个源的游戏是否还在源中，如果不在则移出
     private Task<List<Galgame>> CheckGamesInSourceAsync(GalgameSourceBase source)
     {
+        if (!source.IsAvailable)
+            return Task.FromResult(new List<Galgame>());
+
         if (source is ILocalGalgameSource)
         {
             return Task.Run(async () =>
@@ -524,12 +509,11 @@ public class GalgameSourceCollectionService(
             {
                 IGalgameSourceService srcHandler = SourceServiceFactory.GetSourceService(source.SourceType);
                 await srcHandler.RemoveListenAsync(source); // 先移除旧有监听
-                if (source.Detect) await srcHandler.AddListenAsync(source);
+                if (source.IsAvailable && source.Detect) await srcHandler.AddListenAsync(source);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                infoService.DeveloperEvent(e: e);
             }
         });
     }

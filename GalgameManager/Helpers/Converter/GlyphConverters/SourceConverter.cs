@@ -48,6 +48,7 @@ internal class SourceToDescriptionStrConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, string language)
     {
         if (value is not GalgameSourceBase source) return string.Empty;
+        if (!source.IsAvailable) return "PathNotExist_Brief".GetLocalized();
         switch (source.SourceType)
         {
             case GalgameSourceType.LocalFolder:

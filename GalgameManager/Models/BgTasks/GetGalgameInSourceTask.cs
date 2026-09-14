@@ -30,7 +30,7 @@ public class GetGalgameInSourceTask : BgTaskBase
 
     protected override Task RunInternal()
     {
-        if (_galgameFolderSource is null || _galgameFolderSource.IsRunning)
+        if (_galgameFolderSource is null || _galgameFolderSource.IsRunning || !_galgameFolderSource.IsAvailable)
             return Task.CompletedTask;
         ILocalSettingsService localSettings = App.GetService<ILocalSettingsService>();
         GalgameCollectionService galgameService = (App.GetService<IGalgameCollectionService>() as GalgameCollectionService)!;

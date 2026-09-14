@@ -310,7 +310,7 @@ public partial class LibraryViewModel(
     private async Task OpenFolderInExplorer(GalgameSourceBase? galgameFolder)
     {
         if (galgameFolder is null) return;
-        if (!galgameFolder.IsDelectable)
+        if (!galgameFolder.IsDelectable || !galgameFolder.IsAvailable || !Directory.Exists(galgameFolder.Path))
         {
             infoService.Info(InfoBarSeverity.Error, msg: "LibraryPage_NoPath".GetLocalized());
             return;
@@ -378,7 +378,7 @@ public partial class LibraryViewModel(
             if (manualSelectFolder)
                 await new SelectToScanFolderDialog(CurrentSource).ShowAsync();
 
-            foreach (GalgameSourceBase source in sources)
+            foreach (GalgameSourceBase source in sources.Where(s => s.IsAvailable))
             {
                 galSourceService.Scan(source);
                 infoService.Info(InfoBarSeverity.Success, msg: "LibraryPage_Scan_Success".GetLocalized(source.Name));

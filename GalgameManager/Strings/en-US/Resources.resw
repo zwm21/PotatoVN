@@ -4147,4 +4147,10 @@ If play time can record correctly, just cancel this popup.
   <data name="ChangeSourceDialog_NoTargetSource" xml:space="preserve">
     <value>No target library available. Add another library first.</value>
   </data>
+  <data name="GalgameSourceCollectionService_Unavailable_Title" xml:space="preserve">
+    <value>Some game libraries are unavailable</value>
+  </data>
+  <data name="GalgameSourceCollectionService_Unavailable_Msg" xml:space="preserve">
+    <value>The following libraries were not found on the file system. PotatoVN kept them and their game data unchanged. Please check their locations (renamed?):{0}</value>
+  </data>
 </root>

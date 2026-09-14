@@ -28,6 +28,8 @@ public partial class GalgameFolderSource : GalgameSourceBase, ILocalGalgameSourc
 
     public async override IAsyncEnumerable<(string?, string)> ScanAllGalgames()
     {
+        if (!IsAvailable) yield break;
+
         ILocalSettingsService localSettings = App.GetService<ILocalSettingsService>();
 
         List<string> fileMustContain = new();

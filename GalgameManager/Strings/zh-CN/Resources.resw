@@ -5059,4 +5059,10 @@
   <data name="ChangeSourceDialog_NoTargetSource" xml:space="preserve">
     <value>没有可移动到的目标库，请先添加另一个库。</value>
   </data>
+  <data name="GalgameSourceCollectionService_Unavailable_Title" xml:space="preserve">
+    <value>部分游戏库不可用</value>
+  </data>
+  <data name="GalgameSourceCollectionService_Unavailable_Msg" xml:space="preserve">
+    <value>无法在文件系统中找到以下库，PotatoVN 已保留这些库及其游戏数据，未做删除。请检查对应位置（改名了？）：{0}</value>
+  </data>
 </root>

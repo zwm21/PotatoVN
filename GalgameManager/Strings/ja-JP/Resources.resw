@@ -4076,4 +4076,10 @@
   <data name="ChangeSourceDialog_NoTargetSource" xml:space="preserve">
     <value>移動先のライブラリがありません。先に別のライブラリを追加してください。</value>
   </data>
+  <data name="GalgameSourceCollectionService_Unavailable_Title" xml:space="preserve">
+    <value>一部のゲームライブラリが利用できません</value>
+  </data>
+  <data name="GalgameSourceCollectionService_Unavailable_Msg" xml:space="preserve">
+    <value>次のライブラリをファイルシステム上で見つけられませんでした。PotatoVN はこれらのライブラリとゲームデータを削除せず保持しています。場所を確認してください（名前変更？）：{0}</value>
+  </data>
 </root>

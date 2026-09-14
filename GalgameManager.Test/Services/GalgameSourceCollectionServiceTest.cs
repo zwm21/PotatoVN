@@ -1,6 +1,8 @@
+using System.Collections.ObjectModel;
 using GalgameManager.Contracts.Services;
 using GalgameManager.Enums;
 using GalgameManager.Models;
+using GalgameManager.Models.BgTasks;
 using GalgameManager.Models.Sources;
 using GalgameManager.Services;
 using Moq;
@@ -148,5 +150,132 @@ public class GalgameSourceCollectionServiceTest : ServiceTestBase
         string url = GalgameSourceBase.CalcUrl(GalgameSourceType.LocalFolder, path);
 
         Assert.That(service.GetGalgameSourceFromUrl(url), Is.SameAs(source));
+    }
+
+    // 验证本地库路径缺失但未勾选启动检查时：保留库并标记不可用，不删除数据
+    [Test]
+    public async Task InitAsync_MissingLocalFolderWithoutStartCheck_KeepsSourceAndMarksUnavailable()
+    {
+        await CreateInitializedServiceAsync();
+        string missing = Path.Combine(TestDir, "missing-no-check");
+        GalgameFolderSource source = new(missing) { CheckOnStart = false };
+        Database.GetCollection<GalgameSourceBase>("source").Insert(source);
+
+        GalgameSourceCollectionService service = CreateService();
+        await service.InitAsync();
+
+        GalgameSourceBase? loaded = service.GetGalgameSources().SingleOrDefault(s => s.Id == source.Id);
+        Assert.That(loaded, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(loaded!.IsAvailable, Is.False);
+            Assert.That(Directory.Exists(loaded.Path), Is.False);
+        });
+    }
+
+    // 验证本地库路径缺失且无真实候选时：保留库并标记不可用，不自动删除
+    [Test]
+    public async Task InitAsync_MissingLocalFolder_KeepsSourceAndMarksUnavailable()
+    {
+        await CreateInitializedServiceAsync();
+        string missing = Path.Combine(TestDir, "missing-lib");
+        GalgameFolderSource source = new(missing);
+        Database.GetCollection<GalgameSourceBase>("source").Insert(source);
+
+        GalgameSourceCollectionService service = CreateService();
+        await service.InitAsync();
+
+        GalgameSourceBase? loaded = service.GetGalgameSources().SingleOrDefault(s => s.Id == source.Id);
+        Assert.That(loaded, Is.Not.Null);
+        Assert.That(loaded!.IsAvailable, Is.False);
+    }
+
+    // 验证被 StorageFolder 截断的路径在启动时可以自动修复，并保留可用状态
+    [Test]
+    public async Task InitAsync_TruncatedLocalFolderPath_RepairsSource()
+    {
+        await CreateInitializedServiceAsync();
+        string root = CreateDir("lib-root");
+        string actual = Path.Combine(root, "game\u3000");
+        Directory.CreateDirectory(actual);
+        string stored = Path.Combine(root, "game");
+        GalgameFolderSource source = new(stored);
+        Database.GetCollection<GalgameSourceBase>("source").Insert(source);
+
+        GalgameSourceCollectionService service = CreateService();
+        await service.InitAsync();
+
+        GalgameSourceBase? loaded = service.GetGalgameSources().SingleOrDefault(s => s.Id == source.Id);
+        Assert.That(loaded, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(loaded!.Path, Is.EqualTo(actual));
+            Assert.That(loaded.IsAvailable, Is.True);
+        });
+    }
+
+    // 验证不可用库不会被 ScanAll 排入扫描任务
+    [Test]
+    public async Task ScanAll_UnavailableSource_DoesNotQueueScanTask()
+    {
+        await CreateInitializedServiceAsync();
+        string missing = Path.Combine(TestDir, "missing-scan");
+        GalgameFolderSource source = new(missing);
+        Database.GetCollection<GalgameSourceBase>("source").Insert(source);
+
+        GalgameSourceCollectionService service = CreateService();
+        await service.InitAsync();
+        BgTaskService.Invocations.Clear();
+
+        service.ScanAll();
+
+        BgTaskService.Verify(x => x.AddBgTask(It.IsAny<GetGalgameInSourceTask>()), Times.Never);
+    }
+
+    // 验证可用库中单个条目的被截断路径也会被修复，并连同 LocalConfig 一起落盘
+    [Test]
+    public async Task InitAsync_TruncatedEntryPath_RepairsEntryAndLocalConfig()
+    {
+        await CreateInitializedServiceAsync();
+
+        Guid gameId = Guid.NewGuid();
+        Guid entryId = Guid.NewGuid();
+        Galgame game = new() { Uuid = gameId };
+        GalgameCollectionService.Setup(x => x.GetGalgameFromUuid(gameId)).Returns(game);
+        GalgameCollectionService.SetupGet(x => x.Galgames)
+            .Returns(new ObservableCollection<Galgame> { game });
+
+        string root = CreateDir("entry-root");
+        string actualEntry = Path.Combine(root, "game\u3000");
+        Directory.CreateDirectory(actualEntry);
+        string storedEntry = Path.Combine(root, "game");
+        string actualExe = Path.Combine(actualEntry, "game.exe");
+        File.WriteAllText(actualExe, "x");
+
+        GalgameFolderSource source = new(root)
+        {
+            GalgamesDto =
+            [
+                new GalgameAndPathDbDto(gameId, storedEntry, entryId,
+                    new LocalInstallationConfig { ExePath = Path.Combine(storedEntry, "game.exe") }),
+            ],
+        };
+        Database.GetCollection<GalgameSourceBase>("source").Insert(source);
+
+        GalgameSourceCollectionService service = CreateService();
+        await service.InitAsync();
+
+        GalgameSourceCollectionService service2 = CreateService();
+        await service2.InitAsync();
+
+        GalgameSourceBase? reloaded = service2.GetGalgameSources().SingleOrDefault(s => s.Id == source.Id);
+        Assert.That(reloaded, Is.Not.Null);
+        GalgameAndPath? entry = reloaded!.Galgames.SingleOrDefault(e => e.EntryId == entryId);
+        Assert.That(entry, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(entry!.Path, Is.EqualTo(actualEntry));
+            Assert.That(entry.LocalConfig?.ExePath, Is.EqualTo(actualExe));
+        });
     }
 }

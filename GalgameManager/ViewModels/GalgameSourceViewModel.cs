@@ -136,6 +136,11 @@ public partial class GalgameSourceViewModel : ObservableObject, INavigationAware
 
     public string ImagePathDes => Item?.ImagePath ?? "GalgameSourcePage_Setting_NoImage".GetLocalized();
 
+    /// <summary>
+    /// 当前库是否可以进行扫描（路径可用且支持扫描）。
+    /// </summary>
+    public bool CanScan => Item is { IsAvailable: true, IsSourceScanable: true } && !Item.IsRunning;
+
     #endregion
 
     public GalgameSourceBase? Item
@@ -341,6 +346,9 @@ public partial class GalgameSourceViewModel : ObservableObject, INavigationAware
     {
         if(Item is null) return;
         CanExecute = !Item.IsRunning;
+        OnPropertyChanged(nameof(CanScan));
+        ScanAllCommand.NotifyCanExecuteChanged();
+        AddGalFromZipCommand.NotifyCanExecuteChanged();
         IsUnpacking = _bgTaskService.GetBgTask<UnpackGameTask>(Item.Path)?.IsRunning ?? false;
         // LogExists = _sourceScanService.GetScanResultAsync(Item.Id).Result is not null;
     }
@@ -411,11 +419,11 @@ public partial class GalgameSourceViewModel : ObservableObject, INavigationAware
         });
     }
 
-    [RelayCommand(CanExecute = nameof(CanExecute))]
+    [RelayCommand(CanExecute = nameof(CanScan))]
     private async Task ScanAll()
     {
         // 和 LibraryViewModel 中的 ScanAll() 基本一致
-        if (Item == null) return;
+        if (Item is not { IsAvailable: true }) return;
         // 创建确认对话框
         CheckBox includeSubfoldersCheckBox = new()
         {
@@ -482,7 +490,7 @@ public partial class GalgameSourceViewModel : ObservableObject, INavigationAware
     [RelayCommand(CanExecute = nameof(IsLocalFolder))]
     private async Task AddGalFromZip(string? passWord = null)
     {
-        if (_item is not GalgameFolderSource) return;
+        if (_item is not GalgameFolderSource { IsAvailable: true }) return;
         UnpackDialog dialog = new();
         await dialog.ShowAsync();
         StorageFile? file = dialog.StorageFile;
@@ -526,7 +534,7 @@ public partial class GalgameSourceViewModel : ObservableObject, INavigationAware
     
     private bool IsLocalFolder()
     {
-        return Item?.SourceType == GalgameSourceType.LocalFolder;
+        return Item is { SourceType: GalgameSourceType.LocalFolder, IsAvailable: true };
     }
 
     private void HandelUnpackError(Progress progress)
@@ -691,6 +699,12 @@ public partial class GalgameSourceViewModel : ObservableObject, INavigationAware
     private async Task OpenGameInExplorer(GalgameAndPath gameAndPath)
     {
         if (gameAndPath?.Galgame == null) return;
+        if (!Directory.Exists(gameAndPath.Path))
+        {
+            _infoService.Info(InfoBarSeverity.Error, msg: "PathNotExist".GetLocalized(gameAndPath.Path));
+            return;
+        }
+
         var folder = await StorageFolder.GetFolderFromPathAsync(gameAndPath.Path);
         await Launcher.LaunchFolderAsync(folder);
     }

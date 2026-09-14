@@ -31,6 +31,12 @@ public abstract partial class GalgameSourceBase : ObservableObject, IDisplayable
 
     [BsonIgnore] [JsonIgnore] public string Url => CalcUrl(SourceType, Path);
     public string Path { get; set; } = "";
+    /// <summary>
+    /// 运行时状态：库的根路径当前是否存在。该状态只用于 UI/扫描保护，不持久化。
+    /// </summary>
+    [BsonIgnore]
+    [JsonIgnore]
+    public bool IsAvailable { get; set; } = true;
     [BsonIgnore] [JsonIgnore] public ExUri PathUri => new (Path);
     public abstract GalgameSourceType SourceType { get; }
     [ObservableProperty] private bool _scanOnStart;

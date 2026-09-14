@@ -191,6 +191,9 @@ public class LocalFolderSourceService : IGalgameSourceService
     {
         if (source is not GalgameFolderSource folderSource)
             throw new ArgumentException($"source {source.Path} is not GalgameFolderSource");
+        if (!Directory.Exists(folderSource.Path))
+            return;
+
         FileSystemWatcher watcher = new(folderSource.Path);
         watcher.NotifyFilter = NotifyFilters.DirectoryName;
         watcher.Filter = "*";
