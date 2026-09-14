@@ -74,7 +74,7 @@ public class StoragePathHelperTest
 
         List<string> matches = StoragePathHelper
             .EnumerateTrailingSuffixCandidates(_testDir, "target")
-            .Select(Path.GetFileName)
+            .Select(path => Path.GetFileName(path)!)
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToList();
 
@@ -89,7 +89,7 @@ public class StoragePathHelperTest
 
         List<string> matches = StoragePathHelper
             .EnumerateTrailingSuffixCandidates(_testDir, "target", includeFiles: true)
-            .Select(Path.GetFileName)
+            .Select(path => Path.GetFileName(path)!)
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToList();
 
