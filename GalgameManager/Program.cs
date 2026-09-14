@@ -15,7 +15,8 @@ public static class BootstrapProgram
     public static void Main(string[] args)
     {
         WinRT.ComWrappersSupport.InitializeComWrappers();
-        // Unpackaged 模式下必须先调用 Bootstrapper API 建立对 Windows App SDK Framework 包的动态依赖，
+#if !MICROSOFT_WINDOWSAPPSDK_SELFCONTAINED
+        // 仅框架依赖模式需要调用 Bootstrapper API；自包含模式跳过，直接使用应用目录里的 WinAppSDK 运行时
         if (!RuntimeHelper.IsMSIX)
         {
             try
@@ -66,6 +67,7 @@ public static class BootstrapProgram
                 return;
             }
         }
+#endif
 
         Application.Start((p) =>
         {
