@@ -123,6 +123,7 @@ public static class KeyValues
     public const string GalgamePageNewLayout_ShowCharacters = "galgamePageNewLayout_showCharacters"; //bool, 游戏页是否显示角色
     public const string ShowGameNameInControl = "showGameNameInControl"; //bool, 游戏控件是否显示游戏名称
     public const string CustomSortOrder = "customSortOrder"; //List<string>, 记录自定义排序
+    public const string AddGameToTop = "addGameToTop"; //bool, 首页单个添加的新游戏是否默认置于手动排序最顶端
     public const string PrimarySortKey = "primarySortKey"; //string, 主排序的key，默认是"playtime"，可选值有：playtime（游玩时间）/lastUpdate（最后更新时间）/name（名称）/releaseDate（发售日期）/rating（评分）/category（分类）
     public const string SecondarySortKey = "SecondarySortKey"; //string, 次排序的key，默认是"playtime"，可选值有：playtime（游玩时间）/lastUpdate（最后更新时间）/name（名称）/releaseDate（发售日期）/rating（评分）/category（分类）
     public const string PrimarySortAscending = "PrimarySortAscending"; //bool, 主排序是否降序排列，默认是false（升序）

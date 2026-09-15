@@ -4082,4 +4082,10 @@
   <data name="GalgameSourceCollectionService_Unavailable_Msg" xml:space="preserve">
     <value>次のライブラリをファイルシステム上で見つけられませんでした。PotatoVN はこれらのライブラリとゲームデータを削除せず保持しています。場所を確認してください（名前変更？）：{0}</value>
   </data>
+  <data name="SettingsPage_Library_AddGameToTop.Title" xml:space="preserve">
+    <value>追加したゲームを最上部に表示</value>
+  </data>
+  <data name="SettingsPage_Library_AddGameToTop.Description" xml:space="preserve">
+    <value>有効にすると、「手動並べ替え」モードで「ゲームを追加」またはドラッグ＆ドロップで個別に追加したゲームがリストの先頭に表示されます。スキャンや解凍などの一括自動追加には影響しません。</value>
+  </data>
 </root>

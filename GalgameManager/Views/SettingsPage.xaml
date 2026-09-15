@@ -501,6 +501,12 @@
                     SettingIcon="&#xE8B7;">
                     <control:SettingExpander.SettingContent>
                         <StackPanel Style="{StaticResource SettingStackPanelStyle}">
+                            <!-- 添加游戏时默认置顶 -->
+                            <control:Panel>
+                                <local:SettingToggleSwitch
+                                    x:Uid="SettingsPage_Library_AddGameToTop"
+                                    IsOn="{x:Bind ViewModel.AddGameToTop, Mode=TwoWay}" />
+                            </control:Panel>
                             <!-- 递归搜索子目录 -->
                             <control:Panel>
                                 <StackPanel>

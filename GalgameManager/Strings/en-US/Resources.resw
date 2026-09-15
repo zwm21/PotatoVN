@@ -4153,4 +4153,10 @@ If play time can record correctly, just cancel this popup.
   <data name="GalgameSourceCollectionService_Unavailable_Msg" xml:space="preserve">
     <value>The following libraries were not found on the file system. PotatoVN kept them and their game data unchanged. Please check their locations (renamed?):{0}</value>
   </data>
+  <data name="SettingsPage_Library_AddGameToTop.Title" xml:space="preserve">
+    <value>Show newly added games at the top</value>
+  </data>
+  <data name="SettingsPage_Library_AddGameToTop.Description" xml:space="preserve">
+    <value>When enabled, a game added individually via the Add Game button or drag-and-drop will appear at the top of the list in Custom Order mode. Batch scans, extractions and other automatic additions are not affected.</value>
+  </data>
 </root>
