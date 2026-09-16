@@ -39,6 +39,8 @@ public partial class HomeViewModel : ObservableObject, INavigationAware
     private readonly IInfoService _infoService;
     private readonly IBgTaskService _bgTaskService;
     private readonly ICategoryService _categoryService;
+    private bool _addGameToTop; // 手动排序下，首页单个添加的新游戏是否默认置顶
+    private readonly SemaphoreSlim _addGameToTopLock = new(1, 1);
     [ObservableProperty] private bool _isPhrasing;
     [ObservableProperty] private Stretch _stretch;
     [ObservableProperty] private bool _fixHorizontalPicture; // 是否修复横向图片（截断为标准的长方形）
@@ -130,6 +132,7 @@ public partial class HomeViewModel : ObservableObject, INavigationAware
             HomeFilterShowTagPanel = await _localSettingsService.ReadSettingAsync<bool>(KeyValues.HomeFilterShowTagPanel);
             HomeFilterShowCategoryPanel = await _localSettingsService.ReadSettingAsync<bool>(KeyValues.HomeFilterShowCategoryPanel);
             GameToOpacityConverter.SpecialDisplayVirtualGame = SpecialDisplayVirtualGame;
+            _addGameToTop = await _localSettingsService.ReadSettingAsync<bool>(KeyValues.AddGameToTop);
 
             PrimaryKey = (SortKeys)_localSettingsService.ReadSettingAsync<int>(KeyValues.PrimarySortKey).Result;
             IsPrimaryDescending = _localSettingsService.ReadSettingAsync<bool>(KeyValues.PrimarySortDescending).Result;
@@ -171,6 +174,9 @@ public partial class HomeViewModel : ObservableObject, INavigationAware
     {
         switch (key)
         {
+            case KeyValues.AddGameToTop:
+                _addGameToTop = value is true;
+                break;
             case KeyValues.DisplayVirtualGame:
                 DisplayVirtualGame = value is true;
                 break;
@@ -1058,10 +1064,16 @@ public partial class HomeViewModel : ObservableObject, INavigationAware
         IsPhrasing = true;
         InfoBarSeverity infoBarSeverity;
         string msg;
+        bool moveToTop = _addGameToTop;
+        HashSet<Guid> existingUuids = moveToTop
+            ? _galgameService.Galgames.Select(g => g.Uuid).ToHashSet()
+            : new HashSet<Guid>();
         try
         {
             Galgame tmp = await _galgameService.AddGameAsync(
                 isVirtual ? GalgameSourceType.Virtual : GalgameSourceType.LocalFolder, path, true);
+            if (moveToTop && !existingUuids.Contains(tmp.Uuid))
+                await MoveNewGalgameToTopAsync(tmp);
             infoBarSeverity = tmp.IsIdsEmpty() ? InfoBarSeverity.Warning : InfoBarSeverity.Success;
             msg = tmp.IsIdsEmpty()
                 ? "AddGalgameResult_NotFoundInRss".GetLocalized()
@@ -1075,6 +1087,40 @@ public partial class HomeViewModel : ObservableObject, INavigationAware
 
         IsPhrasing = false;
         _infoService.Info(infoBarSeverity, msg: msg);
+    }
+
+    /// <summary>
+    /// 将首页单次添加的新游戏放到手动排序的最前面。
+    /// 只更新 CustomSortOrder；当前确实处于手动排序时，才同时调整集合物理顺序。
+    /// </summary>
+    private async Task MoveNewGalgameToTopAsync(Galgame game)
+    {
+        try
+        {
+            await _addGameToTopLock.WaitAsync();
+            try
+            {
+                List<string> customSortOrder = await _localSettingsService
+                    .ReadSettingAsync<List<string>>(KeyValues.CustomSortOrder, true) ?? [];
+                customSortOrder = CustomSortOrderHelper.PutFirst(customSortOrder, game.Uuid);
+                await _localSettingsService.SaveSettingAsync(KeyValues.CustomSortOrder, customSortOrder, true);
+
+                if (PrimaryKey == SortKeys.Custom)
+                {
+                    int index = _galgameService.Galgames.IndexOf(game);
+                    if (index > 0)
+                        _galgameService.Galgames.Move(index, 0);
+                }
+            }
+            finally
+            {
+                _addGameToTopLock.Release();
+            }
+        }
+        catch (Exception e)
+        {
+            _infoService.DeveloperEvent(e: e);
+        }
     }
 
     // private void OnGalgameLoadedEvent() => Source.Source = _galgameService.Galgames;
