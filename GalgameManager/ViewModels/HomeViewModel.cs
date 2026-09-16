@@ -1064,12 +1064,12 @@ public partial class HomeViewModel : ObservableObject, INavigationAware
         IsPhrasing = true;
         InfoBarSeverity infoBarSeverity;
         string msg;
-        bool moveToTop = _addGameToTop;
-        HashSet<Guid> existingUuids = moveToTop
-            ? _galgameService.Galgames.Select(g => g.Uuid).ToHashSet()
-            : new HashSet<Guid>();
         try
         {
+            bool moveToTop = _addGameToTop;
+            HashSet<Guid> existingUuids = moveToTop
+                ? _galgameService.Galgames.Select(g => g.Uuid).ToHashSet()
+                : new HashSet<Guid>();
             Galgame tmp = await _galgameService.AddGameAsync(
                 isVirtual ? GalgameSourceType.Virtual : GalgameSourceType.LocalFolder, path, true);
             if (moveToTop && !existingUuids.Contains(tmp.Uuid))
