@@ -9,6 +9,7 @@ using GalgameManager.Models.Sources;
 using GalgameManager.Services;
 using GalgameManager.WinApp.Base.Contracts;
 using LiteDB;
+using Microsoft.UI.Xaml.Controls;
 using Moq;
 
 namespace GalgameManager.Test.Services;
@@ -48,6 +49,14 @@ public class GalgameCollectionServiceTest : ServiceTestBase
         return service;
     }
 
+    private async Task<GalgameCollectionService> CreateInitializedServiceAsync(ContentDialogResult confirmResult)
+    {
+        GalgameCollectionService service = new StubConfirmService(Settings, _jumpListService.Object,
+            _galSrcService.Object, InfoService.Object, BgTaskService.Object, _bus, confirmResult);
+        await service.InitAsync();
+        return service;
+    }
+
     private ILiteCollection<Galgame> DbSet => Database.GetCollection<Galgame>("galgame");
 
     private static Galgame CreateGame(string name)
@@ -66,6 +75,25 @@ public class GalgameCollectionServiceTest : ServiceTestBase
         phraser.Setup(x => x.GetPhraseType()).Returns(slot);
         service.PhraserList[(int)slot] = phraser.Object;
         return phraser;
+    }
+
+    /// <summary>
+    /// 用可配置的确认结果替换真实确认框，便于在不启动UI的情况下测试取消路径
+    /// </summary>
+    private sealed class StubConfirmService : GalgameCollectionService
+    {
+        private readonly ContentDialogResult _confirmResult;
+
+        public StubConfirmService(ILocalSettingsService settings, IJumpListService jumpListService,
+            IGalgameSourceCollectionService galSrcService, IInfoService infoService, IBgTaskService bgTaskService,
+            IMessenger bus, ContentDialogResult confirmResult)
+            : base(settings, jumpListService, galSrcService, infoService, bgTaskService, bus)
+        {
+            _confirmResult = confirmResult;
+        }
+
+        protected override Task<ContentDialogResult> ShowConfirmGalInfoDialogAsync(Galgame galgame,
+            Galgame? fetchedMeta) => Task.FromResult(_confirmResult);
     }
 
     [TestCase(true)]
@@ -267,6 +295,93 @@ public class GalgameCollectionServiceTest : ServiceTestBase
         });
         _galSrcService.Verify(x => x.MoveInNoOperate(source, result, "游戏甲", null), Times.Once);
         BgTaskService.Verify(x => x.CreateBgTask<GetHeaderFromRssTask>(It.IsAny<object[]>()), Times.Once);
+    }
+
+    // 验证用户在确认框取消(Secondary)或直接关闭(None)时，不添加游戏也不自动建库
+    [TestCase(ContentDialogResult.Secondary)]
+    [TestCase(ContentDialogResult.None)]
+    public async Task AddGameAsync_UserCancelsConfirm_DoesNotAddGameOrSource(ContentDialogResult confirmResult)
+    {
+        await Settings.SaveSettingAsync(KeyValues.RssType, RssType.Bangumi);
+        GalgameCollectionService service = await CreateInitializedServiceAsync(confirmResult);
+        Galgame parsed = new();
+        parsed.RssType = RssType.Bangumi;
+        parsed.Id = "bgm-cancel";
+        parsed.Name.Value = "Parsed";
+        SetupPhraser(service, RssType.Bangumi, parsed);
+
+        Assert.ThrowsAsync<PvnUserCanceledException>(async () =>
+            await service.AddGameAsync(GalgameSourceType.Virtual, "游戏甲", force: true, requireConfirm: true));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.Galgames, Is.Empty);
+            Assert.That(DbSet.Count(), Is.Zero);
+        });
+        _galSrcService.Verify(x => x.AddGalgameSourceAsync(It.IsAny<GalgameSourceType>(),
+            It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
+    }
+
+    // 验证用户在确认框确认(Primary)时仍能正常添加
+    [Test]
+    public async Task AddGameAsync_UserConfirms_StillAddsGame()
+    {
+        await Settings.SaveSettingAsync(KeyValues.RssType, RssType.Bangumi);
+        GalgameCollectionService service = await CreateInitializedServiceAsync(ContentDialogResult.Primary);
+        Galgame parsed = new();
+        parsed.RssType = RssType.Bangumi;
+        parsed.Id = "bgm-confirm";
+        parsed.Name.Value = "Parsed";
+        SetupPhraser(service, RssType.Bangumi, parsed);
+        BgTaskService.Setup(x => x.CreateBgTask<GetHeaderFromRssTask>(It.IsAny<object[]>()))
+            .Returns(() => new GetHeaderFromRssTask(service, new Mock<IPvnService>().Object, Settings));
+        GalgameSourceBase source = new Mock<GalgameSourceBase>().Object;
+        _galSrcService.Setup(x => x.GetSourcePath(GalgameSourceType.Virtual, "游戏甲")).Returns("游戏甲");
+        _galSrcService.Setup(x => x.GetGalgameSource(GalgameSourceType.Virtual, "游戏甲"))
+            .Returns((GalgameSourceBase?)null);
+        _galSrcService.Setup(x => x.AddGalgameSourceAsync(GalgameSourceType.Virtual, "游戏甲",
+                It.IsAny<bool>(), It.IsAny<bool>()))
+            .ReturnsAsync(source);
+
+        Galgame result = await service.AddGameAsync(GalgameSourceType.Virtual, "游戏甲", force: true,
+            requireConfirm: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.Galgames, Does.Contain(result));
+            Assert.That(DbSet.FindById(result.Uuid), Is.Not.Null);
+        });
+    }
+
+    // 验证解析失败时仍保留无元数据也强制添加的兜底行为（用户未取消时）
+    [Test]
+    public async Task AddGameAsync_ParseFailure_StillAddsFallbackGame()
+    {
+        await Settings.SaveSettingAsync(KeyValues.RssType, RssType.Bangumi);
+        GalgameCollectionService service = await CreateInitializedServiceAsync(ContentDialogResult.Secondary);
+        Mock<IGalInfoPhraser> phraser = new();
+        phraser.SetupSequence(x => x.GetGalgameInfo(It.IsAny<Galgame>()))
+            .ThrowsAsync(new InvalidOperationException("parse boom"))
+            .ReturnsAsync((Galgame?)null);
+        service.PhraserList[(int)RssType.Bangumi] = phraser.Object;
+        BgTaskService.Setup(x => x.CreateBgTask<GetHeaderFromRssTask>(It.IsAny<object[]>()))
+            .Returns(() => new GetHeaderFromRssTask(service, new Mock<IPvnService>().Object, Settings));
+        GalgameSourceBase source = new Mock<GalgameSourceBase>().Object;
+        _galSrcService.Setup(x => x.GetSourcePath(GalgameSourceType.Virtual, "游戏甲")).Returns("游戏甲");
+        _galSrcService.Setup(x => x.GetGalgameSource(GalgameSourceType.Virtual, "游戏甲"))
+            .Returns((GalgameSourceBase?)null);
+        _galSrcService.Setup(x => x.AddGalgameSourceAsync(GalgameSourceType.Virtual, "游戏甲",
+                It.IsAny<bool>(), It.IsAny<bool>()))
+            .ReturnsAsync(source);
+
+        Galgame result = await service.AddGameAsync(GalgameSourceType.Virtual, "游戏甲", force: true,
+            requireConfirm: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.Galgames, Does.Contain(result));
+            Assert.That(result.Name.Value, Is.EqualTo("游戏甲"));
+        });
     }
 
     #endregion
