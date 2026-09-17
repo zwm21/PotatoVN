@@ -34,7 +34,7 @@ public partial class GalgameCollectionService
             meta ??= await ParseGalInfoOnlyAsync(new Galgame(await GetNameFromPath(sourceType, path)),
                 requireConfirm: requireConfirm);
         }
-        catch (Exception e)
+        catch (Exception e) when (e is not PvnUserCanceledException)
         {
             meta ??= new Galgame(await GetNameFromPath(sourceType, path));
             _infoService.Log(msg:$"Failed on parsing galgame info for {e}");
@@ -58,7 +58,7 @@ public partial class GalgameCollectionService
                     DefaultButton = ContentDialogButton.Close,
                 };
                 if (await confirmDialog.ShowAsync() != ContentDialogResult.Primary)
-                    throw new PvnException("Canceled".GetLocalized());
+                    throw new PvnUserCanceledException("Canceled".GetLocalized());
             }
             Galgame tmp = await DealWithExistGameAsync(sourceType, path, existGame, meta);
             await SaveGalgameAsync(tmp);

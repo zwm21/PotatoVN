@@ -226,6 +226,16 @@ public partial class GalgameCollectionService : IGalgameCollectionService
         bool requireConfirm = false, GameParseType type = GameParseType.All) =>
         ParseGalInfoInternalAsync(galgame, rssType, requireConfirm, type, notify: true);
 
+    /// <summary>
+    /// Show the parse-result confirmation dialog and return the user's choice.
+    /// Production uses ConfirmGalInfoDialog; tests can override to simulate cancel.
+    /// </summary>
+    protected virtual async Task<ContentDialogResult> ShowConfirmGalInfoDialogAsync(Galgame galgame, Galgame? fetchedMeta)
+    {
+        ConfirmGalInfoDialog dialog = new(galgame, fetchedMeta, this);
+        return await dialog.ShowAsync();
+    }
+
     private async Task<Galgame> ParseGalInfoInternalAsync(Galgame galgame, RssType rssType,
         bool requireConfirm, GameParseType type, bool notify)
     {
@@ -237,13 +247,8 @@ public partial class GalgameCollectionService : IGalgameCollectionService
         Galgame result = galgame;
         if (type.HasFlag(GameParseType.GameInfo) || type.HasFlag(GameParseType.Character) || type.HasFlag(GameParseType.Image))
             result = await ParseAsync(galgame, PhraserList[(int)selectedRss], type);
-        if (requireConfirm)
-        {
-            ConfirmGalInfoDialog dialog = new(galgame, result, this);
-            ContentDialogResult tmp = await dialog.ShowAsync();
-            if (tmp == ContentDialogResult.Secondary)
-                throw new PvnException("Canceled".GetLocalized());
-        }
+        if (requireConfirm && await ShowConfirmGalInfoDialogAsync(galgame, result) != ContentDialogResult.Primary)
+            throw new PvnUserCanceledException("Canceled".GetLocalized());
 
         if (type.HasFlag(GameParseType.PlayStatus) &&
             await LocalSettingsService.ReadSettingAsync<bool>(KeyValues.SyncPlayStatusWhenPhrasing))
@@ -319,13 +324,8 @@ public partial class GalgameCollectionService : IGalgameCollectionService
                 ? LocalSettingsService.ReadSettingAsync<RssType>(KeyValues.RssType).Result
                 : galgame.RssType;
         Galgame result = await ParseAsync(galgame, PhraserList[(int)selectedRss], GameParseType.All);
-        if (requireConfirm)
-        {
-            ConfirmGalInfoDialog dialog = new(galgame, result, this);
-            ContentDialogResult tmp = await dialog.ShowAsync();
-            if (tmp == ContentDialogResult.Secondary)
-                throw new PvnException("Canceled".GetLocalized());
-        }
+        if (requireConfirm && await ShowConfirmGalInfoDialogAsync(galgame, result) != ContentDialogResult.Primary)
+            throw new PvnUserCanceledException("Canceled".GetLocalized());
         return result;
     }
 
