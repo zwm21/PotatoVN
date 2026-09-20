@@ -4088,4 +4088,10 @@
   <data name="SettingsPage_Library_AddGameToTop.Description" xml:space="preserve">
     <value>有効にすると、「手動並べ替え」モードで「ゲームを追加」またはドラッグ＆ドロップで個別に追加したゲームがリストの先頭に表示されます。スキャンや解凍などの一括自動追加には影響しません。</value>
   </data>
+  <data name="PathNotExist_Brief" xml:space="preserve">
+    <value>パスが存在しません</value>
+  </data>
+  <data name="PathNotExist" xml:space="preserve">
+    <value>パス {0} は存在しません</value>
+  </data>
 </root>
