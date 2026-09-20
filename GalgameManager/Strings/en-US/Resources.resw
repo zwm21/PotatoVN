@@ -4159,4 +4159,10 @@ If play time can record correctly, just cancel this popup.
   <data name="SettingsPage_Library_AddGameToTop.Description" xml:space="preserve">
     <value>When enabled, a game added individually via the Add Game button or drag-and-drop will appear at the top of the list in Custom Order mode. Batch scans, extractions and other automatic additions are not affected.</value>
   </data>
+  <data name="PathNotExist_Brief" xml:space="preserve">
+    <value>Path does not exist</value>
+  </data>
+  <data name="PathNotExist" xml:space="preserve">
+    <value>Path {0} does not exist</value>
+  </data>
 </root>
