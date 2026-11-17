@@ -42,7 +42,9 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     private readonly IInfoService _infoService;
     private readonly IBgTaskService _bgTaskService;
     private readonly ISidebarService _sidebarService;
+    private readonly IAutoExportService _autoExportService;
     private string _versionDescription;
+    private bool _isCorrectingAutoExportToggle;
 
     #region UI_STRINGS //历史遗留，不要继续使用这种方式获取字符串
 
@@ -85,6 +87,11 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
     public async void OnNavigatedTo(object parameter)
     {
+        _localSettingsService.OnSettingChanged -= HandleAutoExportSettingChanged;
+        _localSettingsService.OnSettingChanged += HandleAutoExportSettingChanged;
+        _lastExportTime = await _localSettingsService.ReadSettingAsync<DateTime>(KeyValues.LastExportTime);
+        UpdateAutoExportDescriptions();
+
         // 设置页会被 Frame 缓存；外部入口（例如单游戏按键映射对话框）修改总开关后，
         // 每次返回设置页都重新读取，避免界面状态与真实启动配置不一致。
         GameReMapEnabled = await _localSettingsService.ReadSettingAsync<bool>(KeyValues.GameReMapEnabled);
@@ -101,6 +108,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
     public void OnNavigatedFrom()
     {
+        _localSettingsService.OnSettingChanged -= HandleAutoExportSettingChanged;
         _updateService.SettingBadgeEvent -= HandelSettingBadgeEvent;
         _galgameCollectionService.MetaSavedEvent -= SetSaveMetaPopUp;
     }
@@ -108,7 +116,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     public SettingsViewModel(IThemeSelectorService themeSelectorService, ILocalSettingsService localSettingsService,
         IGalgameCollectionService galgameService, IUpdateService updateService, INavigationService navigationService,
         ICategoryService categoryService, IInfoService infoService, IBgTaskService bgTaskService,
-        ISidebarService sidebarService)
+        ISidebarService sidebarService, IAutoExportService autoExportService)
     {
         _categoryService = categoryService;
         _themeSelectorService = themeSelectorService;
@@ -120,6 +128,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         _infoService = infoService;
         _bgTaskService = bgTaskService;
         _sidebarService = sidebarService;
+        _autoExportService = autoExportService;
 
         //THEME
         _elementTheme = themeSelectorService.Theme;
@@ -162,7 +171,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         // _overrideLocalNameWithChinese = _localSettingsService.ReadSettingAsync<bool>(KeyValues.OverrideLocalNameWithChinese).Result;
         _autoCategory = _localSettingsService.ReadSettingAsync<bool>(KeyValues.AutoCategory).Result;
         _downloadPlayStatusWhenPhrasing = _localSettingsService.ReadSettingAsync<bool>(KeyValues.SyncPlayStatusWhenPhrasing).Result;
-        _downloadCharacters = _localSettingsService.ReadSettingAsync<bool>(KeyValues.DownloadCharacters).Result;
+        _usePvnBanner = _localSettingsService.ReadSettingAsync<bool>(KeyValues.UsePvnBanner).Result;
         //LIBRARY
         _galgameCollectionService = ((GalgameCollectionService?)galgameService)!;
         _galgameCollectionService.MetaSavedEvent += SetSaveMetaPopUp;
@@ -757,7 +766,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     // [ObservableProperty] private bool _overrideLocalNameWithChinese;
     [ObservableProperty] private bool _autoCategory;
     [ObservableProperty] private bool _downloadPlayStatusWhenPhrasing;
-    [ObservableProperty] private bool _downloadCharacters;
+    [ObservableProperty] private bool _usePvnBanner;
 
     // partial void OnOverrideLocalNameChanged(bool value) => _localSettingsService.SaveSettingAsync(KeyValues.OverrideLocalName, value);
 
@@ -767,7 +776,18 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
     partial void OnDownloadPlayStatusWhenPhrasingChanged(bool value) => _localSettingsService.SaveSettingAsync(KeyValues.SyncPlayStatusWhenPhrasing, value);
 
-    partial void OnDownloadCharactersChanged(bool value) => _localSettingsService.SaveSettingAsync(KeyValues.DownloadCharacters, value);
+    [RelayCommand]
+    private async Task SetDownloadScopeAsync()
+    {
+        DownloadScopeDialog dialog = new(
+            await _localSettingsService.ReadSettingAsync<bool>(KeyValues.DownloadStaffs),
+            await _localSettingsService.ReadSettingAsync<bool>(KeyValues.DownloadCharacters));
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        await _localSettingsService.SaveSettingAsync(KeyValues.DownloadStaffs, dialog.DownloadStaffs);
+        await _localSettingsService.SaveSettingAsync(KeyValues.DownloadCharacters, dialog.DownloadCharacters);
+    }
+
+    partial void OnUsePvnBannerChanged(bool value) => _localSettingsService.SaveSettingAsync(KeyValues.UsePvnBanner, value);
 
     partial void OnVndbTranslateTagsChanged(bool value) => _localSettingsService.SaveSettingAsync(KeyValues.VndbTranslateTags, value);
 
@@ -1162,17 +1182,18 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
     async partial void OnIsAutoExportEnabledChanged(bool value)
     {
+        if (_isCorrectingAutoExportToggle) return;
         try
         {
-            if (!value) return;
-            if (IsNullOrEmpty(_autoExportPath) || !Directory.Exists(_autoExportPath))
+            if (!await _autoExportService.SetEnabledAsync(value))
             {
-                _infoService.Info(InfoBarSeverity.Error, msg: "SettingsPage_Other_AutoExport_PathInvalid".GetLocalized());
+                _isCorrectingAutoExportToggle = true;
                 IsAutoExportEnabled = false;
+                _isCorrectingAutoExportToggle = false;
+                _infoService.Info(InfoBarSeverity.Error, msg: "SettingsPage_Other_AutoExport_PathInvalid".GetLocalized());
                 return;
             }
-            await _localSettingsService.SaveSettingAsync(KeyValues.AutoExport, value);
-            _infoService.Info(InfoBarSeverity.Success, msg: "SettingSuccess".GetLocalized() + ", " + "RestartRequired".GetLocalized());
+            _infoService.Info(InfoBarSeverity.Success, msg: "SettingSuccess".GetLocalized());
         }
         catch (Exception e)
         {
@@ -1194,6 +1215,13 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         AutoExportPathDescription = IsNullOrEmpty(_autoExportPath)
             ? "SettingsPage_Other_AutoExport_Path_NotSet".GetLocalized()
             : "SettingsPage_Other_AutoExport_Path_Description".GetLocalized(_autoExportPath);
+    }
+
+    private void HandleAutoExportSettingChanged(string key, object? value)
+    {
+        if (key != KeyValues.LastExportTime || value is not DateTime lastExportTime) return;
+        _lastExportTime = lastExportTime;
+        UpdateAutoExportDescriptions();
     }
 
     [RelayCommand]
@@ -1223,8 +1251,10 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
             if (openPicker.ShowDialog(App.MainWindow!.GetWindowHandle()) != PickerResult.OK
                 || string.IsNullOrEmpty(openPicker.SelectedPath)) return;
 
-            ExportTask task = new(openPicker.SelectedPath);
-            await _bgTaskService.AddBgTask(task);
+            // 手动导出走 AutoExportService（与启动时自动导出同一套逻辑）；
+            // 注意路径取自本分支的 PvnFolderPicker，不是上游 FolderPicker 流程里的 path 变量
+            if (!await _autoExportService.ExportAsync(openPicker.SelectedPath))
+                _infoService.Info(InfoBarSeverity.Warning, "SettingsPage_Other_Export_Exporting".GetLocalized());
         }
         catch (Exception e)
         {

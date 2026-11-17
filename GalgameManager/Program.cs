@@ -21,9 +21,10 @@ public static class BootstrapProgram
         {
             try
             {
-                // 与 GalgameManager.WinApp.Base.csproj 中的 Microsoft.WindowsAppSDK 版本保持一致
-                // Microsoft.WindowsAppSDK 2.1.3 => 0x0002_0001
-                Bootstrap.Initialize(0x00020001);
+                // 版本取自所引用 Windows App SDK 包生成的常量，升级 SDK 时会自动跟随，不要硬编码
+                Bootstrap.Initialize(Microsoft.WindowsAppSDK.Release.MajorMinor,
+                    Microsoft.WindowsAppSDK.Release.VersionTag,
+                    new PackageVersion(Microsoft.WindowsAppSDK.Runtime.Version.UInt64));
                 AppDomain.CurrentDomain.ProcessExit += (_, _) =>
                 {
                     try
