@@ -98,14 +98,29 @@ jobs:
         }
         Write-Host "Windows App SDK 运行时已内置，便携包校验通过"
 
-    - name: Zip
+    # GitHub 的 windows-latest 镜像自带 7-Zip，直接调用其 exe，不引入第三方 action
+    - name: Compress (7z)
       shell: pwsh
       run: |
+        $sevenZip = $null
+        foreach ($c in @("C:\Program Files\7-Zip\7z.exe", "C:\Program Files (x86)\7-Zip\7z.exe")) {
+            if (Test-Path $c) { $sevenZip = $c; break }
+        }
+        if (-not $sevenZip) {
+            $cmd = Get-Command 7z -ErrorAction SilentlyContinue
+            if ($cmd) { $sevenZip = $cmd.Source }
+        }
+        if (-not $sevenZip) { throw "未找到 7z.exe，无法打包" }
+        Write-Host "使用 7z: $sevenZip"
+
         $folder = "PotatoVN-$env:VERSION-$env:PLATFORM-portable"
         Move-Item -Path publish/portable -Destination $folder
-        Compress-Archive -Path $folder -DestinationPath "publish/$folder.zip" -CompressionLevel Fastest
-        echo "ARTIFACT=$folder.zip" >> $env:GITHUB_ENV
-        Get-Item "publish/$folder.zip" | Select-Object Name, Length | Format-List
+        $archive = "publish/$folder.7z"
+        & $sevenZip a -t7z -mx=5 -bso0 -bsp0 $archive $folder
+        if ($LASTEXITCODE -ne 0) { throw "7z 打包失败，退出码 $LASTEXITCODE" }
+        if (-not (Test-Path $archive)) { throw "7z 打包后未找到 $archive" }
+        echo "ARTIFACT=$folder.7z" >> $env:GITHUB_ENV
+        Get-Item $archive | Select-Object Name, Length | Format-List
 
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
