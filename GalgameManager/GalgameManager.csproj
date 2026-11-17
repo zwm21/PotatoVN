@@ -40,6 +40,15 @@
   </PropertyGroup>
 
   <!--
+    自包含便携分发：把 Windows App SDK 运行时一起打包进输出目录，目标机无需安装 Windows App Runtime。
+    仅在显式指定 PotatoVnPortable=true 时开启——该属性不能通过命令行全局传入，
+    否则会传播到引用的类库项目并触发 "WindowsAppSDKSelfContained should not be applied to a class library"。
+  -->
+  <PropertyGroup Condition="'$(PotatoVnPortable)' == 'true'">
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+  </PropertyGroup>
+
+  <!--
     - MSIX 模式下 RuntimeHelper.GetVersion() 读取 Package.appxmanifest 的 Identity Version
     - 便携/非 MSIX 模式下读取程序集版本
     为避免两边版本不一致，在构建时从 Package.appxmanifest 读取版本并写入程序集版本属性。
