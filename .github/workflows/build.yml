@@ -72,13 +72,15 @@ jobs:
         echo Updated app icon
 
     - name: Publish portable build
+      # PublishDir 必须是绝对路径：传相对路径时 MSBuild 按项目目录解析，
+      # 产物会落到 GalgameManager/publish/portable 而不是仓库根目录的 publish/portable
       run: >
         dotnet publish GalgameManager/GalgameManager.csproj
         -c Release
         -p:Platform=${{ env.PLATFORM }}
         -p:PublishProfile=win10-${{ env.PLATFORM }}
         -p:PotatoVnPortable=true
-        -p:PublishDir=publish/portable/
+        -p:PublishDir=${{ github.workspace }}/publish/portable/
 
     # 自包含打包的核心标志：WinAppSDK 运行时必须出现在输出目录里，
     # 否则打出来的包在没装 Windows App Runtime 的机器上起不来
@@ -101,7 +103,7 @@ jobs:
       run: |
         $folder = "PotatoVN-$env:VERSION-$env:PLATFORM-portable"
         Move-Item -Path publish/portable -Destination $folder
-        Compress-Archive -Path $folder -DestinationPath "publish/$folder.zip" -CompressionLevel Optimal
+        Compress-Archive -Path $folder -DestinationPath "publish/$folder.zip" -CompressionLevel Fastest
         echo "ARTIFACT=$folder.zip" >> $env:GITHUB_ENV
         Get-Item "publish/$folder.zip" | Select-Object Name, Length | Format-List
 
