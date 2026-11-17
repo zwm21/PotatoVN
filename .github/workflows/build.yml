@@ -1,34 +1,44 @@
 name: build
 
+# 每次推 dev / 提 PR 时只构建自包含便携包（绿色版），不再打 MSIX sideload 测试包
+# ——签名 MSIX 由 build-signed-package.yml 在 released / flight-released 分支上产出。
+# 便携包把 .NET 与 Windows App SDK 运行时一起打包，目标机无需安装任何运行时，解压即用。
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: 目标平台（对应 GalgameManager/Properties/PublishProfiles/win10-<platform>.pubxml）
+        required: true
+        default: x64
+        type: choice
+        options:
+          - x64
+          - x86
+          - arm64
   push:
     branches:
       - dev
     paths:
       - 'GalgameManager/**'
       - 'GalgameManager.Core/**'
-      - 'GalgameManager.Server/**'
-      - 'GalgameManager.Test/**'
+      - 'GalgameManager.WinApp.Base/**'
   pull_request:
     paths:
       - 'GalgameManager/**'
       - 'GalgameManager.Core/**'
-      - 'GalgameManager.Server/**'
-      - 'GalgameManager.Test/**'
+      - 'GalgameManager.WinApp.Base/**'
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: windows-latest
 
-    strategy:
-      matrix:
-        platform: ["x86", "x64", "ARM64"]
-    
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install .NET Core
+    - name: Install .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
@@ -36,42 +46,68 @@ jobs:
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v2
 
-    - name: Update version
+    # push / pull_request 事件没有 inputs，回退到 x64
+    - name: Resolve platform
       shell: pwsh
       run: |
-        $manifestPath = "GalgameManager/Package.appxmanifest"
-        [xml]$manifest = Get-Content $manifestPath
+        $platform = "${{ inputs.platform }}"
+        if ([string]::IsNullOrWhiteSpace($platform)) { $platform = "x64" }
+        echo "PLATFORM=$platform" >> $env:GITHUB_ENV
+        echo "目标平台: $platform"
+
+    # 版本号直接取 Package.appxmanifest，不做 CI 自增，保证产物名可预测
+    - name: Read version
+      shell: pwsh
+      run: |
+        [xml]$manifest = Get-Content GalgameManager/Package.appxmanifest
         $version = $manifest.Package.Identity.Version
-        $versionParts = $version.Split('.')
-        $versionParts[3] = [string]([int]$versionParts[3] + 1)
-        $versionParts[3] = $env:GITHUB_RUN_NUMBER
-        $newVersion = [string]::Join('.', $versionParts)
-        $manifest.Package.Identity.Version = $newVersion
-        $manifest.Save($manifestPath)
-        echo "Updated version to $newVersion"
+        if ([string]::IsNullOrWhiteSpace($version)) { throw "无法从 Package.appxmanifest 读取版本号" }
+        echo "VERSION=$version" >> $env:GITHUB_ENV
+        echo "版本: $version"
 
     - name: Update app icon
-      shell: pwsh
+      shell: cmd
       run: |
         xcopy "GalgameManager\Assets\Pictures\icon-dev\*" "GalgameManager\Assets\" /s /e /y
-        echo "Updated app icon"
+        echo Updated app icon
 
-    - name: Create the app package
-      run: msbuild GalgameManager\GalgameManager.csproj /restore "/p:Platform=${{ matrix.platform }};Configuration=Release;UapAppxPackageBuildMode=SideloadOnly;AppxPackageDir=..\publish\;GenerateAppxPackageOnBuild=true;AppxPackageSigningEnabled=true;PackageCertificateKeyFile=GalgameManager_TemporaryKey.pfx"
+    - name: Publish portable build
+      run: >
+        dotnet publish GalgameManager/GalgameManager.csproj
+        -c Release
+        -p:Platform=${{ env.PLATFORM }}
+        -p:PublishProfile=win10-${{ env.PLATFORM }}
+        -p:PotatoVnPortable=true
+        -p:PublishDir=publish/portable/
 
-    - name: Move package
+    # 自包含打包的核心标志：WinAppSDK 运行时必须出现在输出目录里，
+    # 否则打出来的包在没装 Windows App Runtime 的机器上起不来
+    - name: Verify bundled runtime
       shell: pwsh
       run: |
-        # 将 msix 和 cer 移动到 publish 根目录
-        $subFolder = Get-ChildItem -Path publish -Directory | Select-Object -First 1
-        $msixFile = Get-ChildItem -Path $subFolder.FullName -Filter "*.msix" -File | Select-Object -First 1
-        $cerFile = Get-ChildItem -Path $subFolder.FullName -Filter "*.cer" -File | Select-Object -First 1
-        if ($msixFile -and $cerFile) { Move-Item $msixFile.FullName, $cerFile.FullName -Destination publish -Force }
-    
-    - name: Upload build artifacts
+        $runtime = "publish/portable/Microsoft.WindowsAppRuntime.dll"
+        if (-not (Test-Path $runtime)) {
+            Write-Error "输出目录中未找到 Microsoft.WindowsAppRuntime.dll，自包含打包未生效"
+            exit 1
+        }
+        if (-not (Test-Path "publish/portable/GalgameManager.exe")) {
+            Write-Error "输出目录中未找到 GalgameManager.exe"
+            exit 1
+        }
+        Write-Host "Windows App SDK 运行时已内置，便携包校验通过"
+
+    - name: Zip
+      shell: pwsh
+      run: |
+        $folder = "PotatoVN-$env:VERSION-$env:PLATFORM-portable"
+        Move-Item -Path publish/portable -Destination $folder
+        Compress-Archive -Path $folder -DestinationPath "publish/$folder.zip" -CompressionLevel Optimal
+        echo "ARTIFACT=$folder.zip" >> $env:GITHUB_ENV
+        Get-Item "publish/$folder.zip" | Select-Object Name, Length | Format-List
+
+    - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
-        name: PotatoVN-${{ matrix.platform }}-sideload
-        path: |
-          publish/*.msix
-          publish/*.cer
+        name: PotatoVN-${{ env.PLATFORM }}-portable
+        path: publish/${{ env.ARTIFACT }}
+        if-no-files-found: error
