@@ -82,7 +82,7 @@
   <Target Name="GenerateBuildVersionInfo" DependsOnTargets="ReadMsixIdentityVersion" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <_BuildVersionInfoPath>$(IntermediateOutputPath)BuildVersionInfo.txt</_BuildVersionInfoPath>
-      <_BuildVersionInfoArgs>-NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)BuildScripts\Get-BuildVersionInfo.ps1" -BaseVersion "$(_MsixIdentityVersion)" -StartDir "$(MSBuildProjectDirectory)" -OutputPath "$(_BuildVersionInfoPath)"</_BuildVersionInfoArgs>
+      <_BuildVersionInfoArgs>-NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)BuildScripts\Get-BuildVersionInfo.ps1" -BaseVersion "$(_MsixIdentityVersion)" -StartDir "$(MSBuildProjectDirectory)" -ManifestPath "$(MSBuildProjectDirectory)\Package.appxmanifest" -OutputPath "$(_BuildVersionInfoPath)"</_BuildVersionInfoArgs>
     </PropertyGroup>
     <!-- 优先 pwsh，PATH 里没有时回退到 Windows 自带的 powershell.exe -->
     <Exec Command="pwsh $(_BuildVersionInfoArgs) || powershell.exe $(_BuildVersionInfoArgs)"

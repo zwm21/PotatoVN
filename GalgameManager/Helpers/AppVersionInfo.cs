@@ -9,7 +9,9 @@ namespace GalgameManager.Helpers;
 /// 采集与解析均不使用时间戳、随机量，因此同一份源码在任何机器上得到的版本一致。<br/>
 /// 资源行格式：<c>base|commits|commit|[delta]</c>
 /// <list type="bullet">
-///   <item>base：Package.appxmanifest 的 Identity Version，如 1.10.2.1</item>
+///   <item>base：动态版本号，Package.appxmanifest 版本的前三段不变、第 4 段叠加构建号
+///     （自 manifest 改动以来的提交数），例如 manifest 1.10.3.0 的第 3 次提交为 1.10.3.3；
+///     分发目录名 PotatoVN-1.10.3.&lt;n&gt;-x64-portable 即取此值</item>
 ///   <item>commits：git 提交总数，无 git 时为 0</item>
 ///   <item>commit：7 位提交 hash，无 git 时为空</item>
 ///   <item>delta：工作区未提交改动（含未跟踪，排除 ignore 与 Build/）的 8 位 SHA256，干净时为空</item>
@@ -88,8 +90,8 @@ public sealed class AppVersionInfo
     }
 
     /// <summary>
-    /// 日志行：干净 <c>1.10.2.1+r1234.g3f91c2</c>；脏 <c>1.10.2.1+r1234.g3f91c2+4a1b2c3d</c>；
-    /// 无 git <c>1.10.2.1+src.&lt;指纹&gt;</c>；资源缺失/损坏 <c>1.10.2.1+src.unknown</c>
+    /// 日志行：干净 <c>1.10.3.1+r1869.g3f91c2</c>；脏 <c>1.10.3.1+r1869.g3f91c2+4a1b2c3d</c>；
+    /// 无 git <c>1.10.3.1+src.&lt;指纹&gt;</c>；资源缺失/损坏 <c>1.10.3.1+src.unknown</c>
     /// </summary>
     public string ToLogLine()
     {
@@ -99,28 +101,17 @@ public sealed class AppVersionInfo
         return $"{BaseVersion}+r{CommitCount}.g{CommitHash}{delta}";
     }
 
-    /// <summary>UI 显示的版本串：<c>v1.10.1234</c>；无 git 时末位取指纹哈希值，资源缺失时取固定值 0</summary>
-    public string ToDisplayVersion()
-    {
-        int number = _unknown ? 0 : HasGit ? CommitCount : FingerprintNumber;
-        if (!Version.TryParse(BaseVersion, out Version? version) || version is null) return $"v{BaseVersion}";
-        return $"v{version.Major}.{version.Minor}.{number}";
-    }
+    /// <summary>
+    /// UI 显示的版本串，即动态版本号本身（<c>v1.10.3.1</c>）。<br/>
+    /// 第 4 段是构建号，随提交递增，与分发目录名 PotatoVN-1.10.3.&lt;n&gt;-x64-portable 一致。
+    /// </summary>
+    public string ToDisplayVersion() => $"v{BaseVersion}";
 
     /// <summary>无 git 时的源码指纹：base 版本的 SHA256 前 8 位十六进制（确定性，与构建时间无关）</summary>
     public static string ComputeSourceFingerprint(string baseVersion)
     {
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes($"src:{baseVersion}"));
         return Convert.ToHexString(hash)[..Sha256PrefixLength].ToLowerInvariant();
-    }
-
-    private int FingerprintNumber
-    {
-        get
-        {
-            string fingerprint = ComputeSourceFingerprint(BaseVersion);
-            return int.Parse(fingerprint[..4], NumberStyles.HexNumber);
-        }
     }
 
     private static bool IsHex(string value)

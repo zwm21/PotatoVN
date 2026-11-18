@@ -51,7 +51,29 @@ public class BuildVersionScriptTest
         Assert.That(info.CommitHash, Is.EqualTo(RunGit(repo, "rev-parse --short=7 HEAD").Trim()));
         Assert.That(info.Delta, Is.Null.Or.Empty);
         Assert.That(info.ToLogLine(), Is.EqualTo($"{BaseVersion}+r2.g{info.CommitHash}"));
-        Assert.That(info.ToDisplayVersion(), Is.EqualTo("v1.2.2"));
+        Assert.That(info.ToDisplayVersion(), Is.EqualTo($"v{BaseVersion}"));
+    }
+
+    [Test]
+    public async Task Collect_BuildNumberIncrementsPerCommit()
+    {
+        string repo = CreateRepo();
+        string manifest = Path.Combine(repo, "Package.appxmanifest");
+
+        // 改动基础版本的那次提交：构建号 0，动态版本即 manifest 版本本身
+        WriteAndCommit(repo, "Package.appxmanifest", "<Package/>");
+        AppVersionInfo atBump = AppVersionInfo.TryParse(await CollectAsync(repo, manifest))!;
+        Assert.That(atBump.BaseVersion, Is.EqualTo(BaseVersion));
+
+        // 之后每提交一次第 4 段 +1（1.2.3.4 -> 1.2.3.5 -> 1.2.3.6）
+        WriteAndCommit(repo, "b.txt", "b");
+        AppVersionInfo first = AppVersionInfo.TryParse(await CollectAsync(repo, manifest))!;
+        Assert.That(first.BaseVersion, Is.EqualTo("1.2.3.5"));
+        Assert.That(first.ToDisplayVersion(), Is.EqualTo("v1.2.3.5"));
+
+        WriteAndCommit(repo, "c.txt", "c");
+        AppVersionInfo second = AppVersionInfo.TryParse(await CollectAsync(repo, manifest))!;
+        Assert.That(second.BaseVersion, Is.EqualTo("1.2.3.6"));
     }
 
     [Test]
@@ -108,14 +130,18 @@ public class BuildVersionScriptTest
     }
 
     /// <summary>运行采集脚本并返回写出的资源行原文。</summary>
-    private string Collect(string startDir)
+    private string Collect(string startDir) => CollectAsync(startDir).Result;
+
+    /// <summary>运行采集脚本并返回写出的资源行原文；<paramref name="manifestPath"/> 用于计算构建号。</summary>
+    private async Task<string> CollectAsync(string startDir, string? manifestPath = null)
     {
         string outputPath = Path.Combine(_workRoot, "BuildVersionInfo.txt");
         if (File.Exists(outputPath)) File.Delete(outputPath);
 
         ProcessStartInfo info = new(_powerShell,
             $"-NoProfile -ExecutionPolicy Bypass -File \"{_scriptPath}\" -BaseVersion {BaseVersion} " +
-            $"-StartDir \"{startDir}\" -OutputPath \"{outputPath}\"")
+            $"-StartDir \"{startDir}\" -OutputPath \"{outputPath}\"" +
+            (manifestPath is null ? string.Empty : $" -ManifestPath \"{manifestPath}\""))
         {
             CreateNoWindow = true,
             UseShellExecute = false,

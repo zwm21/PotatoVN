@@ -9,7 +9,7 @@ namespace GalgameManager.Test.Helpers;
 [TestFixture]
 public class AppVersionInfoTest
 {
-    private const string BaseVersion = "1.10.2.1";
+    private const string BaseVersion = "1.10.3.7";
     private const string CommitHash = "3f91c2";
 
     [Test]
@@ -24,7 +24,7 @@ public class AppVersionInfoTest
         Assert.That(info.Delta, Is.Null.Or.Empty);
         Assert.That(info.HasGit, Is.True);
         Assert.That(info.ToLogLine(), Is.EqualTo($"{BaseVersion}+r1234.g{CommitHash}"));
-        Assert.That(info.ToDisplayVersion(), Is.EqualTo("v1.10.1234"));
+        Assert.That(info.ToDisplayVersion(), Is.EqualTo($"v{BaseVersion}"));
     }
 
     [Test]
@@ -34,7 +34,7 @@ public class AppVersionInfoTest
 
         Assert.That(info!.Delta, Is.EqualTo("4a1b2c3d"));
         Assert.That(info.ToLogLine(), Is.EqualTo($"{BaseVersion}+r1234.g{CommitHash}+4a1b2c3d"));
-        Assert.That(info.ToDisplayVersion(), Is.EqualTo("v1.10.1234"));
+        Assert.That(info.ToDisplayVersion(), Is.EqualTo($"v{BaseVersion}"));
     }
 
     [Test]
@@ -45,7 +45,7 @@ public class AppVersionInfoTest
 
         Assert.That(stateB!.ToLogLine(), Is.Not.EqualTo(stateA!.ToLogLine()));
         Assert.That(stateB.ToLogLine(), Is.EqualTo($"{BaseVersion}+r1234.g{CommitHash}+9f8e7d6c"));
-        // 脏状态只影响日志行，不影响 UI 显示的提交数
+        // 脏状态只影响日志行，不影响 UI 显示的版本号
         Assert.That(stateB.ToDisplayVersion(), Is.EqualTo(stateA.ToDisplayVersion()));
     }
 
@@ -64,8 +64,8 @@ public class AppVersionInfoTest
         Assert.That(AppVersionInfo.TryParse($"{BaseVersion}|0||")!.ToLogLine(), Is.EqualTo(info.ToLogLine()));
         Assert.That(AppVersionInfo.TryParse("1.11.0.0|0||")!.ToLogLine(), Is.Not.EqualTo(info.ToLogLine()));
 
-        // UI 末位取指纹哈希值
-        Assert.That(info.ToDisplayVersion(), Does.Match("^v1\\.10\\.(\\d{1,5})$"));
+        // 无 git 时退化为 manifest 版本本身（由构建期写入资源）
+        Assert.That(info.ToDisplayVersion(), Is.EqualTo($"v{BaseVersion}"));
     }
 
     [TestCase(null)]
@@ -93,12 +93,12 @@ public class AppVersionInfoTest
         AppVersionInfo missing = AppVersion.LoadFrom(null, BaseVersion);
 
         Assert.That(missing.ToLogLine(), Is.EqualTo($"{BaseVersion}+src.unknown"));
-        Assert.That(missing.ToDisplayVersion(), Is.EqualTo("v1.10.0"));
+        Assert.That(missing.ToDisplayVersion(), Is.EqualTo($"v{BaseVersion}"));
 
         AppVersionInfo corrupt = AppVersion.LoadFrom("not-a-version-line", BaseVersion);
 
         Assert.That(corrupt.ToLogLine(), Is.EqualTo($"{BaseVersion}+src.unknown"));
-        Assert.That(corrupt.ToDisplayVersion(), Is.EqualTo("v1.10.0"));
+        Assert.That(corrupt.ToDisplayVersion(), Is.EqualTo($"v{BaseVersion}"));
     }
 
     [Test]
@@ -115,9 +115,14 @@ public class AppVersionInfoTest
     {
         Assert.DoesNotThrow(() => { _ = AppVersion.Current; });
 
-        // base 版本始终来自程序集/manifest 版本，资源缺失时也不会丢失
-        Assert.That(AppVersion.Current.BaseVersion, Is.EqualTo(RuntimeHelper.GetVersion()));
-        Assert.That(AppVersion.DisplayVersion, Is.Not.Empty);
+        // 前三段必须与 manifest 版本一致；第 4 段是构建号，随提交递增，允许不同
+        Version manifest = Version.Parse(RuntimeHelper.GetVersion());
+        Version current = Version.Parse(AppVersion.Current.BaseVersion);
+        Assert.That(current.Major, Is.EqualTo(manifest.Major));
+        Assert.That(current.Minor, Is.EqualTo(manifest.Minor));
+        Assert.That(current.Build, Is.EqualTo(manifest.Build));
+        Assert.That(current.Revision, Is.GreaterThanOrEqualTo(0));
+        Assert.That(AppVersion.DisplayVersion, Is.EqualTo($"v{AppVersion.Current.BaseVersion}"));
         Assert.That(AppVersion.LogLine, Is.Not.Empty);
 
         // 构建期写入了资源（说明构建机有 git）时，运行期必须解析出 git 信息而不是回退
