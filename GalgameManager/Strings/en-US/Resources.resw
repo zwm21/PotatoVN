@@ -4370,4 +4370,76 @@ Open the log folder now?</value>
   <data name="DownloadScopeDialog_Note.Text" xml:space="preserve">
     <value>Note: Downloading a large amount of staff or character details simultaneously may cause API congestion, which will lead to longer download times</value>
   </data>
+  <data name="SettingsPage_Other_FullBackup.Title" xml:space="preserve">
+    <value>Full Backup</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup.Description" xml:space="preserve">
+    <value>Pack the entire UserData and Settings folders (databases, images, plugins, logs and all app settings) into a single backup file</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_Button.Content" xml:space="preserve">
+    <value>Choose backup location</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_Fail" xml:space="preserve">
+    <value>Full backup failed: {0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_Success" xml:space="preserve">
+    <value>Full backup saved to: {0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_Restarting" xml:space="preserve">
+    <value>The app will restart to create the full backup. Please wait.</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_FileExist" xml:space="preserve">
+    <value>A backup file with the same name already exists: {0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_NoData" xml:space="preserve">
+    <value>There is no data to back up in UserData or Settings</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_PathInvalid" xml:space="preserve">
+    <value>Backup target folder does not exist: {0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore.Title" xml:space="preserve">
+    <value>Restore Full Backup</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore.Description" xml:space="preserve">
+    <value>Replace the current UserData and Settings folders with a full backup. The current data is backed up automatically first and can be rolled back on failure.</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_Button.Content" xml:space="preserve">
+    <value>Choose backup file</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_Fail" xml:space="preserve">
+    <value>Restoring the full backup failed: {0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_Success" xml:space="preserve">
+    <value>Data restored from the full backup: {0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_Restarting" xml:space="preserve">
+    <value>The app will restart in 10 seconds to restore the full backup. The current data will be backed up first.</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_WrongFile" xml:space="preserve">
+    <value>Please select a PotatoVN full backup file such as "xxx.pvnBackup.zip"</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_NotBackup" xml:space="preserve">
+    <value>This file is not a full backup (no UserData/Settings data): {0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_Missing" xml:space="preserve">
+    <value>Backup file does not exist: {0}</value>
+  </data>
+  <data name="FullBackup_Progress_BackingUp" xml:space="preserve">
+    <value>Backing up the current UserData and Settings ...</value>
+  </data>
+  <data name="FullBackup_Progress_Replacing" xml:space="preserve">
+    <value>Replacing UserData and Settings ...</value>
+  </data>
+  <data name="FullBackup_Progress_RollingBack" xml:space="preserve">
+    <value>Restore failed, rolling back to the pre-import data ...</value>
+  </data>
+  <data name="FullBackup_Fail" xml:space="preserve">
+    <value>Full backup operation failed: {0}</value>
+  </data>
+  <data name="FullBackup_WindowTitle" xml:space="preserve">
+    <value>Processing full backup, please wait</value>
+  </data>
+  <data name="FullBackup_Progress_Collecting" xml:space="preserve">
+    <value>Scanning {0} ...</value>
+  </data>
 </root>

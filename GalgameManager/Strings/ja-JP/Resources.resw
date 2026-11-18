@@ -4299,4 +4299,76 @@
   <data name="DownloadScopeDialog_Note.Text" xml:space="preserve">
     <value>注意：大量のスタッフ詳細やキャラクター詳細を同時にダウンロードすると、APIが詰まり、ダウンロード完了に時間がかかる場合があります</value>
   </data>
+  <data name="SettingsPage_Other_FullBackup.Title" xml:space="preserve">
+    <value>完全バックアップ</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup.Description" xml:space="preserve">
+    <value>UserData と Settings フォルダー全体（データベース、画像、プラグイン、ログ、すべてのアプリ設定）を1つのバックアップファイルにまとめます</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_Button.Content" xml:space="preserve">
+    <value>保存先を選択</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_Fail" xml:space="preserve">
+    <value>完全バックアップに失敗しました：{0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_Success" xml:space="preserve">
+    <value>完全バックアップを保存しました：{0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_Restarting" xml:space="preserve">
+    <value>完全バックアップ作成のためアプリを再起動します。しばらくお待ちください。</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_FileExist" xml:space="preserve">
+    <value>同名のバックアップファイルが既に存在します：{0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_NoData" xml:space="preserve">
+    <value>UserData と Settings にバックアップできるデータがありません</value>
+  </data>
+  <data name="SettingsPage_Other_FullBackup_PathInvalid" xml:space="preserve">
+    <value>バックアップ先フォルダーが存在しません：{0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore.Title" xml:space="preserve">
+    <value>完全バックアップを復元</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore.Description" xml:space="preserve">
+    <value>完全バックアップで現在の UserData と Settings フォルダーを置き換えます。復元前に現在のデータを自動的にバックアップし、失敗時はロールバックできます。</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_Button.Content" xml:space="preserve">
+    <value>バックアップファイルを選択</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_Fail" xml:space="preserve">
+    <value>完全バックアップの復元に失敗しました：{0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_Success" xml:space="preserve">
+    <value>完全バックアップからデータを復元しました：{0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_Restarting" xml:space="preserve">
+    <value>完全バックアップを復元するため10秒後にアプリを再起動します。現在のデータは先にバックアップされます。</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_WrongFile" xml:space="preserve">
+    <value>「xxx.pvnBackup.zip」のようなPotatoVNの完全バックアップファイルを選択してください</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_NotBackup" xml:space="preserve">
+    <value>このファイルは完全バックアップではありません（UserData/Settings のデータがありません）：{0}</value>
+  </data>
+  <data name="SettingsPage_Other_FullRestore_Missing" xml:space="preserve">
+    <value>バックアップファイルが存在しません：{0}</value>
+  </data>
+  <data name="FullBackup_Progress_Collecting" xml:space="preserve">
+    <value>{0} をスキャンしています ...</value>
+  </data>
+  <data name="FullBackup_Progress_BackingUp" xml:space="preserve">
+    <value>現在の UserData と Settings をバックアップしています ...</value>
+  </data>
+  <data name="FullBackup_Progress_Replacing" xml:space="preserve">
+    <value>UserData と Settings を置き換えています ...</value>
+  </data>
+  <data name="FullBackup_Progress_RollingBack" xml:space="preserve">
+    <value>復元に失敗したため、復元前のデータにロールバックしています ...</value>
+  </data>
+  <data name="FullBackup_Fail" xml:space="preserve">
+    <value>完全バックアップの処理に失敗しました：{0}</value>
+  </data>
+  <data name="FullBackup_WindowTitle" xml:space="preserve">
+    <value>完全バックアップを処理しています。しばらくお待ちください</value>
+  </data>
 </root>
