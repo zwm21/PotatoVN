@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 
+using GalgameManager.Contracts.Services;
 using GalgameManager.ViewModels;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -20,7 +21,8 @@ public sealed partial class AnnualReportSubPage2 : Page
 
     public AnnualReportSubPage2()
     {
-        ViewModel = new ReportSubPage2ViewModel();
+        ViewModel = new ReportSubPage2ViewModel(App.GetService<ILocalSettingsService>(),
+            App.GetService<IGalgameCollectionService>());
         this.InitializeComponent();
         ViewModel.WordCloudCanvas = CloudCanvas;
     }

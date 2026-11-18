@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    xmlns:control="using:GalgameManager.Views.Control"
     xmlns:local="using:GalgameManager.Views"
     xmlns:core="using:Microsoft.Xaml.Interactions.Core"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
@@ -17,12 +18,24 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
-        <TextBlock Grid.Row="0"
-                   Text="最常游玩的TAG"
-                   HorizontalAlignment="Center"
-                   FontSize="24"
-                   FontWeight="Bold"
-                   Margin="0,0,0,-200"/>
+        <StackPanel Grid.Row="0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Spacing="12"
+                    Margin="0,0,0,-200">
+            <TextBlock Text="最常游玩的TAG"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"/>
+            <TextBlock x:Uid="AnnualReportPage_TagScope"
+                       VerticalAlignment="Center"
+                       Opacity="0.7"/>
+            <!-- 标签统计口径，用户可自行选择 -->
+            <control:ComboBoxWithI18N VerticalAlignment="Center"
+                                      MinWidth="150"
+                                      ItemsSource="{x:Bind ViewModel.TagScopes}"
+                                      SelectedItem="{x:Bind ViewModel.TagScope, Mode=TwoWay}"/>
+        </StackPanel>
         
         <Canvas Grid.Row="1"
                 x:Name="CloudCanvas" 

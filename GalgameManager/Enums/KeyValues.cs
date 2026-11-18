@@ -191,7 +191,7 @@ public static class KeyValues
     public const string GameSyncUpgraded = "gameSyncUpgraded"; //游戏同步升级
     public const string ToUpgradePluginFormatUpgraded = "toUpgradePluginFormatUpgraded"; //待升级插件列表格式升级
     public const string MixedPhraserOrderVersion = "mixedPhraserOrderVersion"; //int，当前配置中的混合搜刮器顺序的版本
-    public const string HideYearReport2026 = "hideYearReport2026"; //bool, 是否隐藏年报入口（隐藏2025年末打开的）
+    public const string AnnualReportTagScope = "annualReportTagScope"; //AnnualReportTagScope, 年度报告词云分页的标签统计口径
 
 
     //废弃Key，只读，仅用于升级
