@@ -59,16 +59,41 @@
     - 便携/非 MSIX 模式下读取程序集版本
     为避免两边版本不一致，在构建时从 Package.appxmanifest 读取版本并写入程序集版本属性。
   -->
-  <Target Name="DeriveAssemblyVersionFromMsixManifest" BeforeTargets="GetAssemblyAttributes" Condition="Exists('$(MSBuildProjectDirectory)\\Package.appxmanifest')">
-    <XmlPeek XmlInputPath="$(MSBuildProjectDirectory)\\Package.appxmanifest" Query="/*[local-name()='Package']/*[local-name()='Identity']/@Version">
+  <Target Name="ReadMsixIdentityVersion" Condition="Exists('$(MSBuildProjectDirectory)\Package.appxmanifest')">
+    <XmlPeek XmlInputPath="$(MSBuildProjectDirectory)\Package.appxmanifest" Query="/*[local-name()='Package']/*[local-name()='Identity']/@Version">
       <Output TaskParameter="Result" PropertyName="_MsixIdentityVersion" />
     </XmlPeek>
+  </Target>
 
+  <Target Name="DeriveAssemblyVersionFromMsixManifest" DependsOnTargets="ReadMsixIdentityVersion" BeforeTargets="GetAssemblyAttributes">
     <PropertyGroup Condition="'$(_MsixIdentityVersion)' != ''">
       <AssemblyVersion>$(_MsixIdentityVersion)</AssemblyVersion>
       <FileVersion>$(_MsixIdentityVersion)</FileVersion>
       <InformationalVersion>$(_MsixIdentityVersion)</InformationalVersion>
     </PropertyGroup>
+  </Target>
+
+  <!--
+    动态版本：构建期把 git 采集结果写入 obj 下的资源文件，并以嵌入资源编入程序集；
+    运行期只读该资源（Helpers/AppVersion.cs），因此运行时不需要 git、也不使用时间戳，
+    同一份源码在任何机器上得到的版本一致。采集脚本见 BuildScripts/Get-BuildVersionInfo.ps1。
+    采集失败（无 git / 无 PowerShell / 非 git 目录）时不中断构建，运行期回退到 +src.unknown。
+  -->
+  <Target Name="GenerateBuildVersionInfo" DependsOnTargets="ReadMsixIdentityVersion" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <_BuildVersionInfoPath>$(IntermediateOutputPath)BuildVersionInfo.txt</_BuildVersionInfoPath>
+      <_BuildVersionInfoArgs>-NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)BuildScripts\Get-BuildVersionInfo.ps1" -BaseVersion "$(_MsixIdentityVersion)" -StartDir "$(MSBuildProjectDirectory)" -OutputPath "$(_BuildVersionInfoPath)"</_BuildVersionInfoArgs>
+    </PropertyGroup>
+    <!-- 优先 pwsh，PATH 里没有时回退到 Windows 自带的 powershell.exe -->
+    <Exec Command="pwsh $(_BuildVersionInfoArgs) || powershell.exe $(_BuildVersionInfoArgs)"
+          ContinueOnError="true" IgnoreExitCode="true" />
+    <Message Condition="!Exists('$(_BuildVersionInfoPath)')" Importance="high"
+             Text="未能生成动态版本资源 $(_BuildVersionInfoPath)，运行时将回退到 +src.unknown。" />
+    <ItemGroup Condition="Exists('$(_BuildVersionInfoPath)')">
+      <EmbeddedResource Include="$(_BuildVersionInfoPath)">
+        <LogicalName>GalgameManager.BuildVersionInfo.txt</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
   </Target>
 
   <ItemGroup>
