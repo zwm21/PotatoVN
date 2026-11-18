@@ -60,10 +60,14 @@ jobs:
         echo "PLATFORM=$platform" >> $env:GITHUB_ENV
         echo "目标平台: $platform"
 
+    # dev 构建换上 dev 版窗口图标。只复制 WindowIcon.ico：
+    # icon-dev 里其余 30 个文件是 MSIX 磁贴/启动屏视觉资产（Potato.scale-*.png、Potato.targetsize-*.png 等），
+    # 便携构建用不到；而 MSIX 命名规则下 Potato.scale-100.png 与 Potato.png 是同一资源的不同 scale
+    # 限定版本，全部复制进 Assets 会让 MakePri 报 PRI175 / PRI277 Duplicate Entry。
     - name: Update app icon
       shell: cmd
       run: |
-        xcopy "GalgameManager\Assets\Pictures\icon-dev\*" "GalgameManager\Assets\" /s /e /y
+        xcopy "GalgameManager\Assets\Pictures\icon-dev\WindowIcon.ico" "GalgameManager\Assets\" /y
         echo Updated app icon
 
     - name: Publish portable build
