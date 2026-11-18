@@ -9,8 +9,6 @@ public interface ISidebarService
 
     IReadOnlyList<SidebarButton> GetButtons();
 
-    Task InitAsync();
-
     Task SaveVisibilityAsync(IReadOnlyDictionary<string, bool> visibility);
 
     Task SetVisibilityAsync(string uniqueId, bool isVisible);

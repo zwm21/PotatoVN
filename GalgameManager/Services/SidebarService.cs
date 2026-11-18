@@ -126,22 +126,6 @@ public class SidebarService : ISidebarService
         }
     }
 
-    public async Task InitAsync()
-    {
-        if (!await _localSettingsService.ReadSettingAsync<bool>(KeyValues.HideYearReport2026))
-        {
-            try
-            {
-                await SetVisibilityAsync(SidebarButtonIds.AnnualReport, false);
-                await _localSettingsService.SaveSettingAsync(KeyValues.HideYearReport2026, true);
-            }
-            catch (Exception)
-            {
-                //ignore
-            }
-        }
-    }
-
     public async Task SaveVisibilityAsync(IReadOnlyDictionary<string, bool> visibility)
     {
         Dictionary<string, bool> map;
