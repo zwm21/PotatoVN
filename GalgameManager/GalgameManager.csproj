@@ -98,17 +98,6 @@
 
   <ItemGroup>
     <Content Remove="Assets\Pictures\icon-dev\*" />
-    <Content Remove="Assets\Pictures\icon-sideload\*" />
-    <Content Remove="Assets\Potato.altform-lightunplated_targetsize-16.png" />
-    <Content Remove="Assets\Potato.altform-lightunplated_targetsize-24.png" />
-    <Content Remove="Assets\Potato.altform-lightunplated_targetsize-256.png" />
-    <Content Remove="Assets\Potato.altform-lightunplated_targetsize-32.png" />
-    <Content Remove="Assets\Potato.altform-lightunplated_targetsize-48.png" />
-    <Content Remove="Assets\Potato.altform-unplated_targetsize-16.png" />
-    <Content Remove="Assets\Potato.altform-unplated_targetsize-24.png" />
-    <Content Remove="Assets\Potato.altform-unplated_targetsize-256.png" />
-    <Content Remove="Assets\Potato.altform-unplated_targetsize-32.png" />
-    <Content Remove="Assets\Potato.altform-unplated_targetsize-48.png" />
     <Content Update="Assets\Data\vn_mapper.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -127,7 +116,6 @@
     <Content Update="Assets\Libs\x64\7za.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Remove="Assets\Potato-dev.png" />
     <Content Update="Assets\Pictures\bangumi.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -142,19 +130,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Assets\Potato.scale-100.png" />
-    <None Remove="Assets\Potato.scale-125.png" />
-    <None Remove="Assets\Potato.scale-150.png" />
-    <None Remove="Assets\Potato.scale-200.png" />
-    <None Remove="Assets\Potato.scale-400.png" />
-    <None Remove="Assets\Potato.targetsize-16.png" />
-    <None Remove="Assets\Potato.targetsize-24.png" />
-    <None Remove="Assets\Potato.targetsize-256.png" />
-    <None Remove="Assets\Potato.targetsize-256_altform-lightunplated.png" />
-    <None Remove="Assets\Potato.targetsize-256_altform-unplated.png" />
-    <None Remove="Assets\Potato.targetsize-32.png" />
-    <None Remove="Assets\Potato.targetsize-48.png" />
-    <None Remove="Assets\Potato.targetsize-48_altform-unplated.png" />
     <None Remove="Views\AnnualReportSubPage1.xaml" />
     <None Remove="Views\AnnualReportSubPage2.xaml" />
     <None Remove="Views\AnnualReportSubPage3.xaml" />

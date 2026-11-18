@@ -1,7 +1,6 @@
 name: build
 
 # 每次推 dev / 提 PR 时只构建自包含便携包（绿色版），不再打 MSIX sideload 测试包
-# 只构建自包含便携包
 # 便携包把 .NET 与 Windows App SDK 运行时一起打包，目标机无需安装任何运行时，解压即用。
 on:
   workflow_dispatch:
