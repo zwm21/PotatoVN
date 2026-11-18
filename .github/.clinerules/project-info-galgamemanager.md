@@ -211,3 +211,12 @@ This document provides a foundational knowledge base. For specific implementatio
 - Multiple LocalFolder and Steam sources may reference one game, with one path per source. Removing the last installation keeps a virtual logical game.
 - `GalgameSourceCollectionService` owns all installation/source-entry relationship and file-move operations; `GalgameCollectionService` owns logical-game identity, metadata, and whole-game lifecycle.
 - Installation data is local/export-only and is not part of PVN server sync. `IPotatoVnApi` directly exposes installation snapshots and explicit installation launch.
+
+## 8. Dynamic Version (build-time git metadata)
+
+- Model: `GalgameManager/Helpers/AppVersionInfo.cs`. Runtime entry point: `GalgameManager/Helpers/AppVersion.cs` (`Current`, `LogLine`, `DisplayVersion`).
+- The MSBuild target `GenerateBuildVersionInfo` in `GalgameManager.csproj` runs `BuildScripts/Get-BuildVersionInfo.ps1` before `PrepareForBuild`, writes `$(IntermediateOutputPath)BuildVersionInfo.txt`, and embeds it as `GalgameManager.BuildVersionInfo.txt`. It re-runs on every build but only rewrites the file when its content changes, so incremental builds stay incremental.
+- Resource line format: `base|commits|commit|[delta]` — `base` is the `Package.appxmanifest` Identity Version (shared with `ReadMsixIdentityVersion`), `commits` is `git rev-list --count HEAD`, `commit` is a 7-char hash, and `delta` is the first 8 hex chars of SHA256 over `git status --porcelain=v1 --untracked-files=all` (ignored files and `Build/` excluded). No timestamps or randomness, so the same source tree always yields the same version.
+- Runtime never calls git. A missing/corrupt resource falls back to `+src.unknown` with a fixed display number; a source tree without git yields `+src.<fingerprint of base>`. Neither throws.
+- `InfoService` writes the dynamic version as the first log line, and `SettingsViewModel.GetVersionDescription()` shows `v<major>.<minor>.<commitCount>`. `RuntimeHelper.GetVersion()` still returns the plain 4-part version consumed by `UpdateService` comparisons — never put the dynamic suffix there.
+- Tests: `GalgameManager.Test/Helpers/AppVersionInfoTest.cs` (resource parsing: clean / dirty / no-git / corrupt) and `GalgameManager.Test/Helpers/BuildVersionScriptTest.cs` (`E2E`, drives the real script against temporary git repositories).
