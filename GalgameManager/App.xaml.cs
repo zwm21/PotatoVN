@@ -84,7 +84,6 @@ public partial class App : Application
             // 从前往后依次处理，直到找到能处理的处理器
             // Launch Activation Handlers
             services.AddTransient<IActivationHandler, JumpListActivationHandler>();     // JumpList
-            services.AddTransient<IActivationHandler, UpdateContentHandler>();          // 更新内容
             // Protocol Activation Handlers
             services.AddTransient<IActivationHandler, BgmOAuthActivationHandler>();     // BgmOAuth
             // Default Handler
@@ -158,8 +157,6 @@ public partial class App : Application
             services.AddTransient<GalgameSourcePage>();
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<SettingsPage>();
-            services.AddTransient<UpdateContentViewModel>();
-            services.AddTransient<UpdateContentPage>();
             services.AddTransient<GalgameViewModel>();
             services.AddTransient<HomeDetailPage>();
             services.AddTransient<HomeViewModel>();

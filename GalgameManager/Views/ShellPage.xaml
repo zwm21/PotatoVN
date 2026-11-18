@@ -166,10 +166,6 @@
 
                 <!--  这里的导航项是隐藏的，只是为了让导航项的命令能够被触发  -->
                 <NavigationViewItem
-                    x:Uid="Shell_UpdateContent"
-                    helpers:NavigationHelper.NavigateTo="GalgameManager.ViewModels.UpdateContentViewModel"
-                    Visibility="Collapsed" />
-                <NavigationViewItem
                     x:Uid="Shell_GalgamePage"
                     helpers:NavigationHelper.NavigateTo="GalgameManager.ViewModels.GalgameViewModel"
                     Visibility="Collapsed" />

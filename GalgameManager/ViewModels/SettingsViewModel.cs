@@ -21,7 +21,6 @@ using Windows.ApplicationModel.Store.Preview;
 using Windows.Globalization;
 using Windows.Security.Credentials;
 using Windows.Security.Credentials.UI;
-using Windows.Services.Store;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
@@ -1430,20 +1429,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         var storeUrl = await _localSettingsService.ReadSettingAsync<string>(KeyValues.UpdateUrl) ??
                        "https://apps.microsoft.com/detail/9p9cbkd5hr3w";
         await Launcher.LaunchUriAsync(new Uri(storeUrl));
-    }
-
-    [RelayCommand]
-    private async Task Rate()
-    {
-        StoreContext context = StoreContext.GetDefault();
-        WinRT.Interop.InitializeWithWindow.Initialize(context, App.MainWindow!.GetWindowHandle());
-        await context.RequestRateAndReviewAppAsync();
-    }
-
-    [RelayCommand]
-    private void UpdateContent()
-    {
-        _navigationService.NavigateTo(typeof(UpdateContentViewModel).FullName!);
     }
 
     private static string GetVersionDescription()

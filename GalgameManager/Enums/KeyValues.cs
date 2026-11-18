@@ -14,7 +14,6 @@ public static class KeyValues
     public const string GameFolderMustContain = "gameFolderMustContain";
     public const string GameFolderShouldContain = "gameFolderShouldContain";
     public const string FaqLastUpdate = "faqLastUpdate";
-    public const string DisplayedUpdateVersion = "displayedUpdateVersion";
     public const string CustomPasswordSaverName = "PotatoVN";
     public const string CustomPasswordDisplayName = "CustomPassword";
     public const string LastUpdateCheckResult = "lastUpdateCheckResult"; // bool,上次检查更新的结果

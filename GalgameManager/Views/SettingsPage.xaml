@@ -885,8 +885,7 @@
                         <HyperlinkButton x:Uid="SettingsPage_PrivacyTermsLink"
                                          Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
                         <HyperlinkButton x:Uid="SettingsPage_RepositoryLink" />
-                        <HyperlinkButton x:Uid="SettingsPage_UpdateContent" Command="{x:Bind ViewModel.UpdateContentCommand}"/>
-                        <HyperlinkButton x:Uid="SettingsPage_RateLink" Command="{x:Bind ViewModel.RateCommand}" />
+                        <HyperlinkButton x:Uid="SettingsPage_UpdateContent" />
                     </StackPanel>
                 </StackPanel>
             </StackPanel>

@@ -441,9 +441,7 @@ This software will use regular expressions to match game folder names and take t
   <data name="SettingsPage_RepositoryLink.Content" xml:space="preserve">
     <value>Repository URL</value>
   </data>
-  <data name="SettingsPage_RateLink.Content" xml:space="preserve">
-    <value>Rate this app</value>
-  </data>
+
   <data name="App_UnhandledException_Exit" xml:space="preserve">
     <value>Exit</value>
   </data>
@@ -555,15 +553,9 @@ Disable: Data is only saved internally by the software and can be manually backe
   <data name="SettingsPage_Library_IgnoreFetchResult.Description" xml:space="preserve">
     <value>Add games to the library even if no matching information is found in the feeds</value>
   </data>
-  <data name="UpdateContentPage_Title.Text" xml:space="preserve">
-    <value>Recently Updated</value>
-  </data>
-  <data name="UpdateContentPage_CurrentVersion" xml:space="preserve">
-    <value>Current Version:</value>
-  </data>
-  <data name="UpdateContentPage_MainTitle.Text" xml:space="preserve">
-    <value>Welcome</value>
-  </data>
+
+
+
   <data name="Shell_Settings.Content" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -631,9 +623,7 @@ Since multiple data sources are involved, you need to configure relevant setting
   <data name="SettingsPage_UpdateContent.Content" xml:space="preserve">
     <value>Change log</value>
   </data>
-  <data name="UpdateContentPage_AppCenterSuccess" xml:space="preserve">
-    <value>The anonymous log upload feature has been successfully enabled. Thank you for your contribution!</value>
-  </data>
+
   <data name="EditableCategory_Add_AlreadyExist" xml:space="preserve">
     <value>This game already exists in this category</value>
   </data>
@@ -997,9 +987,7 @@ Since multiple data sources are involved, you need to configure relevant setting
   <data name="HomePage_Drop_InvalidItem" xml:space="preserve">
     <value>Only supports dragging exe executable files or folders.</value>
   </data>
-  <data name="Shell_UpdateContent.Content" xml:space="preserve">
-    <value>Change log</value>
-  </data>
+
   <data name="ActivationService_FontPopup_Msg" xml:space="preserve">
     <value>This app needs to install the font "Segoe Fluent Icons" to display icons. Do you want to install it now?</value>
   </data>
@@ -1222,9 +1210,7 @@ If play time can record correctly, just cancel this popup.
   <data name="GalgameFolder_GetGalInFolder_Saving" xml:space="preserve">
     <value>Scan finished, saving record</value>
   </data>
-  <data name="UpdateContentPage_Download_Success" xml:space="preserve">
-    <value>The latest change log has been downloaded successfully</value>
-  </data>
+
   <data name="SettingsPage_About_UpdateAvailable.Content" xml:space="preserve">
     <value>New version available!</value>
   </data>
@@ -2249,15 +2235,9 @@ If play time can record correctly, just cancel this popup.
   <data name="SettingsPage_Other_Import_WrongFile" xml:space="preserve">
     <value>Please select a PotatoVN export file like "xxx.pvnExport.zip".</value>
   </data>
-  <data name="UpdateContentPage_WebView2IsNeeded.Text" xml:space="preserve">
-    <value>This page requires WebView2 to display correctly.</value>
-  </data>
-  <data name="UpdateContentPage_DownloadWebview2.Content" xml:space="preserve">
-    <value>Click here to go to WebView2 download link.</value>
-  </data>
-  <data name="UpdateContentPage_SeeWebsite.Label" xml:space="preserve">
-    <value>View all update records.</value>
-  </data>
+
+
+
   <data name="LocalFolderSourceService_OnFolderCreatedError" xml:space="preserve">
     <value>Auto add games failed.</value>
   </data>
@@ -4441,5 +4421,8 @@ Open the log folder now?</value>
   </data>
   <data name="FullBackup_Progress_Collecting" xml:space="preserve">
     <value>Scanning {0} ...</value>
+  </data>
+  <data name="SettingsPage_UpdateContent.NavigateUri" xml:space="preserve">
+    <value>https://potatovn.net/upgrade-log/</value>
   </data>
 </root>

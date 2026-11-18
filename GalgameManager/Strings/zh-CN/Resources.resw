@@ -453,9 +453,7 @@
   <data name="SettingsPage_RepositoryLink.Content" xml:space="preserve">
     <value>仓库地址</value>
   </data>
-  <data name="SettingsPage_RateLink.Content" xml:space="preserve">
-    <value>评价本应用</value>
-  </data>
+
   <data name="App_UnhandledException_Exit" xml:space="preserve">
     <value>退出应用</value>
   </data>
@@ -604,15 +602,9 @@
   <data name="SettingsPage_Library_IgnoreFetchResult.Description" xml:space="preserve">
     <value>即使未在信息源中找到匹配信息，仍将游戏添加到库中</value>
   </data>
-  <data name="UpdateContentPage_Title.Text" xml:space="preserve">
-    <value>最近更新的内容</value>
-  </data>
-  <data name="UpdateContentPage_CurrentVersion" xml:space="preserve">
-    <value>当前版本：</value>
-  </data>
-  <data name="UpdateContentPage_MainTitle.Text" xml:space="preserve">
-    <value>欢迎</value>
-  </data>
+
+
+
   <data name="Shell_Settings.Content" xml:space="preserve">
     <value>设置</value>
   </data>
@@ -683,9 +675,7 @@
   <data name="SettingsPage_UpdateContent.Content" xml:space="preserve">
     <value>更新记录</value>
   </data>
-  <data name="UpdateContentPage_AppCenterSuccess" xml:space="preserve">
-    <value>已成功开启匿名日志上传功能，感谢您的贡献！</value>
-  </data>
+
   <data name="EditableCategory_Add_AlreadyExist" xml:space="preserve">
     <value>该游戏已经存在于该分类中</value>
   </data>
@@ -1067,9 +1057,7 @@
   <data name="HomePage_Drop_InvalidItem" xml:space="preserve">
     <value>仅支持拖拽exe可执行文件或文件夹</value>
   </data>
-  <data name="Shell_UpdateContent.Content" xml:space="preserve">
-    <value>更新记录</value>
-  </data>
+
   <data name="ActivationService_FontPopup_Msg" xml:space="preserve">
     <value>本应用需要安装字体"Segoe Fluent Icons"才能正常显示图标，是否立即安装？</value>
   </data>
@@ -1313,9 +1301,7 @@
   <data name="GalgameFolder_GetGalInFolder_Saving" xml:space="preserve">
     <value>扫描完成，保存记录中</value>
   </data>
-  <data name="UpdateContentPage_Download_Success" xml:space="preserve">
-    <value>已成功下载最新更新记录文档</value>
-  </data>
+
   <data name="SettingsPage_About_UpdateAvailable.Content" xml:space="preserve">
     <value>有新版本 ヾ(✿ﾟ▽ﾟ)ノ</value>
   </data>
@@ -2398,15 +2384,9 @@
   <data name="SettingsPage_Other_Import_WrongFile" xml:space="preserve">
     <value>请选择形如"xxx.pvnExport.zip"的PotatoVN导出文件</value>
   </data>
-  <data name="UpdateContentPage_WebView2IsNeeded.Text" xml:space="preserve">
-    <value>本页需要WebView2以正常显示</value>
-  </data>
-  <data name="UpdateContentPage_DownloadWebview2.Content" xml:space="preserve">
-    <value>点此跳转Webview2下载链接</value>
-  </data>
-  <data name="UpdateContentPage_SeeWebsite.Label" xml:space="preserve">
-    <value>查看所有更新记录</value>
-  </data>
+
+
+
   <data name="LocalFolderSourceService_OnFolderCreatedError" xml:space="preserve">
     <value>自动添加游戏失败</value>
   </data>
@@ -5236,5 +5216,8 @@
   </data>
   <data name="SettingsPage_Other_FullBackup_FileExist" xml:space="preserve">
     <value>目标文件夹中已存在同名备份文件：{0}</value>
+  </data>
+  <data name="SettingsPage_UpdateContent.NavigateUri" xml:space="preserve">
+    <value>https://potatovn.net/upgrade-log/</value>
   </data>
 </root>

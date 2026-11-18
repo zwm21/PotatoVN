@@ -109,12 +109,6 @@ public partial class PluginService
                 case PageEnum.HelpPage:
                     _navigationService.NavigateTo(typeof(HelpViewModel).FullName!);
                     break;
-                case PageEnum.UpdateContentPage:
-                    if (parameter is bool displayTitle)
-                        _navigationService.NavigateTo(typeof(UpdateContentViewModel).FullName!, displayTitle);
-                    else
-                        _navigationService.NavigateTo(typeof(UpdateContentViewModel).FullName!);
-                    break;
                 case PageEnum.AnnualReportPage:
                     _navigationService.NavigateTo(typeof(AnnualReportViewModel).FullName!);
                     break;

@@ -22,7 +22,6 @@ public class UpdateService : IUpdateService
     private const string SIDELOAD_STABLE_DOWNLOAD_URL = "https://download.potatovn.net/release";
     private const string SIDELOAD_BETA_DOWNLOAD_URL = "https://download.potatovn.net/flight-released";
 
-    private readonly bool _firstUpdate;
     private readonly ILocalSettingsService _localSettingsService;
     private readonly IInfoService _infoService;
 
@@ -40,8 +39,6 @@ public class UpdateService : IUpdateService
     {
         _localSettingsService = localSettingsService;
         _infoService = infoService;
-        var last = localSettingsService.ReadSettingAsync<string>(KeyValues.DisplayedUpdateVersion).Result ?? "";
-        _firstUpdate = last != RuntimeHelper.GetVersion();
     }
 
     private static async Task<StorageFolder> GetTempRootAsync()
@@ -846,8 +843,4 @@ Start-Sleep -Seconds 2
         var availableVersion = await GetAvailableUpdateVersionAsync();
         SettingBadgeEvent?.Invoke(availableVersion != null);
     }
-
-    public bool ShouldDisplayUpdateContent() => _firstUpdate;
-
-
 }

@@ -441,9 +441,7 @@
   <data name="SettingsPage_RepositoryLink.Content" xml:space="preserve">
     <value>リポジトリのアドレス</value>
   </data>
-  <data name="SettingsPage_RateLink.Content" xml:space="preserve">
-    <value>このアプリケーションを評価する</value>
-  </data>
+
   <data name="App_UnhandledException_Exit" xml:space="preserve">
     <value>アプリケーションを終了</value>
   </data>
@@ -555,15 +553,9 @@
   <data name="SettingsPage_Library_IgnoreFetchResult.Description" xml:space="preserve">
     <value>情報源で一致する情報が見つからなくても、ゲームをライブラリに追加します</value>
   </data>
-  <data name="UpdateContentPage_Title.Text" xml:space="preserve">
-    <value>最近の更新内容</value>
-  </data>
-  <data name="UpdateContentPage_CurrentVersion" xml:space="preserve">
-    <value>現在のバージョン：</value>
-  </data>
-  <data name="UpdateContentPage_MainTitle.Text" xml:space="preserve">
-    <value>ようこそ</value>
-  </data>
+
+
+
   <data name="Shell_Settings.Content" xml:space="preserve">
     <value>設定</value>
   </data>
@@ -631,9 +623,7 @@
   <data name="SettingsPage_UpdateContent.Content" xml:space="preserve">
     <value>更新履歴</value>
   </data>
-  <data name="UpdateContentPage_AppCenterSuccess" xml:space="preserve">
-    <value>匿名ログアップロード機能が正常に有効になりました。ご協力ありがとうございます！</value>
-  </data>
+
   <data name="EditableCategory_Add_AlreadyExist" xml:space="preserve">
     <value>このゲームはすでにこのカテゴリに存在します</value>
   </data>
@@ -997,9 +987,7 @@
   <data name="HomePage_Drop_InvalidItem" xml:space="preserve">
     <value>exe実行ファイルまたはフォルダーのドラッグ＆ドロップのみサポートしています</value>
   </data>
-  <data name="Shell_UpdateContent.Content" xml:space="preserve">
-    <value>更新履歴</value>
-  </data>
+
   <data name="ActivationService_FontPopup_Msg" xml:space="preserve">
     <value>このアプリケーションはアイコンを正しく表示するためにフォント「Segoe Fluent Icons」のインストールが必要です。今すぐインストールしますか？</value>
   </data>
@@ -1222,9 +1210,7 @@
   <data name="GalgameFolder_GetGalInFolder_Saving" xml:space="preserve">
     <value>スキャン完了、記録を保存中</value>
   </data>
-  <data name="UpdateContentPage_Download_Success" xml:space="preserve">
-    <value>最新の更新記録ドキュメントを正常にダウンロードしました</value>
-  </data>
+
   <data name="SettingsPage_About_UpdateAvailable.Content" xml:space="preserve">
     <value>新しいバージョンがあります ヾ(✿ﾟ▽ﾟ)ノ</value>
   </data>
@@ -2254,15 +2240,9 @@
   <data name="SettingsPage_Other_Import_WrongFile" xml:space="preserve">
     <value>"xxx.pvnExport.zip"のようなPotatoVNエクスポートファイルを選択してください</value>
   </data>
-  <data name="UpdateContentPage_WebView2IsNeeded.Text" xml:space="preserve">
-    <value>このページを正常に表示するにはWebView2が必要です</value>
-  </data>
-  <data name="UpdateContentPage_DownloadWebview2.Content" xml:space="preserve">
-    <value>こちらをクリックしてWebView2ダウンロードリンクへ</value>
-  </data>
-  <data name="UpdateContentPage_SeeWebsite.Label" xml:space="preserve">
-    <value>全ての更新履歴を表示</value>
-  </data>
+
+
+
   <data name="LocalFolderSourceService_OnFolderCreatedError" xml:space="preserve">
     <value>ゲームの自動追加に失敗しました</value>
   </data>
@@ -4370,5 +4350,8 @@
   </data>
   <data name="FullBackup_WindowTitle" xml:space="preserve">
     <value>完全バックアップを処理しています。しばらくお待ちください</value>
+  </data>
+  <data name="SettingsPage_UpdateContent.NavigateUri" xml:space="preserve">
+    <value>https://potatovn.net/upgrade-log/</value>
   </data>
 </root>
