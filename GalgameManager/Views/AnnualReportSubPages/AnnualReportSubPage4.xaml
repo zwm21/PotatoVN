@@ -12,7 +12,7 @@
 
     <Page.Resources>
         <converter:DoubleToStringConverter x:Key="DoubleToStringConverter" />
-        <converter:AnyToVisibilityConverter x:Key="AnyToVisibilityConverter" />
+        <converter:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Page.Resources>
 
     <Grid>
@@ -20,7 +20,9 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="20" ColumnSpacing="50">
+        <Grid Grid.Row="0" Margin="20" ColumnSpacing="50"
+              Visibility="{x:Bind ViewModel.AnnualReportData.HasPlayData, Mode=OneWay,
+                                  Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
@@ -50,7 +52,8 @@
                 </control:Panel>
 
                 <control:Panel Grid.Row="1"
-                               Visibility="{x:Bind ViewModel.AnnualReportData.LongestStreakGame, Converter={StaticResource AnyToVisibilityConverter}}">
+                               Visibility="{x:Bind ViewModel.AnnualReportData.HasStreakGame, Mode=OneWay,
+                                                   Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid ColumnDefinitions="2*,3*" ColumnSpacing="10">
                         <Image Grid.Column="0" Source="{x:Bind ViewModel.AnnualReportData.LongestStreakGame.ImagePath.Value}"/>
                         <Grid Grid.Column="1" Margin="30 30 0 30"
@@ -88,5 +91,17 @@
                                     TooltipPosition="Top" />
             </Grid>
         </Grid>
+
+        <!-- 今年一部都没玩过：整页给空态 -->
+        <TextBlock Grid.Row="0"
+                   x:Uid="AnnualReportPage_NoData"
+                   Style="{ThemeResource SubtitleTextBlockStyle}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   Visibility="{x:Bind ViewModel.AnnualReportData.HasPlayData, Mode=OneWay,
+                                       Converter={StaticResource BoolToVisibilityConverter},
+                                       ConverterParameter=true}"/>
     </Grid>
 </Page>

@@ -8,7 +8,6 @@ using GalgameManager.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
-using System.Text.RegularExpressions;
 
 namespace GalgameManager.ViewModels;
 
@@ -17,13 +16,11 @@ public partial class AnnualReportViewModel(IGalgameCollectionService gameService
 {
     [ObservableProperty] private Frame? _contentFrame;
     [ObservableProperty] private Visibility _calculating = Visibility.Visible;
-    
+
     private int _currentPageIndex = -1;
     private int _previousPageIndex = -1;
     private readonly AnnualReportData _annualReportData = new();
-    
-    private static readonly Regex YearPattern = new(@"(19|20)\d{2}(-\d{1,2})?");
-    
+
     public void OnNavigatedTo(object parameter)
     {
         // 计算年度报告数据
@@ -36,6 +33,9 @@ public partial class AnnualReportViewModel(IGalgameCollectionService gameService
             var ratedGamesCount = 0;
             double totalRating = 0;
 
+            // 统计年份：优先当前年份，当前年份没有游玩记录时回退到最近一个有记录的年份
+            _annualReportData.Year = AnnualReportStats.ResolveYear(gameService.Galgames);
+
             // 第一页数据
             foreach (Galgame game in gameService.Galgames)
             {
@@ -44,7 +44,7 @@ public partial class AnnualReportViewModel(IGalgameCollectionService gameService
                 foreach (KeyValuePair<string, int> t in game.PlayedTime)
                 {
                     DateTime date = Utils.TryParseDateGuessCulture(t.Key);
-                    if (date.Year != AnnualReportData.Year) continue;
+                    if (date.Year != _annualReportData.Year) continue;
                     playInYearMin += t.Value;
                     _annualReportData.PlayedTimePerMonth[date.Month - 1] += t.Value / 60.0; //确实会有误差，但应该问题不大
                     if (!playedInYear[date.Month - 1])
@@ -68,7 +68,9 @@ public partial class AnnualReportViewModel(IGalgameCollectionService gameService
                     var dayOfWeek = (int)date.DayOfWeek; // 0=Sunday, 1=Monday...
                     _annualReportData.PlayTimePerDayOfWeek[dayOfWeek] += t.Value / 60.0;
                 }
-                if (playInYearMin >= _annualReportData.FavoriteGamePlayedTime * 60)
+                // 必须要求今年真的玩过：初始时 FavoriteGamePlayedTime 为 0，
+                // 少了这个判断的话，一部都没玩过时条件恒真，"本年度最长游玩时间"会挂上循环里最后一部游戏
+                if (playInYearMin > 0 && playInYearMin >= _annualReportData.FavoriteGamePlayedTime * 60)
                 {
                     _annualReportData.FavoriteGame = game;
                     _annualReportData.FavoriteGamePlayedTime = playInYearMin / 60.0;
@@ -111,7 +113,7 @@ public partial class AnnualReportViewModel(IGalgameCollectionService gameService
                     foreach (KeyValuePair<string, int> t in game.PlayedTime)
                     {
                         DateTime date = Utils.TryParseDateGuessCulture(t.Key);
-                        if (date.Year == AnnualReportData.Year)
+                        if (date.Year == _annualReportData.Year)
                         {
                             gameMonthlyPlayTime[date.Month - 1] += t.Value / 60.0;
                         }
@@ -128,7 +130,7 @@ public partial class AnnualReportViewModel(IGalgameCollectionService gameService
                 _annualReportData.PlayedTime += playInYearMin / 60.0;
                 
                 // 统计年度入库
-                if (game.AddTime.Year == AnnualReportData.Year)
+                if (game.AddTime.Year == _annualReportData.Year)
                 {
                     _annualReportData.NewGamesCount++;
                 }
@@ -192,24 +194,7 @@ public partial class AnnualReportViewModel(IGalgameCollectionService gameService
             // 计算平均评分
             if (ratedGamesCount > 0) _annualReportData.AverageRating = totalRating / ratedGamesCount;
 
-            // 第二页数据
-            Dictionary<string, int> tags = new();
-            foreach (Galgame game in gameService.Galgames)
-            {
-                foreach (var tag in game.Tags.Value ?? [])
-                {
-                    if (!tags.TryAdd(tag, 1))
-                        tags[tag]++;
-                }
-            }
-            // 可以优化成nlogn的，但应该不会造成太大的性能问题（应该不会有几十万个tag吧？）
-            _annualReportData.TagFrequencies = tags
-                .OrderByDescending(p => p.Value)
-                .Where(g => !AnnualReportData.BannedTags.Contains(g.Key) && 
-                            !YearPattern.IsMatch(g.Key))
-                .Take(AnnualReportData.TagFrequencyMax)
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            // 第三页数据
+            // 第三页数据（词云分页的标签统计由 ReportSubPage2ViewModel 按用户选择的口径自行计算）
             // 以下部分效率很低，但是数据量不大，应该问题不大
             Dictionary<Category, int> developers = new();
             CategoryGroup devGroup = categoryService.DeveloperGroup;
@@ -307,11 +292,20 @@ public partial class AnnualReportViewModel(IGalgameCollectionService gameService
 /// </summary>
 public partial class AnnualReportData : ObservableObject
 {
-    public const int Year = 2025;
-    public const int TagFrequencyMax = 30;
     public static readonly int[] PlayedTimeRange = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
-    public static readonly string[] BannedTags = ["PC", "汉化", "GAL", "galgame", "Galgame", "ADV", "R18", "AVG","游戏","生肉","硬盘已存"];
-    
+
+    /// <summary>
+    /// 本次报告统计的年份，由<see cref="Helpers.AnnualReportStats.ResolveYear"/>决定：
+    /// 优先当前年份，当前年份没有任何游玩记录时回退到最近一个有记录的年份
+    /// </summary>
+    public int Year { get; set; } = DateTime.Now.Year;
+
+    /// 今年是否有游玩记录，供各分页做空态展示
+    public bool HasPlayData => TotalGamesPlayed > 0;
+
+    /// 是否统计出了连续游玩期间的主要游戏，供空态展示
+    public bool HasStreakGame => LongestStreakGameTime > 0;
+
     [ObservableProperty] private Galgame _favoriteGame = new();
     [ObservableProperty] private double _favoriteGamePlayedTime; //最喜欢的游戏的时间，小时
     [ObservableProperty] private double _playedTime; //玩过的总时间，小时
@@ -325,7 +319,6 @@ public partial class AnnualReportData : ObservableObject
     /// 若i为最后一个元素，则表示PlayedTimeRange[i]+的区间
     public int[] PlayedTimeRangeCnt = new int[PlayedTimeRange.Length];
     public Dictionary<PlayType, int> PlayTypeCnt = new(); //玩过的游戏状态统计
-    public Dictionary<string, int> TagFrequencies = new(); //Tag词频统计
     [ObservableProperty] private Category _favouriteDeveloper = new(); //最喜欢的开发商
     public List<Galgame> GamesInFavouriteDeveloper = new(); //今年玩过的最喜欢的开发商的游戏
     public int LongestStreak; //最长连续游玩天数

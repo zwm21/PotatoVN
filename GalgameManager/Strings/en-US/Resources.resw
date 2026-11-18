@@ -4413,4 +4413,19 @@ Open the log folder now?</value>
   <data name="SettingsPage_Help.NavigateUri" xml:space="preserve">
     <value>https://potatovn.net/usage/quick-start/import-game.html</value>
   </data>
+  <data name="AnnualReportPage_NoData.Text" xml:space="preserve">
+    <value>No games played this year yet.</value>
+  </data>
+  <data name="AnnualReportPage_TagScope.Text" xml:space="preserve">
+    <value>Scope</value>
+  </data>
+  <data name="AnnualReportTagScope_AddedInYear" xml:space="preserve">
+    <value>Games added this year</value>
+  </data>
+  <data name="AnnualReportTagScope_PlayedInYear" xml:space="preserve">
+    <value>Games played this year</value>
+  </data>
+  <data name="AnnualReportTagScope_AllLibrary" xml:space="preserve">
+    <value>Entire library</value>
+  </data>
 </root>

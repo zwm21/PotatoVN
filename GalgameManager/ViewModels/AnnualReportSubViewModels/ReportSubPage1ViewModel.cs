@@ -148,7 +148,10 @@ public partial class ReportSubPage1ViewModel : ObservableObject, INavigationAwar
     {
         Debug.Assert(parameter is AnnualReportData);
         AnnualReportData = (AnnualReportData)parameter;
-        AveragePlayHours = AnnualReportData.PlayedTime / AnnualReportData.TotalGamesPlayed;
+        // 一部都没玩过时不能做除法，否则会得到 NaN 并直接显示在卡片上
+        AveragePlayHours = AnnualReportData.TotalGamesPlayed > 0
+            ? AnnualReportData.PlayedTime / AnnualReportData.TotalGamesPlayed
+            : 0;
         // 初始化图表数据
         InitializeCharts();
     }

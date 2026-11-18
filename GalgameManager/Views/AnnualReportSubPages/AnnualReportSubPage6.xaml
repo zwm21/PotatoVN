@@ -6,8 +6,14 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prefab="using:GalgameManager.Views.Prefab"
-    xmlns:viewModels="using:GalgameManager.ViewModels" xmlns:behaviors="using:GalgameManager.Behaviors"
+    xmlns:viewModels="using:GalgameManager.ViewModels"
+    xmlns:converter="using:GalgameManager.Helpers.Converter"
+    xmlns:behaviors="using:GalgameManager.Behaviors"
     mc:Ignorable="d">
+
+    <Page.Resources>
+        <converter:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </Page.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -18,12 +24,16 @@
         <TextBlock Text="在每个月，我最喜欢..."
                    Style="{ThemeResource SubtitleTextBlockStyle}"
                    HorizontalAlignment="Center"
-                   Margin="0,20,0,20"/>
+                   Margin="0,20,0,20"
+                   Visibility="{x:Bind ViewModel.AnnualReportData.HasPlayData, Mode=OneWay,
+                                       Converter={StaticResource BoolToVisibilityConverter}}"/>
 
         <GridView Grid.Row="1"
                   ItemsSource="{x:Bind ViewModel.MonthlyBestGames}"
                   SelectionMode="None"
-                  HorizontalAlignment="Center">
+                  HorizontalAlignment="Center"
+                  Visibility="{x:Bind ViewModel.AnnualReportData.HasPlayData, Mode=OneWay,
+                                      Converter={StaticResource BoolToVisibilityConverter}}">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="viewModels:MonthlyBestGame">
                     <Grid Width="200" Height="330" Margin="10">
@@ -48,6 +58,18 @@
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>
+
+        <!-- 今年一部都没玩过：没有月度之星，给空态 -->
+        <TextBlock Grid.Row="1"
+                   x:Uid="AnnualReportPage_NoData"
+                   Style="{ThemeResource SubtitleTextBlockStyle}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   Visibility="{x:Bind ViewModel.AnnualReportData.HasPlayData, Mode=OneWay,
+                                       Converter={StaticResource BoolToVisibilityConverter},
+                                       ConverterParameter=true}"/>
     </Grid>
 </Page>
 

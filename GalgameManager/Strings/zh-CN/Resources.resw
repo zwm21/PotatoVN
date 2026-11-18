@@ -5206,4 +5206,19 @@
   <data name="SettingsPage_Help.NavigateUri" xml:space="preserve">
     <value>https://potatovn.net/usage/quick-start/import-game.html</value>
   </data>
+  <data name="AnnualReportPage_NoData.Text" xml:space="preserve">
+    <value>今年还没有游玩记录</value>
+  </data>
+  <data name="AnnualReportPage_TagScope.Text" xml:space="preserve">
+    <value>统计范围</value>
+  </data>
+  <data name="AnnualReportTagScope_AddedInYear" xml:space="preserve">
+    <value>年度入库的游戏</value>
+  </data>
+  <data name="AnnualReportTagScope_PlayedInYear" xml:space="preserve">
+    <value>年度游玩过的游戏</value>
+  </data>
+  <data name="AnnualReportTagScope_AllLibrary" xml:space="preserve">
+    <value>整个游戏库</value>
+  </data>
 </root>

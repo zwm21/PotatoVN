@@ -14,6 +14,7 @@
 
     <Page.Resources>
         <converter:ImagePathConverter x:Key="ImagePathConverter" />
+        <converter:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <cmtkConverter:StringFormatConverter x:Key="StrFmt"/>
     </Page.Resources>
 
@@ -24,7 +25,9 @@
         </Grid.RowDefinitions>
 
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      Visibility="{x:Bind ViewModel.AnnualReportData.HasPlayData, Mode=OneWay,
+                                          Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid Margin="{StaticResource SmallRightMargin}">
                 <Grid.Resources>
                     <x:Double x:Key="TileHeight">150</x:Double>
@@ -254,5 +257,17 @@
                 </Grid>
             </Grid>
         </ScrollViewer>
+
+        <!-- 今年一部都没玩过：整页给空态，别把 0 / NaN / 默认图标摆出来 -->
+        <TextBlock Grid.Row="1"
+                   x:Uid="AnnualReportPage_NoData"
+                   Style="{StaticResource SubtitleTextBlockStyle}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   Visibility="{x:Bind ViewModel.AnnualReportData.HasPlayData, Mode=OneWay,
+                                       Converter={StaticResource BoolToVisibilityConverter},
+                                       ConverterParameter=true}"/>
     </Grid>
 </Page>
