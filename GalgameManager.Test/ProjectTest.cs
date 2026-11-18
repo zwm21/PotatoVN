@@ -12,11 +12,17 @@ public class ProjectTest
         var manifestVersion = ReadPackageAppxManifestIdentityVersion();
 
         var runtimeVersion = RuntimeHelper.GetVersion();
-        Assert.That(runtimeVersion, Is.EqualTo(manifestVersion));
+
+        // 程序集/文件/产品版本取的是动态版本号：manifest 前三段不变、第 4 段叠加"自 manifest 改动以来的提交数"，
+        // 因此这里只要求前三段一致，第 4 段允许大于等于 manifest 的 revision
+        Assert.That(Version.Parse(runtimeVersion).Major, Is.EqualTo(Version.Parse(manifestVersion).Major));
+        Assert.That(Version.Parse(runtimeVersion).Minor, Is.EqualTo(Version.Parse(manifestVersion).Minor));
+        Assert.That(Version.Parse(runtimeVersion).Build, Is.EqualTo(Version.Parse(manifestVersion).Build));
+        Assert.That(Version.Parse(runtimeVersion).Revision, Is.GreaterThanOrEqualTo(0));
 
         var assemblyVersion = typeof(RuntimeHelper).Assembly.GetName().Version?.ToString();
         Assert.That(assemblyVersion, Is.Not.Null);
-        Assert.That(assemblyVersion, Is.EqualTo(manifestVersion));
+        Assert.That(assemblyVersion, Is.EqualTo(runtimeVersion));
     }
 
     private static string ReadPackageAppxManifestIdentityVersion()

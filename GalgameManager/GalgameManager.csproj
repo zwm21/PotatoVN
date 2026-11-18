@@ -54,22 +54,31 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
   </PropertyGroup>
 
-  <!--
-    - MSIX 模式下 RuntimeHelper.GetVersion() 读取 Package.appxmanifest 的 Identity Version
-    - 便携/非 MSIX 模式下读取程序集版本
-    为避免两边版本不一致，在构建时从 Package.appxmanifest 读取版本并写入程序集版本属性。
-  -->
+  <!-- 从 Package.appxmanifest 读取 Identity Version，供程序集版本属性与动态版本共用 -->
   <Target Name="ReadMsixIdentityVersion" Condition="Exists('$(MSBuildProjectDirectory)\Package.appxmanifest')">
     <XmlPeek XmlInputPath="$(MSBuildProjectDirectory)\Package.appxmanifest" Query="/*[local-name()='Package']/*[local-name()='Identity']/@Version">
       <Output TaskParameter="Result" PropertyName="_MsixIdentityVersion" />
     </XmlPeek>
   </Target>
 
-  <Target Name="DeriveAssemblyVersionFromMsixManifest" DependsOnTargets="ReadMsixIdentityVersion" BeforeTargets="GetAssemblyAttributes">
-    <PropertyGroup Condition="'$(_MsixIdentityVersion)' != ''">
-      <AssemblyVersion>$(_MsixIdentityVersion)</AssemblyVersion>
-      <FileVersion>$(_MsixIdentityVersion)</FileVersion>
-      <InformationalVersion>$(_MsixIdentityVersion)</InformationalVersion>
+  <!--
+    - MSIX 模式下 RuntimeHelper.GetVersion() 读取 Package.appxmanifest 的 Identity Version
+    - 便携/非 MSIX 模式下读取程序集版本
+    三个版本属性统一取动态版本号（manifest 前三段 + 第 4 段叠加"自 manifest 改动以来的提交数"），
+    与分发目录名 PotatoVN-<动态版本>-<平台>-portable 完全一致，便于区分同基础版本的每次构建。
+    动态版本取不到时（无 git / 无 PowerShell / 未生成资源文件）回落到 manifest 的基础版本。
+  -->
+  <Target Name="DeriveAssemblyVersionFromMsixManifest"
+          DependsOnTargets="GenerateBuildVersionInfo;ReadMsixIdentityVersion"
+          BeforeTargets="GetAssemblyAttributes">
+    <PropertyGroup>
+      <_EffectiveVersion Condition="'$(_DynamicVersion)' != ''">$(_DynamicVersion)</_EffectiveVersion>
+      <_EffectiveVersion Condition="'$(_EffectiveVersion)' == ''">$(_MsixIdentityVersion)</_EffectiveVersion>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(_EffectiveVersion)' != ''">
+      <AssemblyVersion>$(_EffectiveVersion)</AssemblyVersion>
+      <FileVersion>$(_EffectiveVersion)</FileVersion>
+      <InformationalVersion>$(_EffectiveVersion)</InformationalVersion>
     </PropertyGroup>
   </Target>
 
@@ -89,6 +98,15 @@
           ContinueOnError="true" IgnoreExitCode="true" />
     <Message Condition="!Exists('$(_BuildVersionInfoPath)')" Importance="high"
              Text="未能生成动态版本资源 $(_BuildVersionInfoPath)，运行时将回退到 +src.unknown。" />
+    <!-- 把动态版本号读回 MSBuild 属性，供 DeriveAssemblyVersionFromMsixManifest 写入 exe 的文件版本/产品版本 -->
+    <ReadLinesFromFile File="$(_BuildVersionInfoPath)" Condition="Exists('$(_BuildVersionInfoPath)')">
+      <Output TaskParameter="Lines" ItemName="_BuildVersionInfoLines" />
+    </ReadLinesFromFile>
+    <PropertyGroup>
+      <_BuildVersionInfoLine>@(_BuildVersionInfoLines)</_BuildVersionInfoLine>
+      <!-- 资源行格式 base|commits|commit|[delta]，第一段即动态版本号 -->
+      <_DynamicVersion>$([System.Text.RegularExpressions.Regex]::Match($(_BuildVersionInfoLine), '^[^|]+').Value)</_DynamicVersion>
+    </PropertyGroup>
     <ItemGroup Condition="Exists('$(_BuildVersionInfoPath)')">
       <EmbeddedResource Include="$(_BuildVersionInfoPath)">
         <LogicalName>GalgameManager.BuildVersionInfo.txt</LogicalName>
