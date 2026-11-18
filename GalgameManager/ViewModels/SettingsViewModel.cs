@@ -1382,7 +1382,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
     private static string GetVersionDescription()
     {
-        return $"{"AppDisplayName".GetLocalized()} - {RuntimeHelper.GetVersion()}";
+        return $"{"AppDisplayName".GetLocalized()} - {AppVersion.DisplayVersion}";
     }
 
     #endregion

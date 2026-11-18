@@ -33,6 +33,9 @@ public class InfoService : IInfoService
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7)
             .CreateLogger();
+
+        // 首行日志写入动态版本（构建期采集，见 Helpers/AppVersion.cs），便于反馈问题时定位具体构建
+        Serilog.Log.Information("{VersionLine}", AppVersion.LogLine);
     }
 
     public void Info(InfoBarSeverity infoBarSeverity, string? title = null, string? msg = null, int? displayTimeMs = 3000)
