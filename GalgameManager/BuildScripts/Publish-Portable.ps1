@@ -40,6 +40,9 @@ dotnet publish $project -c Release -p:Platform=$Platform -p:PublishProfile=win10
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish 失败，退出码 $LASTEXITCODE" }
 
 $infoFile = Get-ChildItem -Path (Join-Path $repoRoot "GalgameManager\obj") -Recurse -Filter BuildVersionInfo.txt |
+    # obj 下同时存在 Debug / Release 与各平台的产物，只取本次 Release 构建生成的（最新写入的）那个
+    Where-Object { $_.FullName -match '\\Release\\' } |
+    Sort-Object LastWriteTime -Descending |
     Select-Object -First 1
 if (-not $infoFile) { throw "未找到构建期生成的 BuildVersionInfo.txt" }
 $fields = (Get-Content $infoFile.FullName).Trim() -split '\|'

@@ -100,6 +100,9 @@ jobs:
       shell: pwsh
       run: |
         $file = Get-ChildItem -Path GalgameManager/obj -Recurse -Filter BuildVersionInfo.txt |
+            # obj 下可能同时存在 Debug / Release 与各平台的产物，只取本次 Release 构建生成的
+            Where-Object { $_.FullName -match '\\Release\\' } |
+            Sort-Object LastWriteTime -Descending |
             Select-Object -First 1
         if (-not $file) { throw "未找到构建期生成的 BuildVersionInfo.txt" }
         $fields = (Get-Content $file.FullName).Trim() -split '\|'
