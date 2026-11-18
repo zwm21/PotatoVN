@@ -10,7 +10,6 @@ public static class SidebarButtonIds
     public const string Category = "builtin:category";
     public const string AnnualReport = "builtin:annual-report";
     public const string Info = "builtin:info";
-    public const string Help = "builtin:help";
     public const string Account = "builtin:account";
     public const string Plugin = "builtin:plugin";
     public const string Settings = "builtin:settings";

@@ -886,6 +886,7 @@
                                          Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
                         <HyperlinkButton x:Uid="SettingsPage_RepositoryLink" />
                         <HyperlinkButton x:Uid="SettingsPage_UpdateContent" />
+                        <HyperlinkButton x:Uid="SettingsPage_Help" />
                     </StackPanel>
                 </StackPanel>
             </StackPanel>

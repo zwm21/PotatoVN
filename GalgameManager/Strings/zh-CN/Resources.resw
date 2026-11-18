@@ -441,12 +441,8 @@
   <data name="SettingsPage_Library_SearchRegexTryItOut" xml:space="preserve">
     <value>可以在这里输入待匹配串来测试匹配结果</value>
   </data>
-  <data name="Shell_Help.Content" xml:space="preserve">
-    <value>帮助</value>
-  </data>
-  <data name="Shell_HelpText.Text" xml:space="preserve">
-    <value>帮助</value>
-  </data>
+
+
   <data name="SettingsPage_RepositoryLink.NavigateUri" xml:space="preserve">
     <value>https://github.com/GoldenPotato137/GalgameManager</value>
   </data>
@@ -460,21 +456,11 @@
   <data name="App_UnhandledException_Hyperlink" xml:space="preserve">
     <value>点此复制错误信息并报告这个问题</value>
   </data>
-  <data name="HelpPage_GettingFaq" xml:space="preserve">
-    <value>正在从网络上获取最新FAQ中</value>
-  </data>
-  <data name="HelpPage_Website.Label" xml:space="preserve">
-    <value>在浏览器中打开</value>
-  </data>
-  <data name="HelpPage_NewFeature.Label" xml:space="preserve">
-    <value>新功能建议</value>
-  </data>
-  <data name="HelpPage_Help.Label" xml:space="preserve">
-    <value>提出新问题</value>
-  </data>
-  <data name="HelpPage_Download.Label" xml:space="preserve">
-    <value>立刻下载最新FAQ</value>
-  </data>
+
+
+
+
+
   <data name="GalgameCollectionService_CreateSymbolicLinkFailed" xml:space="preserve">
     <value>存档云端化失败啦！但是别担心，你的存档是安全的。
 以下为失败原因：</value>
@@ -1590,12 +1576,8 @@
   <data name="SettingsPage_Notification_Pvn_Empty.Description" xml:space="preserve">
     <value>是否启用Pvn同步空事件（即已是最新状态，什么都没有做）的通知</value>
   </data>
-  <data name="FaqService_LoadError" xml:space="preserve">
-    <value>加载FAQ文件失败</value>
-  </data>
-  <data name="FaqService_DownloadError" xml:space="preserve">
-    <value>下载FAQ失败</value>
-  </data>
+
+
   <data name="GalgamePage_Characters.Text" xml:space="preserve">
     <value>角色</value>
   </data>
@@ -4651,9 +4633,7 @@
   <data name="InfoText" xml:space="preserve">
     <value>状态</value>
   </data>
-  <data name="HelpText" xml:space="preserve">
-    <value>帮助</value>
-  </data>
+
   <data name="AccountText" xml:space="preserve">
     <value>账户</value>
   </data>
@@ -5219,5 +5199,11 @@
   </data>
   <data name="SettingsPage_UpdateContent.NavigateUri" xml:space="preserve">
     <value>https://potatovn.net/upgrade-log/</value>
+  </data>
+  <data name="SettingsPage_Help.Content" xml:space="preserve">
+    <value>帮助</value>
+  </data>
+  <data name="SettingsPage_Help.NavigateUri" xml:space="preserve">
+    <value>https://potatovn.net/usage/quick-start/import-game.html</value>
   </data>
 </root>

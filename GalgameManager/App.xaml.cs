@@ -108,7 +108,6 @@ public partial class App : Application
             services.AddSingleton<SteamSourceService>();
             services.AddSingleton<ZipSourceService>();
             //
-            services.AddSingleton<IFaqService, FaqService>();
             services.AddSingleton<IFilterService, FilterService>();
             services.AddSingleton<ICategoryService, CategoryService>();
             services.AddSingleton<IStaffService, StaffService>();
@@ -143,8 +142,6 @@ public partial class App : Application
             services.AddTransient<CategoryPage>();
             services.AddTransient<CategorySettingViewModel>();
             services.AddTransient<CategorySettingPage>();
-            services.AddTransient<HelpViewModel>();
-            services.AddTransient<HelpPage>();
             services.AddTransient<GalgameSettingViewModel>();
             services.AddTransient<GalgameSettingPage>();
             services.AddTransient<PlayedTimePage>();

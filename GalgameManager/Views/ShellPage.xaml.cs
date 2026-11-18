@@ -72,7 +72,6 @@ public sealed partial class ShellPage : Page
             _builtInNavItems[SidebarButtonIds.Category] = CategoryNavItem;
             _builtInNavItems[SidebarButtonIds.AnnualReport] = AnnualReportNavItem;
             _builtInNavItems[SidebarButtonIds.Info] = InfoNavItem;
-            _builtInNavItems[SidebarButtonIds.Help] = HelpNavItem;
             _builtInNavItems[SidebarButtonIds.Account] = AccountNavItem;
             _builtInNavItems[SidebarButtonIds.Plugin] = PluginNavItem;
             _builtInNavItems[SidebarButtonIds.Settings] = SettingsNavItem;

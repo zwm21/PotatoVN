@@ -429,12 +429,8 @@ This software will use regular expressions to match game folder names and take t
   <data name="SettingsPage_Library_SearchRegexTryItOut" xml:space="preserve">
     <value>You can enter string here to test the matching results</value>
   </data>
-  <data name="Shell_Help.Content" xml:space="preserve">
-    <value>Help</value>
-  </data>
-  <data name="Shell_HelpText.Text" xml:space="preserve">
-    <value>Help</value>
-  </data>
+
+
   <data name="SettingsPage_RepositoryLink.NavigateUri" xml:space="preserve">
     <value>https://github.com/GoldenPotato137/GalgameManager</value>
   </data>
@@ -448,21 +444,11 @@ This software will use regular expressions to match game folder names and take t
   <data name="App_UnhandledException_Hyperlink" xml:space="preserve">
     <value>Click here to copy the error message and report this issue</value>
   </data>
-  <data name="HelpPage_GettingFaq" xml:space="preserve">
-    <value>Retrieving the latest FAQ from the network</value>
-  </data>
-  <data name="HelpPage_Website.Label" xml:space="preserve">
-    <value>Open in browser</value>
-  </data>
-  <data name="HelpPage_NewFeature.Label" xml:space="preserve">
-    <value>Suggest a feature</value>
-  </data>
-  <data name="HelpPage_Help.Label" xml:space="preserve">
-    <value>New question</value>
-  </data>
-  <data name="HelpPage_Download.Label" xml:space="preserve">
-    <value>Download the latest FAQ</value>
-  </data>
+
+
+
+
+
   <data name="GalgameCollectionService_CreateSymbolicLinkFailed" xml:space="preserve">
     <value>Failed to archive cloud! Don't worry, your save is secure.
 Failure reasons:</value>
@@ -1490,12 +1476,8 @@ If play time can record correctly, just cancel this popup.
   <data name="SettingsPage_Notification_Pvn_Empty.Description" xml:space="preserve">
     <value>Enable notifications for Pvn Sync empty events (i.e., already up to date, nothing was done)</value>
   </data>
-  <data name="FaqService_LoadError" xml:space="preserve">
-    <value>Failed to load FAQ file</value>
-  </data>
-  <data name="FaqService_DownloadError" xml:space="preserve">
-    <value>Failed to download FAQ</value>
-  </data>
+
+
   <data name="GalgamePage_Characters.Text" xml:space="preserve">
     <value>Character</value>
   </data>
@@ -4424,5 +4406,11 @@ Open the log folder now?</value>
   </data>
   <data name="SettingsPage_UpdateContent.NavigateUri" xml:space="preserve">
     <value>https://potatovn.net/upgrade-log/</value>
+  </data>
+  <data name="SettingsPage_Help.Content" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="SettingsPage_Help.NavigateUri" xml:space="preserve">
+    <value>https://potatovn.net/usage/quick-start/import-game.html</value>
   </data>
 </root>

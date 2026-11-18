@@ -73,15 +73,6 @@ public class SidebarService : ISidebarService
         },
         new()
         {
-            UniqueId = SidebarButtonIds.Help,
-            Title = "HelpText".GetLocalized(),
-            Placement = SidebarButtonPlacement.Footer,
-            Order = 2,
-            FallbackGlyph = "&#xE897;",
-            FluentGlyph = "&#xE897;",
-        },
-        new()
-        {
             UniqueId = SidebarButtonIds.Account,
             Title = "AccountText".GetLocalized(),
             Placement = SidebarButtonPlacement.Footer,

@@ -22,7 +22,6 @@ public class PageService : IPageService
         Configure<LibraryViewModel, LibraryPage>();
         Configure<GalgameSourceViewModel, GalgameSourcePage>();
         Configure<GalgameSettingViewModel, GalgameSettingPage>();
-        Configure<HelpViewModel, HelpPage>();
         Configure<PlayedTimeViewModel, PlayedTimePage>();
         Configure<CategoryViewModel, CategoryPage>();
         Configure<CategorySettingViewModel, CategorySettingPage>();

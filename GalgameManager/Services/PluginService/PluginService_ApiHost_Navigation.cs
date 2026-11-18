@@ -106,9 +106,6 @@ public partial class PluginService
                         throw new ArgumentException(null, nameof(parameter));
                     _navigationService.NavigateTo(typeof(ScanResultViewModel).FullName!, scanResultId);
                     break;
-                case PageEnum.HelpPage:
-                    _navigationService.NavigateTo(typeof(HelpViewModel).FullName!);
-                    break;
                 case PageEnum.AnnualReportPage:
                     _navigationService.NavigateTo(typeof(AnnualReportViewModel).FullName!);
                     break;

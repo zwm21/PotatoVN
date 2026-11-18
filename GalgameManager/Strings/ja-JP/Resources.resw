@@ -429,12 +429,8 @@
   <data name="SettingsPage_Library_SearchRegexTryItOut" xml:space="preserve">
     <value>マッチング対象の文字列をここに入力して、結果をテストできます。</value>
   </data>
-  <data name="Shell_Help.Content" xml:space="preserve">
-    <value>ヘルプ</value>
-  </data>
-  <data name="Shell_HelpText.Text" xml:space="preserve">
-    <value>ヘルプ</value>
-  </data>
+
+
   <data name="SettingsPage_RepositoryLink.NavigateUri" xml:space="preserve">
     <value>https://github.com/GoldenPotato137/GalgameManager</value>
   </data>
@@ -448,21 +444,11 @@
   <data name="App_UnhandledException_Hyperlink" xml:space="preserve">
     <value>エラー情報をコピーしてこの問題を報告するには、ここをクリックしてください。</value>
   </data>
-  <data name="HelpPage_GettingFaq" xml:space="preserve">
-    <value>ネットワークから最新のFAQを取得中</value>
-  </data>
-  <data name="HelpPage_Website.Label" xml:space="preserve">
-    <value>ブラウザで開く</value>
-  </data>
-  <data name="HelpPage_NewFeature.Label" xml:space="preserve">
-    <value>新機能の提案</value>
-  </data>
-  <data name="HelpPage_Help.Label" xml:space="preserve">
-    <value>新しい質問を提出する</value>
-  </data>
-  <data name="HelpPage_Download.Label" xml:space="preserve">
-    <value>最新のFAQを今すぐダウンロード</value>
-  </data>
+
+
+
+
+
   <data name="GalgameCollectionService_CreateSymbolicLinkFailed" xml:space="preserve">
     <value>セーブデータのクラウド化に失敗しました！でもご安心ください、セーブデータは安全です。
 失敗原因は以下の通りです：</value>
@@ -1490,12 +1476,8 @@
   <data name="SettingsPage_Notification_Pvn_Empty.Description" xml:space="preserve">
     <value>Pvn同期空イベント（つまり、既に最新の状態であり、何も行われていない）の通知を有効にしますか</value>
   </data>
-  <data name="FaqService_LoadError" xml:space="preserve">
-    <value>FAQファイルのロードに失敗しました</value>
-  </data>
-  <data name="FaqService_DownloadError" xml:space="preserve">
-    <value>FAQのダウンロードに失敗しました</value>
-  </data>
+
+
   <data name="GalgamePage_Characters.Text" xml:space="preserve">
     <value>キャラクター</value>
   </data>
@@ -4353,5 +4335,11 @@
   </data>
   <data name="SettingsPage_UpdateContent.NavigateUri" xml:space="preserve">
     <value>https://potatovn.net/upgrade-log/</value>
+  </data>
+  <data name="SettingsPage_Help.Content" xml:space="preserve">
+    <value>ヘルプ</value>
+  </data>
+  <data name="SettingsPage_Help.NavigateUri" xml:space="preserve">
+    <value>https://potatovn.net/usage/quick-start/import-game.html</value>
   </data>
 </root>

@@ -259,34 +259,6 @@
                 </NavigationViewItem>
 
                 <NavigationViewItem
-                    x:Name="HelpNavItem"
-                    Width="70"
-                    helpers:NavigationHelper.NavigateTo="GalgameManager.ViewModels.HelpViewModel">
-                    <NavigationViewItem.Content>
-                        <Grid
-                            Width="60"
-                            Height="65"
-                            Margin="-12,0,-20,0">
-                            <FontIcon
-                                Margin="0,18,0,0"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Top"
-                                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                FontSize="16"
-                                Glyph="&#xE897;" />
-                            <TextBlock
-                                x:Uid="Shell_HelpText"
-                                Margin="0,0,0,16"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Bottom"
-                                FontSize="12"
-                                TextAlignment="Center"
-                                TextWrapping="NoWrap" />
-                        </Grid>
-                    </NavigationViewItem.Content>
-                </NavigationViewItem>
-
-                <NavigationViewItem
                     x:Name="AccountNavItem"
                     Width="70"
                     helpers:NavigationHelper.NavigateTo="GalgameManager.ViewModels.AccountViewModel">
