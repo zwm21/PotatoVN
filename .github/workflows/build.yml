@@ -2,6 +2,7 @@ name: build
 
 # 每次推 dev / 提 PR 时只构建自包含便携包（绿色版），不再打 MSIX sideload 测试包
 # 便携包把 .NET 与 Windows App SDK 运行时一起打包，目标机无需安装任何运行时，解压即用。
+# 推 dev 与手动 dispatch 还会把该便携包发成 GitHub Release（tag 用动态版本号），作为分发渠道。
 on:
   workflow_dispatch:
     inputs:
@@ -28,7 +29,8 @@ on:
       - 'GalgameManager.WinApp.Base/**'
 
 permissions:
-  contents: read
+  # 创建 Release 与上传资产需要写权限
+  contents: write
 
 jobs:
   build:
@@ -141,3 +143,55 @@ jobs:
         name: PotatoVN-${{ env.PLATFORM }}-portable
         path: publish/${{ env.ARTIFACT }}
         if-no-files-found: error
+
+    # 把便携包发成 GitHub Release，tag 取动态版本号（每次提交都不同，天然唯一）。
+    # 用 windows-latest 自带的 gh CLI，不引入第三方 action（与上面 7z 的做法一致）。
+    # PR 事件只有 contents: read 权限且不该产出版本，故跳过；workflow_dispatch 也发，
+    # 方便手动补发。同一 commit 重跑时更新已有 Release 的资产与说明，不做删除，保证幂等。
+    - name: Create GitHub Release
+      if: github.event_name != 'pull_request'
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # runner 的控制台代码页不一定是 UTF-8（本机是 CP936），git 输出的中文提交信息
+        # 会按错误代码页解码成乱码，写进 Release Notes 前必须先纠正
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+        $tag = "v$env:VERSION"
+        $archive = "publish/$env:ARTIFACT"
+        $title = "PotatoVN $env:VERSION"
+
+        # Release Notes：动态版本信息 + 自上一个 Release tag 以来的提交
+        $prev = git tag --sort=-creatordate | Where-Object { $_ -ne $tag } | Select-Object -First 1
+        if ($prev) {
+            $log = git log --no-merges --pretty=format:"- %s (%h)" "$prev..HEAD"
+        } else {
+            $log = git log --no-merges --pretty=format:"- %s (%h)" -n 30
+        }
+        if ([string]::IsNullOrWhiteSpace($log)) { $log = "（自 $prev 以来没有新提交）" }
+        $notes = @(
+            "自包含便携包（$env:PLATFORM），解压即用，无需安装 .NET 与 Windows App Runtime。"
+            ""
+            "- 动态版本: $env:VERSION"
+            "- 提交: $env:COMMIT（仓库累计 $env:COMMITS 个提交）"
+            ""
+            "## 自上次 Release 以来的变更"
+            ""
+            $log
+        ) -join "`n"
+        $notesFile = "publish/release-notes.md"
+        Set-Content -Path $notesFile -Value $notes -Encoding utf8
+
+        gh release view $tag 2>$null | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release $tag 已存在，更新资产与说明"
+            gh release upload $tag $archive --clobber
+            if ($LASTEXITCODE -ne 0) { throw "上传 Release 资产失败" }
+            gh release edit $tag --title $title --notes-file $notesFile
+            if ($LASTEXITCODE -ne 0) { throw "更新 Release 说明失败" }
+        } else {
+            gh release create $tag $archive --title $title --notes-file $notesFile
+            if ($LASTEXITCODE -ne 0) { throw "创建 Release 失败" }
+        }
+        Write-Host "Release 已发布: $tag ($archive)"
