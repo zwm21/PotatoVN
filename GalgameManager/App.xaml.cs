@@ -266,6 +266,29 @@ public partial class App : Application
             Exit();
             return;
         }
+
+        // 完整备份/恢复：必须在解析任何服务之前执行。
+        // 运行中的实例独占 pvn_data.db 与 pvn_settings.db，替换这两个文件夹只能在"没有实例在跑"时进行；
+        // 而免安装版的 LocalSettingsService 一构造就会打开设置数据库（见 RedirectToMainInstanceAsync 注释）。
+        // 进度窗口要一直留到启动流程结束再关闭：主窗口此时才被创建，提前关掉最后一个窗口会让应用直接退出。
+        FullBackupWindow? fullBackupWindow = null;
+        FullBackupResult? fullBackupResult = null;
+        try
+        {
+            FullBackupService service = FullBackupService.CreateDefault();
+            if (service.HasPendingRequest())
+            {
+                fullBackupWindow = new FullBackupWindow();
+                fullBackupWindow.Activate();
+                fullBackupResult = await service.RunPendingAsync((key, arg) =>
+                    fullBackupWindow.DispatcherQueue.TryEnqueue(() => fullBackupWindow.SetStatus(key, arg)));
+            }
+        }
+        catch (Exception e)
+        {
+            fullBackupResult = FullBackupResult.Fail("FullBackup_Fail", e.Message);
+        }
+
         // 设置LiveCharts字体
         LiveCharts.Configure(config => config.HasGlobalSKTypeface(SKFontManager.Default.MatchCharacter('汉')));
         _instance = this;
@@ -273,7 +296,18 @@ public partial class App : Application
         WinApp.Base.Helpers.UiThreadInvokeHelper.Init(DispatcherQueue);
 #pragma warning restore CS0618 //
         Status = WindowMode.Booting;
-        await GetService<IActivationService>().LaunchedAsync(AppInstance.GetCurrent().GetActivatedEventArgs());
+        try
+        {
+            await GetService<IActivationService>().LaunchedAsync(AppInstance.GetCurrent().GetActivatedEventArgs());
+        }
+        finally
+        {
+            fullBackupWindow?.Close();
+        }
+
+        if (fullBackupResult is not null)
+            GetService<IInfoService>().Info(fullBackupResult.Success ? InfoBarSeverity.Success : InfoBarSeverity.Error,
+                fullBackupResult.MessageKey.GetLocalized(), fullBackupResult.MessageArg);
     }
 
     /// <summary>

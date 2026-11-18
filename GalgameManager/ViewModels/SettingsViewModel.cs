@@ -1301,6 +1301,72 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         }
     }
 
+    /// <summary>
+    /// 完整备份：把 UserData 与 Settings 两个文件夹整体打包。<br/>
+    /// 运行中的实例独占两个 LiteDB 数据库，无法边跑边拷，因此只记录请求后重启，
+    /// 由 <see cref="App.OnLaunched"/> 在打开数据库之前完成打包。
+    /// </summary>
+    [RelayCommand]
+    private async Task FullBackup()
+    {
+        try
+        {
+            PvnFolderPicker openPicker = new();
+            if (openPicker.ShowDialog(App.MainWindow!.GetWindowHandle()) != PickerResult.OK
+                || string.IsNullOrEmpty(openPicker.SelectedPath)) return;
+            if (!Utils.IsPathWritable(openPicker.SelectedPath))
+            {
+                _infoService.Info(InfoBarSeverity.Error,
+                    msg: "ExportTask_PathNotWritable".GetLocalized(openPicker.SelectedPath));
+                return;
+            }
+
+            FullBackupService.CreateDefault().RequestBackup(openPicker.SelectedPath);
+            _infoService.Info(InfoBarSeverity.Success, msg: "SettingsPage_Other_FullBackup_Restarting".GetLocalized(),
+                displayTimeMs: 1000 * 5);
+            await Task.Delay(5 * 1000);
+            AppInstance.Restart("/fullbackup"); // 并没有实现这个参数，只是为了和正常启动区分
+        }
+        catch (Exception e)
+        {
+            _infoService.Info(InfoBarSeverity.Error, "SettingsPage_Other_FullBackup_Fail".GetLocalized(),
+                $"{e.Message}\n{e.StackTrace}");
+        }
+    }
+
+    /// <summary>
+    /// 恢复完整备份：用备份包替换当前的 UserData 与 Settings 文件夹。<br/>
+    /// 与 <see cref="ImportData"/> 同理需要重启后执行；导入前会自动备份当前数据，失败可回滚。
+    /// </summary>
+    [RelayCommand]
+    private async Task FullRestore()
+    {
+        try
+        {
+            FileOpenPicker openPicker = new();
+            WinRT.Interop.InitializeWithWindow.Initialize(openPicker, App.MainWindow!.GetWindowHandle());
+            openPicker.SuggestedStartLocation = PickerLocationId.HomeGroup;
+            openPicker.FileTypeFilter.Add(".zip");
+            StorageFile file = await openPicker.PickSingleFileAsync();
+            var path = file?.Path;
+            if (path is null) return;
+            if (file?.Name.EndsWith(FullBackupService.BackupFileExtension, StringComparison.OrdinalIgnoreCase)
+                is not true)
+                throw new PvnException("SettingsPage_Other_FullRestore_WrongFile".GetLocalized());
+
+            FullBackupService.CreateDefault().RequestRestore(path);
+            _infoService.Info(InfoBarSeverity.Success, msg: "SettingsPage_Other_FullRestore_Restarting".GetLocalized(),
+                displayTimeMs: 1000 * 10);
+            await Task.Delay(10 * 1000);
+            AppInstance.Restart("/fullbackup");
+        }
+        catch (Exception e)
+        {
+            _infoService.Info(InfoBarSeverity.Error, "SettingsPage_Other_FullRestore_Fail".GetLocalized(),
+                $"{e.Message}\n{e.StackTrace}");
+        }
+    }
+
     #endregion
 
     #region Notification

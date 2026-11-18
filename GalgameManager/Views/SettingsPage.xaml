@@ -809,6 +809,22 @@
                                             Command="{x:Bind ViewModel.ImportDataCommand}"/>
                                 </control:Setting>
                             </control:Panel>
+                            <!-- 完整备份（UserData + Settings 整包） -->
+                            <control:Panel>
+                                <control:Setting x:Uid="SettingsPage_Other_FullBackup">
+                                    <Button x:Uid="SettingsPage_Other_FullBackup_Button"
+                                            MinWidth="{StaticResource ButtonMinWidth}"
+                                            Command="{x:Bind ViewModel.FullBackupCommand}"/>
+                                </control:Setting>
+                            </control:Panel>
+                            <!-- 恢复完整备份 -->
+                            <control:Panel>
+                                <control:Setting x:Uid="SettingsPage_Other_FullRestore">
+                                    <Button x:Uid="SettingsPage_Other_FullRestore_Button"
+                                            MinWidth="{StaticResource ButtonMinWidth}"
+                                            Command="{x:Bind ViewModel.FullRestoreCommand}"/>
+                                </control:Setting>
+                            </control:Panel>
                             <!-- 优化内存占用 -->
                             <control:Panel>
                                 <local:SettingToggleSwitch x:Uid="SettingsPage_Other_Memory"

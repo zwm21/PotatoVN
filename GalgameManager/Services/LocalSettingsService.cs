@@ -38,11 +38,18 @@ public class LocalSettingsService : ILocalSettingsService
     public event ILocalSettingsService.Delegate? OnSettingChanged;
     public DirectoryInfo LocalFolder => new(AppStoragePaths.LocalDataPath);
     public DirectoryInfo TemporaryFolder => new(AppStoragePaths.TempPath);
-    private DirectoryInfo SettingsFolder => new(Path.Combine(LocalFolder.FullName, "../",  "Settings"));
+    private DirectoryInfo SettingsFolder => GetSettingsFolder(LocalFolder);
     public LiteDatabase Database { get; private set; } = null!;
     private LiteDatabase? _settingDatabase; //这个数据库只在非MSIX模式下使用
     private ILiteCollection<SettingItem>? _settingCollection; //这个表只在非MSIX模式下使用
     public bool IsDatabaseUsable { get; private set; }
+
+    /// <summary>
+    /// 设置数据库所在文件夹：数据目录（UserData）的兄弟目录 Settings。<br/>
+    /// 该文件夹在 LocalFolder 之外，因此「导出数据」不会包含它，完整备份需要单独处理。
+    /// </summary>
+    public static DirectoryInfo GetSettingsFolder(DirectoryInfo localFolder) =>
+        new(Path.Combine(localFolder.FullName, "..", "Settings"));
 
     public LocalSettingsService(IFileService fileService, IOptions<LocalSettingsOptions> options)
     {
