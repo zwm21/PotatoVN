@@ -45,7 +45,7 @@ public enum PageEnum
     /// 帮助界面
     HelpPage = 14,
 
-    /// 更新内容界面
+    /// 更新内容界面（页面已移除，仅为兼容旧插件保留该枚举值；导航到它会抛异常）
     UpdateContentPage = 15,
 
     /// 年度报告界面
