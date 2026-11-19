@@ -106,3 +106,37 @@
 - 产物：发布输出中两个 DLL 与 deps.json 引用均消失；根目录条目 395 → 393，包体 332.1 → 324.5 MB（-7.7 MB）。
 - 运行：干净副本启动正常（主窗口 1532×958、9 导航项、4 命令栏、zh-CN 文案、日志无 ERR）；
   再导入真实备份全数据验证：3615 文件恢复、游戏列表正常、RSS 247 MB、日志只有版本行。
+
+---
+
+## 追加：第二轮轻量化——删除 AI/ML 栈与 .winmd（已调研 + 全页面实测，未提交）
+
+`Optimize-PortableLayout.ps1` 增加两个开关，`Publish-Portable.ps1` 与 `build.yml` 都传
+`-DeleteWinmd:$true`（AI/ML 删除默认开启）。
+
+### 重新审视后确定的删除范围
+
+| 范围 | 文件数 | 体积 | 判定依据 |
+| --- | --- | --- | --- |
+| AI/ML 栈 | 25 | **43.5 MB** | 源码零引用；运行期 18 个 PE 一个都不加载（对比进程已加载模块得出）；来源是 `Microsoft.Windows.AI.MachineLearning 2.1.1` + `Microsoft.WindowsAppSDK.AI 2.1.10` 的可选 workload |
+| `lib/*.winmd` | 51 | **2.7 MB** | WinRT 元数据仅 XAML 编译期使用；运行期全删也能跑 |
+| 合计 | 76 | **46.2 MB** | 包体 324.5 → 278.3 MB，根目录 393 → 368 条目 |
+
+**关键发现（差点误删）**：`Microsoft.WindowsAppSDK.AI` 包里混着通用的
+`Microsoft.Graphics.Imaging.Projection.dll`，`DownloadHelper` 在用 `Windows.Graphics.Imaging`，
+所以删除用**显式文件清单**而不是 `Microsoft.Windows.AI.*` 通配符，并已在合成目录测试中确认
+`Microsoft.Graphics.Imaging.dll` / `.Projection.dll` / `.winmd` 三个都保留。
+
+### 明确不删的（有影响）
+- **诊断件 7.6 MB**（`mscordaccore*`/`mscordbi`/`mscorrc`/`DiaSymReader`/`createdump.exe`）：
+  不影响正常功能，但会削弱崩溃转储与调试能力——仓库有专门的 CrashDiagnostics 体系，不碰。
+- **`Assets/Data/vn_mapper.db` 11.1 MB**：运行期要被 `PhraseHelper` 读，不是"删掉"而是要改成
+  按需下载，属代码改动。
+- **未加载的 `System.*` 23 MB（122 个）**：只能靠 `PublishTrimmed` 裁，已排除。
+- **R2R 77 MB**：实测关掉后 `GalgameManager.dll` 8.89→3.89 MB、整包 324.5→~247 MB，但换启动速度，需单独决策。
+
+### 验证（两阶段各自全页面实测）
+- 阶段1（只删 AI/ML）与阶段2（再删 winmd）都用**导入真实备份**的副本跑：
+  9 个导航页 + 年度报告 6 个子页 + 过滤/排序弹出层全部渲染，两阶段的 UIA 元素数**逐个页面完全一致**，
+  进程稳定、stderr 0 字节、日志只有版本行。
+- 以 CI 相同方式（仓库根 + 相对路径 + `-DeleteWinmd:$true`）调用成功，4 个必须保留的文件复核通过。

@@ -34,13 +34,25 @@
 
 .PARAMETER KeepLanguages
     要保留的语言目录名，其余"只含 *.mui"的目录会被删除。
+
+.PARAMETER RemoveAiMlStack
+    删除 Windows App SDK 传递带入的 AI/ML 栈（onnxruntime / DirectML / Microsoft.Windows.AI.* /
+    Microsoft.Windows.Workloads.* / workloads*.json）。应用源码零引用、运行期一个都不加载，
+    属可选 workload 组件。注意 **不删** Microsoft.Graphics.Imaging.*：那是通用图像投影，
+    DownloadHelper 在用它。
+
+.PARAMETER DeleteWinmd
+    连 lib/ 里的 *.winmd 一并删除（而不是搬进 lib/）。WinRT 元数据只在 XAML 编译期使用，
+    运行期不需要；默认 false（先搬后删需要单独确认过再开）。
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$Target,
     [string]$LibDir = 'lib',
     [string[]]$MovePatterns = @('*.winmd', '*.pdb'),
-    [string[]]$KeepLanguages = @('zh-CN', 'en-us', 'ja-JP')
+    [string[]]$KeepLanguages = @('zh-CN', 'en-us', 'ja-JP'),
+    [bool]$RemoveAiMlStack = $true,
+    [bool]$DeleteWinmd = $false
 )
 
 Set-StrictMode -Version 2.0
@@ -86,7 +98,62 @@ foreach ($dir in @(Get-ChildItem -LiteralPath $Target -Directory -Force)) {
     $removedLangs++
 }
 
-# ---------- 3. 校验宿主/加载器必需的同目录文件没有被误搬 ----------
+# ---------- 3. 删除 AI/ML 栈 ----------
+# 来源：Microsoft.Windows.AI.MachineLearning 2.1.1 与 Microsoft.WindowsAppSDK.AI 2.1.10
+# （后者由 Microsoft.WindowsAppSDK 2.1.3 直接依赖）。应用源码零引用，实测运行期 18 个 PE 一个都不加载。
+# 刻意用显式清单而不是通配符：Microsoft.WindowsAppSDK.AI 里混着通用的
+# Microsoft.Graphics.Imaging.Projection.dll（DownloadHelper 用 Windows.Graphics.Imaging），不能误删。
+$aiMlFiles = @(
+    'onnxruntime.dll'
+    'DirectML.dll'
+    'NPUDetect.dll'
+    'Microsoft.ML.OnnxRuntime.dll'
+    'Microsoft.Windows.AI.MachineLearning.dll'
+    'Microsoft.Windows.AI.MachineLearning.Projection.dll'
+    'Microsoft.Windows.AI.Imaging.dll'
+    'Microsoft.Windows.AI.Imaging.Projection.dll'
+    'Microsoft.Windows.AI.Text.dll'
+    'Microsoft.Windows.AI.Text.Projection.dll'
+    'Microsoft.Windows.AI.ContentSafety.dll'
+    'Microsoft.Windows.AI.ContentSafety.Projection.dll'
+    'Microsoft.Windows.AI.AICapabilities.dll'
+    'Microsoft.Windows.AI.Projection.dll'
+    'Microsoft.Windows.AI.Foundation.Projection.dll'
+    'Microsoft.Windows.Workloads.dll'
+    'Microsoft.Windows.Workloads.Resources.dll'
+    'Microsoft.Windows.Workloads.Resources_ec.dll'
+    'Microsoft.Windows.Workloads.pri'
+    'workloads.json'
+    'workloads.365.json'
+    'workloads.j32.json'
+    'workloads.lnl.json'
+    'workloads.qnn.json'
+    'workloads.stx.json'
+)
+$removedAiMl = 0
+$removedAiMlBytes = 0L
+if ($RemoveAiMlStack) {
+    foreach ($name in $aiMlFiles) {
+        foreach ($path in @(Join-Path $Target $name), (Join-Path $libPath $name)) {
+            if (Test-Path -LiteralPath $path) {
+                $removedAiMlBytes += (Get-Item -LiteralPath $path).Length
+                Remove-Item -LiteralPath $path -Force
+                $removedAiMl++
+            }
+        }
+    }
+}
+
+# ---------- 4. 视参数决定 winmd 的去留 ----------
+$deletedWinmd = 0
+if ($DeleteWinmd) {
+    foreach ($file in @(Get-ChildItem -LiteralPath $libPath -Filter '*.winmd' -File -Force -ErrorAction SilentlyContinue)) {
+        $deletedWinmd++
+        Remove-Item -LiteralPath $file.FullName -Force
+    }
+}
+
+# ---------- 5. 校验宿主/加载器必需的同目录文件没有被误搬 ----------
 foreach ($required in @('GalgameManager.exe', 'GalgameManager.dll', 'GalgameManager.deps.json', 'GalgameManager.runtimeconfig.json')) {
     if (-not (Test-Path -LiteralPath (Join-Path $Target $required))) { throw "整理后根目录缺少 $required" }
 }
@@ -97,3 +164,9 @@ $afterDirs = @($after | Where-Object { $_.PSIsContainer })
 Write-Host ("根目录整理: {0} -> {1} 个条目（文件 {2} -> {3}，目录 {4} -> {5}）" -f `
         $before.Count, $after.Count, $beforeFiles.Count, $afterFiles.Count, $beforeDirs.Count, $afterDirs.Count)
 Write-Host ("  搬入 $LibDir/: $moved 个文件；删除语言目录: $removedLangs 个（保留 $($KeepLanguages -join ', ')）")
+if ($RemoveAiMlStack) {
+    Write-Host ("  删除 AI/ML 栈: $removedAiMl 个文件 / {0:N1} MB" -f ($removedAiMlBytes/1MB))
+}
+if ($DeleteWinmd) {
+    Write-Host "  删除 $LibDir/*.winmd: $deletedWinmd 个"
+}

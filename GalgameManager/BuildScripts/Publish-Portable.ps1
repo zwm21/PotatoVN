@@ -59,10 +59,10 @@ foreach ($name in @("Microsoft.WindowsAppRuntime.dll", "GalgameManager.exe")) {
     if (-not (Test-Path (Join-Path $target $name))) { throw "输出目录中未找到 $name，自包含打包未生效" }
 }
 
-# 收拢根目录：搬走 winmd/pdb、清理冗余语言目录。
-# 托管 DLL / 原生 DLL / .pri / workloads*.json 受宿主与 OS 加载机制限制必须留在根目录，
+# 收拢根目录：搬走 winmd/pdb、清理冗余语言目录、删除 AI/ML 栈与 winmd。
+# 托管 DLL / 原生 DLL / .pri 受宿主与 OS 加载机制限制必须留在根目录，
 # 原因见 Optimize-PortableLayout.ps1 的注释。
-& (Join-Path $repoRoot "GalgameManager\BuildScripts\Optimize-PortableLayout.ps1") -Target $target
+& (Join-Path $repoRoot "GalgameManager\BuildScripts\Optimize-PortableLayout.ps1") -Target $target -DeleteWinmd:$true
 
 $files = (Get-ChildItem $target -Recurse -File).Count
 Write-Host "发布完成: $target"
