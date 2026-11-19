@@ -3,25 +3,31 @@
 .SYNOPSIS
     收拢自包含便携包根目录：把与运行时加载机制无关的产物移入子目录，并清理冗余语言目录。
 
-.DESCRIPTION
-    .NET 8 自包含应用的加载机制决定了哪些文件必须留在应用根目录（= 可执行文件所在目录）：
-
+    必须留在应用根目录的（前两条是机制限制，后两条是踩过的坑）：
     * 托管程序集：hostpolicy 组装 TPA（可信平台程序集）列表时，"probe type=app" 只取 deps.json
       资产路径的"文件名"部分，固定拼成 <应用目录>\<文件名>.dll（COREHOST_TRACE 实测），
       因此改写 deps.json 里的路径既无效、也无法把 DLL 放进子目录。
     * 原生 DLL：由 OS 加载器按"可执行文件目录 → System32 → PATH"查找，子目录不在搜索范围内。
-    * .pri：MRT 只在应用根目录发现资源映射，移走后 ms-appx:///MainWindow.xaml 直接加载失败
+    * *.pdb：运行时的栈跟踪符号解析只找程序集**同目录**的 portable PDB。搬进子目录后
+      Exception.ToString() / CrashDiagnostics 的崩溃日志会丢掉文件名和行号（已实测复现），
+      所以 PDB 必须留在根目录——这是诊断能力，不是可选装饰。
+    * *.pri：MRT 只在应用根目录发现资源映射，移走后 ms-appx:///MainWindow.xaml 直接加载失败
       （XamlParseException）。
-    * workloads*.json：onnxruntime / DirectML 执行提供包的清单，跟随 onnxruntime.dll 所在目录解析。
-    * .exe / GalgameManager.dll / *.deps.json / *.runtimeconfig.json：宿主与 apphost 的同目录约定。
+    * workloads*.json / .exe / GalgameManager.dll / *.deps.json / *.runtimeconfig.json：
+      执行提供包清单与宿主、apphost 的同目录约定。
 
-    可以安全搬走的只有两类：
+    可以处理的只有两类：
     * *.winmd：WinRT 元数据仅在 XAML 编译期使用；运行时把全部 .winmd 删掉应用仍能启动并渲染
       （实测），也不存在 Type.GetType / ApiInformation 之类的运行时 winmd 查找。
-    * *.pdb：仅调试用，运行期不加载。
+      默认搬进 lib/，-DeleteWinmd 可直接删。
+    * AI/ML 栈（onnxruntime / DirectML / Microsoft.Windows.AI.* / Microsoft.Windows.Workloads.*）：
+      Windows App SDK 的可选 workload，应用源码零引用、运行期一个都不加载，直接删。
 
     语言目录：每个目录只含 WinUI 内置控件的 *.mui；应用自身三语言文案在 resources.pri 里。
     仅保留应用支持的三种语言，其余目录删除（MRT 会按主语言回退）。
+
+    本脚本只删除**发布产物**里可再生的文件（重新 dotnet publish 就会回来），从不碰用户数据；
+    删除用 Remove-Item 而不是回收站——它是 CI 构建步骤，不能依赖交互式 Shell 的回收站。
 
 .PARAMETER Target
     发布目录（含 GalgameManager.exe 的那个目录）。
@@ -41,15 +47,21 @@
     属可选 workload 组件。注意 **不删** Microsoft.Graphics.Imaging.*：那是通用图像投影，
     DownloadHelper 在用它。
 
+.PARAMETER MovePatterns
+    额外要从根目录搬走的文件名通配符，**默认为空**。
+    不要把 *.pdb 放进来：.NET 运行时的栈跟踪符号解析只找程序集**同目录**的 portable PDB，
+    搬走会让 Exception.ToString() / CrashDiagnostics 的崩溃日志丢掉文件名和行号（已实测复现）。
+    也不要把 *.pri 放进来：MRT 只在应用根目录发现资源映射，搬走直接 ms-appx 加载失败。
+
 .PARAMETER DeleteWinmd
-    连 lib/ 里的 *.winmd 一并删除（而不是搬进 lib/）。WinRT 元数据只在 XAML 编译期使用，
-    运行期不需要；默认 false（先搬后删需要单独确认过再开）。
+    把 *.winmd 直接删掉（而不是搬进 lib/）。WinRT 元数据只在 XAML 编译期使用，运行期不需要；
+    默认 false。已用导入真实备份的全页面实测确认无影响后才在调用方开启。
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$Target,
     [string]$LibDir = 'lib',
-    [string[]]$MovePatterns = @('*.winmd', '*.pdb'),
+    [string[]]$MovePatterns = @(),
     [string[]]$KeepLanguages = @('zh-CN', 'en-us', 'ja-JP'),
     [bool]$RemoveAiMlStack = $true,
     [bool]$DeleteWinmd = $false
@@ -66,6 +78,26 @@ foreach ($required in @('GalgameManager.exe', 'GalgameManager.dll', 'GalgameMana
     }
 }
 
+# 子目录必须严格位于发布目录内，否则 -LibDir '..' 之类就能把文件搬出去、甚至删到外面
+$targetFull = [System.IO.Path]::GetFullPath($Target)
+$libPath = [System.IO.Path]::GetFullPath((Join-Path $Target $LibDir))
+if (-not $libPath.StartsWith($targetFull + [System.IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+    throw "LibDir 解析后越出发布目录: '$LibDir' -> '$libPath'"
+}
+
+# 搬移前就拒绝会把受保护文件搬走的通配符：这些文件离开根目录就直接破坏运行期行为
+# （.pri -> MRT 找不到资源映射；.pdb -> 栈跟踪丢行号；宿主文件 -> 起不来）
+$protectedPatterns = @('*.pri', '*.pdb', 'GalgameManager.exe', 'GalgameManager.dll',
+                       'GalgameManager.deps.json', 'GalgameManager.runtimeconfig.json',
+                       'resources.pri', 'appsettings.json')
+foreach ($pattern in $MovePatterns) {
+    foreach ($p in $protectedPatterns) {
+        if ($pattern -like $p -or $p -like $pattern) {
+            throw "MovePatterns 不允许搬移受保护文件: '$pattern'（命中保护规则 '$p'）"
+        }
+    }
+}
+
 function Get-RootEntries {
     return @(Get-ChildItem -LiteralPath $Target -Force)
 }
@@ -73,9 +105,25 @@ function Get-RootEntries {
 $before = Get-RootEntries
 $beforeFiles = @($before | Where-Object { -not $_.PSIsContainer })
 $beforeDirs = @($before | Where-Object { $_.PSIsContainer })
+# 记录整理前根目录的 .pri：MRT 只在应用根目录发现资源映射，一个都不能少
+$priBefore = @(Get-ChildItem -LiteralPath $Target -Filter '*.pri' -File -Force | ForEach-Object { $_.Name })
 
-# ---------- 1. 搬走与加载机制无关的产物 ----------
-$libPath = Join-Path $Target $LibDir
+# ---------- 1. winmd：搬进 lib/，或按参数直接删 ----------
+$movedWinmd = 0
+$deletedWinmd = 0
+foreach ($file in @(Get-ChildItem -LiteralPath $Target -Filter '*.winmd' -File -Force)) {
+    if ($DeleteWinmd) {
+        Remove-Item -LiteralPath $file.FullName -Force
+        $deletedWinmd++
+    }
+    else {
+        if (-not (Test-Path -LiteralPath $libPath)) { New-Item -ItemType Directory -Path $libPath | Out-Null }
+        Move-Item -LiteralPath $file.FullName -Destination (Join-Path $libPath $file.Name)
+        $movedWinmd++
+    }
+}
+
+# ---------- 2. 额外搬移（默认无；PDB 与 .pri 都不该搬，见 MovePatterns 注释） ----------
 $moved = 0
 foreach ($pattern in $MovePatterns) {
     foreach ($file in @(Get-ChildItem -LiteralPath $Target -Filter $pattern -File -Force)) {
@@ -134,39 +182,33 @@ $removedAiMl = 0
 $removedAiMlBytes = 0L
 if ($RemoveAiMlStack) {
     foreach ($name in $aiMlFiles) {
-        foreach ($path in @(Join-Path $Target $name), (Join-Path $libPath $name)) {
-            if (Test-Path -LiteralPath $path) {
-                $removedAiMlBytes += (Get-Item -LiteralPath $path).Length
-                Remove-Item -LiteralPath $path -Force
-                $removedAiMl++
-            }
+        # 只在发布目录内删：越界的情况已在入口被 $libPath 断言挡掉
+        $path = Join-Path $Target $name
+        if (Test-Path -LiteralPath $path) {
+            $removedAiMlBytes += (Get-Item -LiteralPath $path).Length
+            Remove-Item -LiteralPath $path -Force
+            $removedAiMl++
         }
     }
 }
 
-# ---------- 4. 视参数决定 winmd 的去留 ----------
-$deletedWinmd = 0
-if ($DeleteWinmd) {
-    foreach ($file in @(Get-ChildItem -LiteralPath $libPath -Filter '*.winmd' -File -Force -ErrorAction SilentlyContinue)) {
-        $deletedWinmd++
-        Remove-Item -LiteralPath $file.FullName -Force
-    }
-}
-
-# ---------- 5. 校验宿主/加载器必需的同目录文件没有被误搬 ----------
-foreach ($required in @('GalgameManager.exe', 'GalgameManager.dll', 'GalgameManager.deps.json', 'GalgameManager.runtimeconfig.json')) {
+# ---------- 5. 校验：宿主/加载器必需的同目录文件、以及资源映射，一个都不能少 ----------
+foreach ($required in @('GalgameManager.exe', 'GalgameManager.dll', 'GalgameManager.deps.json',
+                       'GalgameManager.runtimeconfig.json', 'resources.pri', 'appsettings.json')) {
     if (-not (Test-Path -LiteralPath (Join-Path $Target $required))) { throw "整理后根目录缺少 $required" }
 }
+$priAfter = @(Get-ChildItem -LiteralPath $Target -Filter '*.pri' -File -Force | ForEach-Object { $_.Name })
+# AI/ML 清单里的 .pri（Microsoft.Windows.Workloads.pri）是故意删的，不参与校验
+$priRequired = @($priBefore | Where-Object { $_ -notin $aiMlFiles })
+$priMissing = @($priRequired | Where-Object { $_ -notin $priAfter })
+if ($priMissing.Count -gt 0) { throw "整理后根目录缺少资源映射: $($priMissing -join ', ')" }
 
 $after = Get-RootEntries
 $afterFiles = @($after | Where-Object { -not $_.PSIsContainer })
 $afterDirs = @($after | Where-Object { $_.PSIsContainer })
 Write-Host ("根目录整理: {0} -> {1} 个条目（文件 {2} -> {3}，目录 {4} -> {5}）" -f `
         $before.Count, $after.Count, $beforeFiles.Count, $afterFiles.Count, $beforeDirs.Count, $afterDirs.Count)
-Write-Host ("  搬入 $LibDir/: $moved 个文件；删除语言目录: $removedLangs 个（保留 $($KeepLanguages -join ', ')）")
+Write-Host ("  winmd: 搬入 $LibDir/ $movedWinmd 个，删除 $deletedWinmd 个；额外搬移 $moved 个；删除语言目录 $removedLangs 个（保留 $($KeepLanguages -join ', ')）")
 if ($RemoveAiMlStack) {
     Write-Host ("  删除 AI/ML 栈: $removedAiMl 个文件 / {0:N1} MB" -f ($removedAiMlBytes/1MB))
-}
-if ($DeleteWinmd) {
-    Write-Host "  删除 $LibDir/*.winmd: $deletedWinmd 个"
 }
