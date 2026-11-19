@@ -1,7 +1,6 @@
 # PROGRESS
 
 ## 本轮任务：精简 PotatoVN 自包含便携包根目录
-
 分支 `dev`，本轮任务基线 HEAD `4b51c4df`。
 
 ### 一、结论：分层可迁移性（x64 实测，COREHOST_TRACE + 实跑验证）
@@ -52,7 +51,58 @@
 
 ### 五、风险与未做事项
 
-- **不要**在本机直接跑 `Publish-Portable.ps1`：当前动态版本 1.10.3.12 与 `publish/PotatoVN-1.10.3.12-x64-portable` 已存在且里面有开发者真实 `UserData`/`Settings`，脚本会 `Remove-Item -Recurse` 掉它。本轮因此只用等价的 `dotnet publish` 命令手工发布到临时目录（`publish/_lab/`、`publish/_verify/`，均已清理）。
+- ~~**不要**在本机直接跑 `Publish-Portable.ps1`~~：当时动态版本 1.10.3.12 与 `publish/PotatoVN-1.10.3.12-x64-portable` 同名且内含真实数据，脚本会 `Remove-Item -Recurse` 掉它，所以那轮只用等价的 `dotnet publish` 命令手工发布到临时目录（`publish/_lab/`、`publish/_verify/`，均已清理）。提交后动态版本升到 1.10.3.13，该风险已解除（见下方追加记录）。
 - 改动已提交到本地 `dev`（未 push）。
 - 实验副本与临时脚本都已删除（按仓库规则移入回收站，未永久删除）；回收站里因此多出约 4.7 GB 的可再生产物，用户可按需清空。
-- 参考过的用户备份 `publish/PotatoVN_26-11-18_15-47-00.pvnBackup.zip` 只做了只读结构查看（顶层 `Settings/` + `UserData/`），没有解包、没有注入任何测试副本。
+
+---
+
+## 追加：完整备份导入新版便携包验证（1.10.3.13）
+
+提交 `2542e47d` 后用 `Publish-Portable.ps1` 打出 `publish/PotatoVN-1.10.3.13-x64-portable`
+（根目录 395 条目 / 462 文件 / 332 MB）。动态版本升到 1.10.3.13，因此不会再覆盖带真实数据的 1.10.3.12 目录。
+
+把 `publish/PotatoVN_26-11-18_15-47-00.pvnBackup.zip`（168 MB，3617 条目 = UserData 3615 + Settings 2）
+导入该包：`.pvnBackup.zip` 走 `FullBackupService` 恢复流程（在 `%TEMP%\PotatoVN_FullBackup.json`
+写 `Kind=restore` 标记，`App.OnLaunched` 先于任何数据库打开完成恢复），不需要改代码。
+
+结果（实跑 + UIA 验证）：
+- 恢复完整：`UserData` 3615 文件 / 170.6 MB、`Settings` 2 文件；`Temp/ImportBackup` 为空（原目录本就是空的）。
+- 主界面/游戏库/年度报告全部正常：游戏列表加载出全部作品，游戏库按来源分组（虚拟库 + 多个本地文件夹），
+  zh-CN 界面文案与导航项（主页/游戏/游戏库/分类/年度报告/状态/账户/插件/设置）正常。
+- 年度报告有真实数据：过去一年 27.43 小时、6 部作品、最活跃月份 9 月；点开「游玩时长分析」（CartesianChart）
+  与「游戏完成度分析」（PieChart）TeachingTip 均正常渲染，进程稳定——LiveChartsCore + SkiaSharp 链路在整理后的
+  布局下用真实数据验证通过（此前空数据态图表不会实例化，这一轮补上了）。
+- `UserData/Images` 3470 文件 / 167.5 MB（封面图全部就位），`pvn_data.db` 2.28 MB、`ex-vndb.db` 0.67 MB、
+  `Settings/pvn_settings.db`；日志只有版本行，无 ERR。
+- 旧的 1.10.3.12 包（含真实 UserData/Settings）未被触碰，时间戳仍是 11/18 22:48。
+
+导入后该包体积变为 503 MB / 4079 文件，应用仍在运行（pid 见当次汇报）；分发改包前需删掉包内
+`UserData/`、`Settings/`、`Temp/`。
+
+---
+
+## 追加：第一档轻量化——移除两个死依赖（已调研 + 验证，未提交）
+
+`GalgameManager.csproj` 移除 `<PackageReference Include="Lib.Harmony" />` 与
+`<PackageReference Include="System.Linq.Async" />`。
+
+### 可移除性证据（全仓检索 + deps.json 依赖图）
+- `Lib.Harmony` → `0Harmony.dll`（4.95 MB）：除 csproj 外全仓零引用；不在 `PluginLoadContext`
+  的 15 个共享程序集清单里（插件需要会自带）；deps.json 中无任何下游依赖、自身也无传递依赖。
+- `System.Linq.Async` → `System.Linq.Async.dll`（2.71 MB）：全仓无 `using System.Linq.Async`，
+  独有方法（SelectAwait/WhereAwait/ForEachAsync/ToAsyncEnumerable/MergeAwait/AggregateAwait/
+  ToLookupAsync/ToHashSetAsync/ToEnumerable）一个都没用；唯一两个同名方法 `ToListAsync()` /
+  `FirstOrDefaultAsync()`（`PhraseHelper.cs:90,167`）接收者是 `AsyncTableQuery<T>`
+  （PotatoVnDBMapper 的 `Db` 是 `SQLiteAsyncConnection`，已用 strings 验证），属 sqlite-net-pcl 的 API。
+  同样无下游依赖、无传递依赖。
+- `Polly` 删不得：`GalFingerPrint.Client` 与 `PotatoVN.Client` 的传递依赖（本次未动）。
+
+### 验证结果
+- 构建：`dotnet build GalgameManager.sln -c Release` → 0 错误（首次因上次中断的 XAML 编译留下
+  `output.json` 锁 + 缺 `resources.pri`，`dotnet clean` 后通过；与本次改动无关）。**编译通过本身就是
+  最硬的证明**——若真有代码用到这两个包，会直接 CS1061/CS0012。
+- 测试：306 通过 / 7 失败 / 313 总计，与基线逐项一致。
+- 产物：发布输出中两个 DLL 与 deps.json 引用均消失；根目录条目 395 → 393，包体 332.1 → 324.5 MB（-7.7 MB）。
+- 运行：干净副本启动正常（主窗口 1532×958、9 导航项、4 命令栏、zh-CN 文案、日志无 ERR）；
+  再导入真实备份全数据验证：3615 文件恢复、游戏列表正常、RSS 247 MB、日志只有版本行。
