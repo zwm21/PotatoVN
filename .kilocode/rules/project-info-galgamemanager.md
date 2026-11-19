@@ -37,7 +37,7 @@ The client application implements the core functionalities of PotatoVN:
     *   **Views:** Define the UI structure and appearance (XAML files in `GalgameManager/Views/`).
     *   **ViewModels:** Act as intermediaries between Views and Models, handling UI logic and state (found in `GalgameManager/ViewModels/`).
 *   **Development Framework Base:** Initially generated using TemplateStudio, providing a standardized project structure and common patterns.
-  *   **Localization:** Supports multiple languages through localization files, managed via Crowdin (configuration in `crowdin.yml` at the repository root). String resources are located in `GalgameManager/Strings/` within language-specific subfolders (e.g., `zh-CN`, `en-US`), typically in `Resources.resw` files.
+  *   **Localization:** Supports multiple languages through localization files that are maintained **locally in this repo** (no Crowdin pipeline — the `crowdin*.yml` workflows and root `crowdin.yml` were removed). String resources are located in `GalgameManager/Strings/` within language-specific subfolders (`zh-CN`, `en-US`, `ja-JP`), as `Resources.resw` files, and must be edited with `GalgameManager/Strings/resw_tool.py` (search / update / delete / validate) rather than by hand.
       *   **Implementing XAML Localization:**
           *   Use the `x:Uid` attribute on XAML elements to mark them for localization. For example: `<TextBlock x:Uid="MyUniqueControlUid" />`.
           *   In the `.resw` resource file (e.g., `Strings/zh-CN/Resources.resw`), create a `<data>` entry where the `name` attribute is the `x:Uid` value followed by a dot and the target property name. The property name varies by control type:
@@ -236,7 +236,7 @@ This section highlights important files and directories specific to the client a
 *   **Feature Implementation:** New features would likely involve creating or updating services, viewmodels, and views.
 *   **Bug Fixing:** Debugging would require navigating through the MVVM layers and understanding data flow.
 *   **UI/UX Enhancements:** Changes to XAML in `Views/` and potentially `Styles/`.
-*   **Localization:** Adding new languages would involve updating files in `Strings/` and ensuring Crowdin integration.
+*   **Localization:** Adding a new language means adding `<locale>/Resources.resw` under `Strings/`, extending `Enums/LanguageEnum.cs`, and filling the keys with `resw_tool.py`.
 *   **API Integration:** Modifying or adding interactions with external services (Bangumi, VNDB, `GalgameManager.Server`) would typically occur in `Services/` or dedicated API helper classes.
 *   **Configuration Management:** Understanding `appsettings.json` for client-side settings.
 

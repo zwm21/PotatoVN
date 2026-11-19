@@ -45,7 +45,17 @@ A visual novel management tool designed to provide galgame collectors with a con
   
 ## Translation  
   
-PotatoVN uses Crowdin for localization. You are welcome to bring PotatoVN to your language on [Crowdin](https://crowdin.com/project/potatovn).  
+All UI strings live in `GalgameManager/Strings/<locale>/Resources.resw` and are maintained **locally in this repo** (Crowdin is no longer used).
+Use `GalgameManager/Strings/resw_tool.py` (run it from that directory) to add or change strings:
+
+```bash
+python resw_tool.py search "Settings_*"                                               # search keys
+python resw_tool.py update "NewKey.Text" en-US="English" ja-JP="日本語" zh-CN="中文"   # add / update
+python resw_tool.py delete "ObsoleteKey.Text"                                         # delete
+python resw_tool.py validate                                                          # validate all locales
+```
+
+**Never edit `.resw` files by hand.** Adding a new language also requires updating `GalgameManager/Enums/LanguageEnum.cs`.
   
 ## For developers  
   

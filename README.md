@@ -40,7 +40,17 @@
 
 ## 翻译
 
-PotatoVN使用crowdin来进行本地化，欢迎在[crowdin](https://crowdin.com/project/potatovn)将PotatoVN带到您的语言当中。
+PotatoVN 的界面文案全部放在 `GalgameManager/Strings/<语言>/Resources.resw` 里，由仓库**本地维护**（已不使用 Crowdin）。
+新增或修改文案请使用 `GalgameManager/Strings/resw_tool.py`（在该目录下运行）：
+
+```bash
+python resw_tool.py search "Settings_*"                                               # 搜索 key
+python resw_tool.py update "NewKey.Text" en-US="English" ja-JP="日本語" zh-CN="中文"   # 新增 / 修改
+python resw_tool.py delete "ObsoleteKey.Text"                                         # 删除
+python resw_tool.py validate                                                          # 校验三种语言是否合法
+```
+
+**不要直接手改 `.resw`**。新增语言时除 `Resources.resw` 外还需同步 `GalgameManager/Enums/LanguageEnum.cs`。
 
 ## 开发者相关
 本程序是一个WinUI3的应用，要编译本程序，请参考[微软文档](https://learn.microsoft.com/zh-cn/windows/apps/windows-app-sdk/set-up-your-development-environment?tabs=cs-vs-community%2Ccpp-vs-community%2Cvs-2022-17-1-a%2Cvs-2022-17-1-b)
