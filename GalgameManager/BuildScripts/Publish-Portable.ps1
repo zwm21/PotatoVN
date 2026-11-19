@@ -8,6 +8,7 @@
     （见 BuildScripts/Get-BuildVersionInfo.ps1 的 Get-DynamicVersion），
     例如 manifest 1.10.3.0 的第 7 次提交得到 1.10.3.7，目录名为 PotatoVN-1.10.3.7-x64-portable。
     与 .github/workflows/build.yml 的产物命名规则一致。
+    发布完成后调用 Optimize-PortableLayout.ps1 收拢根目录（搬走 winmd/pdb、清理冗余语言目录）。
 
 .PARAMETER Platform
     目标平台：x64 / x86 / arm64，默认 x64。
@@ -57,6 +58,11 @@ Move-Item -Path $staging -Destination $target
 foreach ($name in @("Microsoft.WindowsAppRuntime.dll", "GalgameManager.exe")) {
     if (-not (Test-Path (Join-Path $target $name))) { throw "输出目录中未找到 $name，自包含打包未生效" }
 }
+
+# 收拢根目录：搬走 winmd/pdb、清理冗余语言目录。
+# 托管 DLL / 原生 DLL / .pri / workloads*.json 受宿主与 OS 加载机制限制必须留在根目录，
+# 原因见 Optimize-PortableLayout.ps1 的注释。
+& (Join-Path $repoRoot "GalgameManager\BuildScripts\Optimize-PortableLayout.ps1") -Target $target
 
 $files = (Get-ChildItem $target -Recurse -File).Count
 Write-Host "发布完成: $target"

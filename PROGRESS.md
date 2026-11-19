@@ -1,0 +1,58 @@
+# PROGRESS
+
+## 本轮任务：精简 PotatoVN 自包含便携包根目录
+
+分支 `dev`，本轮任务基线 HEAD `4b51c4df`。
+
+### 一、结论：分层可迁移性（x64 实测，COREHOST_TRACE + 实跑验证）
+
+| 层 | 根目录条目数 | 能否搬进子目录 | 依据 |
+| --- | --- | --- | --- |
+| 托管 DLL（deps.json runtime 条目） | 308 | **不能** | `COREHOST_TRACE=1` 显示 hostpolicy 组装 TPA 时 `probe type=app` 只取资产路径的**文件名**，固定拼成 `<应用目录>\<文件名>.dll`；改写 deps.json 路径（`lib/X.dll`）后 TPA 仍指向根目录，启动即 `Failed to load System.Private.CoreLib.dll (0x80070002)` / `FileNotFoundException: System.Runtime` |
+| 原生 DLL | 62 | **不能** | OS 加载器按「可执行文件目录 → System32 → PATH」查找，子目录不在搜索范围；全仓 `[DllImport]` 只调 Windows 系统库，无 `NativeLibrary` 自定义解析 |
+| WinRT `.winmd` | 51 | **能** → `lib/` | 只在 XAML 编译期使用：把全部 51 个 `.winmd` 删掉，应用仍能启动并渲染主界面（实测）；再往根目录放一个 4KB 垃圾 `.winmd` 也不报错，说明运行期根本不扫描应用目录的 winmd；仓库内也无 `Type.GetType` / `ApiInformation` 之类运行期 winmd 查找 |
+| XAML 与框架资源 | 2 个目录（`Microsoft.UI.Xaml/`、`Uno.UI.Toolkit/`） | 不能 | WinUI / Uno 按相对路径读 `Assets/map.html`、`NoiseAsset_256x256_PNG.png`、`Themes/Generic.xaml(.xbf)` |
+| `.pri` | 6 | **不能** | MRT 只在应用根目录发现资源映射。搬走后 `MainWindow..ctor` 抛 `XamlParseException: Cannot locate resource from 'ms-appx:///MainWindow.xaml'`（实测崩溃报告） |
+| `.json` | 9 | 部分 | `GalgameManager.deps.json` / `.runtimeconfig.json`（apphost 同目录约定）、`appsettings.json`（内容根 = `AppContext.BaseDirectory`）必须留根目录；`workloads*.json` 6 个是 onnxruntime / DirectML 执行提供包清单，跟随 `onnxruntime.dll` 解析，一并留在根目录 |
+| `.pdb` | 3 | **能** → `lib/` | 仅调试用，运行期不加载 |
+| `.exe` | 3 | 不能 | `GalgameManager.exe`（入口）、`RestartAgent.exe`（WinAppSDK 重启代理）、`createdump.exe`（运行时崩溃转储） |
+| 语言目录 | 83 | 可清理 | 每个只含 2 个 WinUI 内置控件 `.mui`，应用自身三语言文案在 `resources.pri`；保留 `zh-CN` / `en-us` / `ja-JP`，其余删除后 MRT 按主语言回退 |
+
+已试过并**否决**的两条"搬托管 DLL"路线（都有实测证据，详见 `Optimize-PortableLayout.ps1` 注释）：
+
+1. 改写 `deps.json` 的 runtime 资产路径 → 无效（TPA 探测只用文件名）。
+2. `runtimeconfig.json` 的 `additionalProbingPaths` → 能注册 `probe type=lookup`（`<probeDir>/<包名>/<版本>/<relpath>`，即 NuGet 磁盘布局），按此布局堆放 307 个 DLL 后应用确实能跑；但该相对路径是**按进程当前工作目录**解析的——用 `Start-Process -WorkingDirectory C:\Windows` 启动立刻起不来。便携包不能依赖 CWD，故不采用。（顺带：`PROBING_DIRECTORIES` 对默认 ALC 无效，把 DLL 搬去 `lib/` 同时从 deps.json 删条目同样起不来。）
+
+### 二、改动文件
+
+- 新增 `GalgameManager/BuildScripts/Optimize-PortableLayout.ps1`：搬 `*.winmd` / `*.pdb` 到 `lib/`，删除只含 `*.mui` 的多余语言目录，并校验宿主必需的同目录文件没被误搬。幂等，非 PotatoVN 发布目录直接报错退出。无架构假设，x64 / x86 / arm64 通用。
+- `GalgameManager/BuildScripts/Publish-Portable.ps1`：自包含校验之后调用上面的脚本。
+- `.github/workflows/build.yml`：新增 `Slim down publish root` 步骤，调用同一脚本 + 复核 4 个必须留在根目录的文件（未硬编码架构名，`env.PLATFORM` 已有）。
+- `.kilocode/rules/project-info-galgamemanager.md` 第 9 节：补记上述加载机制结论（可复用知识）。
+
+### 三、根目录条目数前后对比（x64 发布产物）
+
+| | 条目总数 | 文件 | 目录 |
+| --- | --- | --- | --- |
+| 整理前 | 531 | 442 | 89 |
+| 整理后 | **395** | 388 | 7 |
+
+搬入 `lib/` 54 个文件（51 `.winmd` + 3 `.pdb`），删除 83 个语言目录（释放 166 个 `.mui`），保留目录：`Assets`、`Microsoft.UI.Xaml`、`Uno.UI.Toolkit`、`zh-CN`、`en-us`、`ja-JP`、`lib`。
+
+### 四、验证记录
+
+- 构建：`dotnet publish GalgameManager/GalgameManager.csproj -c Release -p:Platform=x64 -p:PublishProfile=win10-x64 -p:PotatoVnPortable=true -p:PublishDir=...` 成功（动态版本 1.10.3.12，commit 4b51c4d）。注意 `.sln`/`GalgameManager.csproj` 需带 `-p:Platform=x64`。
+- 测试：`dotnet test GalgameManager.Test/GalgameManager.Test.csproj` → **通过 306 / 失败 7 / 跳过 0 / 总计 313**，与基线完全一致（7 项既有环境失败：缺 `winapp` CLI 的 `UnpackagedApp_ShouldDisplayMigratedData` 等，按要求未修）。
+- 运行：干净临时副本（全新发布产物，不含 `UserData`/`Settings`/`Temp`；数据经 `POTATOVN_LOCALDATA_PATH` / `POTATOVN_TEMP_PATH` 重定向到副本外的临时目录）启动验证：
+  - 主界面渲染正常，UIA 树与整理前一致（标题栏、导航项「主页/游戏/游戏库/分类/年度报告/状态/账户/插件/设置」、命令栏「过滤/添加游戏/排序/更多选项」）。
+  - 三语言本地化：zh-CN 界面文案（"游戏""过滤""添加游戏"）正常，即 `resources.pri` + `zh-CN/Microsoft.ui.xaml.dll.mui` 加载正常；`en-us`、`ja-JP` 的 `.mui` 原样保留。
+  - 导航到「年度报告」并逐个子页（总览/习惯/月度/鉴赏/词云/最爱）全部正常渲染，无异常；图表控件位于 TeachingTip 内且需要游玩数据才会实例化，而本轮改动不移动任何托管/原生程序集，LiveChartsCore 链路与整理前完全一致。
+  - `UserData/pvn_data.db`、`Settings/pvn_settings.db`、`UserData/Plugins`、`UserData/data.dataStatus.json` 均正常创建；日志 `UserData/Logs/log<date>.txt` 正常写入版本行，无 ERR 记录。
+- 脚本调用路径：以 CI 相同方式（仓库根 + 相对目标路径）调用成功；二次调用幂等；对非发布目录报错退出 1。
+
+### 五、风险与未做事项
+
+- **不要**在本机直接跑 `Publish-Portable.ps1`：当前动态版本 1.10.3.12 与 `publish/PotatoVN-1.10.3.12-x64-portable` 已存在且里面有开发者真实 `UserData`/`Settings`，脚本会 `Remove-Item -Recurse` 掉它。本轮因此只用等价的 `dotnet publish` 命令手工发布到临时目录（`publish/_lab/`、`publish/_verify/`，均已清理）。
+- 改动已提交到本地 `dev`（未 push）。
+- 实验副本与临时脚本都已删除（按仓库规则移入回收站，未永久删除）；回收站里因此多出约 4.7 GB 的可再生产物，用户可按需清空。
+- 参考过的用户备份 `publish/PotatoVN_26-11-18_15-47-00.pvnBackup.zip` 只做了只读结构查看（顶层 `Settings/` + `UserData/`），没有解包、没有注入任何测试副本。
