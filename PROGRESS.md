@@ -250,3 +250,44 @@
 - 未验证「其他设置」区块展开后的逐项列表（用 UI 自动化点击展开时占用电脑过久被用户中止）；
   该点已由编译通过 + 设置页正常打开 + resw/XAML/ViewModel 三处同步删除覆盖。
 - `HalfFullWidth`（37 KB，1 处调用）与图表栈改直引（3.1 MB）本轮未做，等用户决定。
+
+---
+
+## 追加：R2R 单程序集豁免，发布包 276.3 → 244.4 MB（未提交）
+
+### 改动
+三个发布配置 `GalgameManager/Properties/PublishProfiles/win10-{x64,x86,arm64}.pubxml`
+各加一个 ItemGroup：
+
+```xml
+<ItemGroup>
+  <PublishReadyToRunExclude Include="Microsoft.Windows.SDK.NET.dll" />
+</ItemGroup>
+```
+
+### 实测结果
+- `Microsoft.Windows.SDK.NET.dll`：59,498,496 B (56.74 MB) → **26,086,944 B (24.88 MB)**
+- 整包：276.27 MB → **244.41 MB**，**省 31.86 MB**
+- 冒烟测试：启动 2.1s 出主窗口，标题 `PotatoVN`，正常关闭
+
+### 关键坑：Identity 必须带 `.dll` 扩展名
+第一版写 `<PublishReadyToRunExclude Include="Microsoft.Windows.SDK.NET" />`（不带后缀），
+**完全无效**——包内 DLL 仍是 56.74 MB。原因经 `dotnet msbuild -getItem:PublishReadyToRunExclude`
+诊断确认：MSBuild 把 Identity `Microsoft.Windows.SDK.NET` 解析成
+`Filename=Microsoft.Windows.SDK` + `Extension=.NET`，导致与 `Assemblies` 列表里的
+文件路径匹配不上。补上 `.dll` 后立即生效（R2R 中间目录中该文件消失）。
+
+### 验证过程中的两个构建坑（均已解决，与本次改动无关）
+1. `obj/x64/Release/.../R2R/` 里残留**旧缓存**（含早已删除的 `Microsoft.AppCenter.*`），
+   会干扰对"豁免是否生效"的判断。排查 R2R 相关问题时先删这个目录。
+2. `CSC error CS2012` + `WMC9999`：`intermediatexaml/GalgameManager.dll` 被
+   `Microsoft.UI.Xaml.Markup.Compiler` 锁定，且每次构建都新起进程自我锁定。
+   解决：杀 XamlCompiler 进程 → `dotnet build-server shutdown` →
+   `dotnet clean` → 手动删 `intermediatexaml/` 与 `output.json` → 重新构建。
+   这是本机既有构建坑，非代码问题。
+
+### 验证
+- `dotnet build GalgameManager.sln -c Debug`：**0 错误**，10 个警告（均为既有的
+  NU1900 网络、AutoMapper 两条高危漏洞、CS1998）。
+- `dotnet test GalgameManager.Test`：**306 通过 / 7 失败 / 0 跳过 / 313 总计**，与基线一致。
+- 未做 UI 遍历（上一轮因占用电脑过久被要求停止）；本轮只做启动冒烟。
