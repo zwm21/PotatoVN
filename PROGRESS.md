@@ -195,3 +195,58 @@
 - 完整发布 + 导入真实备份实跑：9 导航页 + 年报 6 子页 + 过滤/排序弹出层正常。
 - **修复前/后对照实验**：1.10.3.15（PDB 在 lib/，修复前）与修复后包跑同一套操作，
   年报子页的点击/选中态/内容变化/文本数量逐项完全一致（33→27→24→30→49→24），证明行为无变化。
+
+---
+
+## 追加：删除 AppCenter 遥测与四个零引用 NuGet 包（未提交）
+
+### 改动内容
+
+**AppCenter 遥测（`Microsoft.AppCenter.Analytics` 5.0.6 + `Microsoft.AppCenter.Crashes` 5.0.2）**
+服务已于 2025 年退役，且需上报用户行为数据。删除范围：
+
+- 移入回收站：`Services/AppCenterService.cs`、`Contracts/Services/IAppCenterService.cs`
+- `App.xaml.cs`：删 DI 注册
+- `Services/ActivationService.cs`：删字段、构造参数、赋值、`StartAsync()` 调用（4 处）
+- `Services/InfoService.cs`：删字段、构造参数、赋值、`UploadEvent()` 调用（4 处）
+- `ViewModels/SettingsViewModel.cs`：删 `UploadToAppCenter` 属性、构造读取、`OnUploadToAppCenterChanged`（3 处）
+- `Enums/KeyValues.cs`：删 `UploadData` 常量
+- `Views/SettingsPage.xaml`：删「上传匿名事件日志」设置面板
+- 三个语言 `Resources.resw`：经 `resw_tool.py delete` 删 `SettingsPage_Other_AppCenter.Title` / `.Description`
+- `GalgameManager.csproj`：删两个 `PackageReference`
+
+未改 `docs/UpdateContent/zh-CN.md` 的历史更新记录（那是历史事实，不应篡改；其中
+`PotatoVN.TurnOnAppCenter` 协议链接在代码中本就不存在对应处理器，是既存死链）。
+
+**四个零引用 NuGet 包**
+
+| 包 | 引用审计结论 |
+|---|---|
+| `CommunityToolkit.WinUI.Controls.Sizers` 8.2.241112-preview1 | 全仓无 `Sizers` 使用（唯一命中是 `KnowledgePicker.WordCloud.Sizers`，属另一个包） |
+| `CommunityToolkit.WinUI.Behaviors` 8.1.240916 | 仅 `Views/GalgameSourcePage.xaml:13` 声明 xmlns，无 `behaviors:` 元素使用；连带删掉该 xmlns |
+| `System.Memory` 4.6.3 | 代码无 `MemoryMarshal`/`Unsafe.*` 调用，.NET 8 运行时内置 |
+| `System.Runtime.CompilerServices.Unsafe` 6.1.2 | 同上 |
+
+注意：`Grep` 工具在本次调查中对 `GalgameManager/Views/*.xaml` 漏报（返回空），
+实际用 `grep -rn --include="*.xaml"` 才拿到全部命中。**结论以 bash grep 为准。**
+
+### 验证
+- `dotnet build GalgameManager.sln -c Debug`：**0 错误**，10 个警告全部为既存（NU1900 网络、
+  AutoMapper 16.1.1 两条高危漏洞、CS1998）。
+- `dotnet test GalgameManager.Test`：**306 通过 / 7 失败 / 0 跳过 / 313 总计**，与基线完全一致；
+  7 项失败均为既存（5 个尾部空白路径 + 2 个缺 `winapp` CLI 的升级 UI 测试）。
+- `Publish-Portable.ps1`：278.3 MB → **276.3 MB**（-2 MB）。
+- 目标程序集对比：改动前包含 `Microsoft.AppCenter.dll`、`Microsoft.AppCenter.Analytics.dll`、
+  `Microsoft.AppCenter.Crashes.dll`、`CommunityToolkit.WinUI.Controls.Sizers.dll`、
+  `CommunityToolkit.WinUI.Behaviors.dll`；改动后**全部消失**。
+- 运行时（沙箱 `%TEMP%\PotatoVN_Verify_AppCenterRemoval`，`POTATOVN_PORTABLE=0` +
+  `POTATOVN_LOCALDATA_PATH` + `POTATOVN_TEMP_PATH` 重定向，已用完清理）：进程正常启动、
+  主窗口 1532×958、9 个导航项、中文资源加载正常、设置页正常打开、关于区显示
+  `PotatoVN - v1.10.3.17`。
+
+### 已知遗留
+- 三个 `Resources.resw` 各留下 2 个空行（`resw_tool.py` 的删除方式所致）。遵守「不手工编辑
+  .resw」的仓库规则未处理，XML 中无害。
+- 未验证「其他设置」区块展开后的逐项列表（用 UI 自动化点击展开时占用电脑过久被用户中止）；
+  该点已由编译通过 + 设置页正常打开 + resw/XAML/ViewModel 三处同步删除覆盖。
+- `HalfFullWidth`（37 KB，1 处调用）与图表栈改直引（3.1 MB）本轮未做，等用户决定。
