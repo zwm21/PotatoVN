@@ -96,9 +96,6 @@ public class GameMuteTask : BgTaskBase
 
 public static class AudioHelper
 {
-    [DllImport("user32.dll")]
-    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-
     [DllImport("ole32.dll")]
     private static extern int CoInitialize(IntPtr pvReserved);
 

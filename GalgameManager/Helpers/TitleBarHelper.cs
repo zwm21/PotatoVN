@@ -2,7 +2,6 @@
 using Windows.UI.ViewManagement;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Windowing;
 
 namespace GalgameManager.Helpers;
@@ -71,15 +70,6 @@ internal class TitleBarHelper
             titleBar.ButtonPressedBackgroundColor = Color.FromArgb(51, 255, 255, 255);
             titleBar.ButtonPressedForegroundColor = Colors.White;
             titleBar.ButtonInactiveForegroundColor = Color.FromArgb(255, 102, 102, 102);
-        }
-    }
-
-    public static void ApplySystemThemeToCaptionButtons()
-    {
-        var frame = App.AppTitlebar as FrameworkElement;
-        if (frame != null)
-        {
-            UpdateTitleBar(frame.ActualTheme);
         }
     }
 }

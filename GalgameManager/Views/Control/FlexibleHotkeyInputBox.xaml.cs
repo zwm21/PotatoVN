@@ -304,12 +304,6 @@ public sealed partial class FlexibleHotkeyInputBox : INotifyPropertyChanged
         }
     }
 
-    private void ClearButton_Click(object sender, RoutedEventArgs e)
-    {
-        HotkeyKeys = new List<int>();
-        OnHotkeyChanged();
-    }
-
     private void StartCapturing()
     {
         _isCapturing = true;

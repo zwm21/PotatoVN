@@ -148,9 +148,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Views\AnnualReportSubPage1.xaml" />
-    <None Remove="Views\AnnualReportSubPage2.xaml" />
-    <None Remove="Views\AnnualReportSubPage3.xaml" />
     <None Remove="Views\Control\HomeItem.xaml" />
     <None Remove="Views\Dialog\ChangePlayStatusDialog.xaml" />
     <None Remove="Views\Dialog\ChangeSourceDialog.xaml" />
@@ -163,8 +160,6 @@
     <None Remove="Views\Dialog\SelectPvnServerDialog.xaml" />
     <None Remove="Views\GalgamePagePanel\GameDescriptionPanel.xaml" />
     <None Remove="Views\ImportWindow.xaml" />
-    <None Remove="Views\PasswordDialog.xaml" />
-    <None Remove="Views\SettingExpander.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -224,13 +219,7 @@
     <Page Update="Views\Dialog\SelectGameDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Views\GalgamePagePanel\GameHeaderOldPanel.xaml">
-      <SubType>Designer</SubType>
-    </Page>
     <Page Update="Views\GalgamePagePanel\GameDescriptionPanel.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Update="ViewModels\ReportSubPage3ViewModel.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Views\ImportWindow.xaml">
@@ -254,16 +243,12 @@
     <Page Update="Views\Dialog\SelectProcessDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="Views\SettingExpander.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Update="Views\Control\SettingToggleSwitch.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\Dialog\SelectFileDialog.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Remove="Views\Control\AdactiveGridView.xaml" />
     <Page Update="Views\GalgamePagePanel\GameHeaderPanel.xaml">
       <SubType>Designer</SubType>
     </Page>

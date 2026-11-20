@@ -842,8 +842,6 @@ public class KeyMappingTask : BgTaskBase
             e: exception);
     }
 
-    private static bool IsMouseButtonCode(int code) => code is >= 1 and <= 7;
-
     private static bool IsKeyDown(int key) => (GetAsyncKeyState(key) & 0x8000) != 0;
 
     private static bool IsMouseButtonUp(int message) =>
@@ -882,22 +880,6 @@ public class KeyMappingTask : BgTaskBase
             _ => key,
         };
     }
-
-    private static string GetKeyDisplayName(VirtualKey key) => key switch
-    {
-        VirtualKey.LeftWindows or VirtualKey.RightWindows => "Win",
-        VirtualKey.Control => "Ctrl",
-        VirtualKey.LeftControl => "左 Ctrl",
-        VirtualKey.RightControl => "右 Ctrl",
-        VirtualKey.Menu => "Alt",
-        VirtualKey.LeftMenu => "左 Alt",
-        VirtualKey.RightMenu => "右 Alt",
-        VirtualKey.Shift => "Shift",
-        VirtualKey.LeftShift => "左 Shift",
-        VirtualKey.RightShift => "右 Shift",
-        _ => key.ToString(),
-    };
-
 
     public override string Title { get; } = "KeyMappingTask_Title".GetLocalized();
 

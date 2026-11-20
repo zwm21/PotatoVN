@@ -113,10 +113,6 @@ public static class MagpieHelper
         return success;
     }
 
-    // 需要额外声明 GetWindowThreadProcessId
-    [DllImport("user32.dll", SetLastError = true)]
-    static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-
     [DllImport("user32.dll")]
     static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr ProcessId);
 
