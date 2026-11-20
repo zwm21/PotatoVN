@@ -34,7 +34,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 {
     private readonly ILocalSettingsService _localSettingsService;
     private readonly GalgameCollectionService _galgameCollectionService;
-    private readonly INavigationService _navigationService;
     private readonly IUpdateService _updateService;
     private readonly IThemeSelectorService _themeSelectorService;
     private readonly ICategoryService _categoryService;
@@ -105,13 +104,12 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     }
 
     public SettingsViewModel(IThemeSelectorService themeSelectorService, ILocalSettingsService localSettingsService,
-        IGalgameCollectionService galgameService, IUpdateService updateService, INavigationService navigationService,
+        IGalgameCollectionService galgameService, IUpdateService updateService,
         ICategoryService categoryService, IInfoService infoService, IBgTaskService bgTaskService,
         ISidebarService sidebarService)
     {
         _categoryService = categoryService;
         _themeSelectorService = themeSelectorService;
-        _navigationService = navigationService;
         _updateService = updateService;
         updateService.SettingBadgeEvent += HandelSettingBadgeEvent;
         _versionDescription = GetVersionDescription();

@@ -35,6 +35,30 @@ public class ProjectTest
     }
 
     [Test]
+    public void DeadCodeCleanup_PreservesActiveSettingsAndParserContracts()
+    {
+        Type viewModel = typeof(GalgameManager.ViewModels.SettingsViewModel);
+        Type parser = typeof(GalgameManager.Helpers.Phrase.VndbPhraser);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(viewModel.GetProperty("MagpieHotkeysString"), Is.Not.Null);
+            Assert.That(viewModel.GetConstructors().SelectMany(constructor => constructor.GetParameters())
+                .Any(parameter => parameter.ParameterType == typeof(GalgameManager.Contracts.Services.INavigationService)), Is.False);
+            Assert.That(viewModel.GetProperty("MagpieHotkeyKeys")?.PropertyType, Is.EqualTo(typeof(List<int>)));
+            Assert.That(parser.GetMethod("GetGalgameCharacterByName"), Is.Null);
+            Assert.That(typeof(GalgameManager.Contracts.Phrase.IGalCharacterPhraser).IsAssignableFrom(parser), Is.True);
+            Assert.That(new[]
+            {
+                (int)GalgameManager.Enums.BackgroundStretchMode.UniformToFill,
+                (int)GalgameManager.Enums.BackgroundStretchMode.Fill,
+                (int)GalgameManager.Enums.BackgroundStretchMode.Uniform,
+                (int)GalgameManager.Enums.BackgroundStretchMode.None,
+            }, Is.EqualTo(new[] { 0, 1, 2, 3 }));
+        });
+    }
+
+    [Test]
     public void Version_ShouldMatch_PackageAppxmanifest()
     {
         var manifestVersion = ReadPackageAppxManifestIdentityVersion();

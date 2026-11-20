@@ -314,8 +314,6 @@ public class LocalSettingsService : ILocalSettingsService
                 return (T?)(object)false;
             case KeyValues.FixHorizontalPicture:
                 return (T?)(object)true;
-            case KeyValues.LastNoticeUpdateVersion:
-                return (T?)(object)"";
             case KeyValues.AutoCategory:
             case KeyValues.DownloadCharacters:
             case KeyValues.UsePvnBanner:
@@ -342,7 +340,6 @@ public class LocalSettingsService : ILocalSettingsService
             case KeyValues.SyncGameCharacters:
             case KeyValues.SyncStaff:
             case KeyValues.SyncHeaderImage:
-            case KeyValues.GalgamePageNewLayout:
             case KeyValues.GalgamePageNewLayout_ShowPainter:
             case KeyValues.GalgamePageNewLayout_ShowSeiyu:
             case KeyValues.GalgamePageNewLayout_ShowWriter:
@@ -376,8 +373,6 @@ public class LocalSettingsService : ILocalSettingsService
                 return (T?)(object)12; // 默认12秒
             case KeyValues.CustomTextFileExtensions:
                 return (T?)(object)new List<string> { ".doc", ".docx", ".pdf", ".txt", ".md" };
-            case KeyValues.AutoExportInterval:
-                return (T?)(object)168.0;
             case KeyValues.VndbTranslateTags:
             case KeyValues.VndbCensorTags:
             case KeyValues.VndbRemoveSpoilerTags:

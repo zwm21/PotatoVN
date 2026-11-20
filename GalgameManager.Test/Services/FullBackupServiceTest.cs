@@ -1,6 +1,5 @@
 using System.IO.Compression;
 using System.Text;
-using GalgameManager.Enums;
 using GalgameManager.Services;
 
 namespace GalgameManager.Test.Services;
@@ -256,8 +255,8 @@ public class FullBackupServiceTest
     [TestCase(false)]
     public async Task BackupAndRestore_PreservesLegacyDataTransferSettingsAndFiles(bool autoExportEnabled)
     {
-        string legacySettings = $"{{\"{KeyValues.AutoExport}\":{autoExportEnabled.ToString().ToLowerInvariant()}," +
-                                $"\"{KeyValues.AutoExportInterval}\":1,\"{KeyValues.MaxBackupNumber}\":3}}";
+        string legacySettings = $"{{\"autoExport\":{autoExportEnabled.ToString().ToLowerInvariant()}," +
+                                "\"autoExportInterval\":1,\"maxBackupNumber\":3}";
         const string dataStatus = "{\"ImportGalgame\":false,\"ImportPageSettings\":false}";
         const string exportFileName = "PotatoVN_old.pvnExport.zip";
         Write(_settings, "legacy-settings.json", legacySettings);

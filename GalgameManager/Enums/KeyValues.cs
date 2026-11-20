@@ -16,20 +16,12 @@ public static class KeyValues
     public const string CustomPasswordSaverName = "PotatoVN";
     public const string CustomPasswordDisplayName = "CustomPassword";
     public const string LastUpdateCheckResult = "lastUpdateCheckResult"; // bool,上次检查更新的结果
-    public const string LastNoticeUpdateVersion = "lastNoticeUpdateVersion"; // string,上次通知更新的版本
     public const string IgnoredUpdateVersions = "IgnoredUpdateVersions";
     public const string AutoCategory = "autoCategory"; // bool,是否自动分类
     public const string AuthenticationType = "authenticationType"; // AuthenticationType,身份验证类型
     public const string FontInstalled = "fontInstalled"; //bool, 是否安装了Segoe Fluent Icons字体
     public const string CustomTextFileExtensions = "CustomTextFileExtensions"; // List<string>, 用户自定义的文本文件扩展名列表
     public const string SidebarButtonVisibility = "SidebarButtonVisibility"; // Dictionary<string, bool>, 侧边栏按钮显示状态
-
-    //自动导出相关
-    public const string AutoExport = "autoExport"; //bool, 是否启用自动导出
-    public const string AutoExportInterval = "autoExportInterval"; //double, 每次导出间相隔时间(小时)
-    public const string AutoExportPath = "autoExportPath"; //string, 导出路径
-    public const string LastExportTime = "lastExportTime"; //DateTime, 上次导出时间
-    public const string MaxBackupNumber = "maxBackupNumber"; //int, 最多保存备份数目
 
     //账户相关
     public const string BangumiAccount = "bangumiAccount"; //BgmAccount?, Bangumi账户, 若为null则未登录
@@ -49,7 +41,6 @@ public static class KeyValues
     public const string MagpieHotkeys = "magpieHotkeys"; //List<int>, Magpie快捷键 VirtualKey codes
     public const string AlwaysEnableMagpie = "AlwaysEnableMagpie"; //bool, 是否无视各个游戏设置总是启用Magpie
     public const string MinPlayTimeRecordThreshold = "minPlayTimeRecordThreshold"; //int, 记录一次游玩的最小游玩时长 (分钟)
-    public const string GameMuteEnabled = "gameMuteEnabled"; //bool, 是否启用游戏静音功能
     public const string GameReMapEnabled = "gameReMapEnabled";
     public const string GlobalKeyMappings = "GlobalKeyMappings";
 
@@ -64,8 +55,6 @@ public static class KeyValues
 
     //数据相关
     public const string GalgameSources = "galgameSources";
-    ///int, 当前已经用到的最大的galgameSource的id
-    public const string GalgameSourcesId = "galgameSourcesId";
     public const string Galgames = "galgames";
     public const string Filters = "filters";
     public const string KeepFilters = "keepFilters"; //bool, 离开界面/关闭软件时是否保留筛选器
@@ -125,8 +114,6 @@ public static class KeyValues
     public const string AddGameToTop = "addGameToTop"; //bool, 首页单个添加的新游戏是否默认置于手动排序最顶端
     public const string PrimarySortKey = "primarySortKey"; //string, 主排序的key，默认是"playtime"，可选值有：playtime（游玩时间）/lastUpdate（最后更新时间）/name（名称）/releaseDate（发售日期）/rating（评分）/category（分类）
     public const string SecondarySortKey = "SecondarySortKey"; //string, 次排序的key，默认是"playtime"，可选值有：playtime（游玩时间）/lastUpdate（最后更新时间）/name（名称）/releaseDate（发售日期）/rating（评分）/category（分类）
-    public const string PrimarySortAscending = "PrimarySortAscending"; //bool, 主排序是否降序排列，默认是false（升序）
-    public const string SecondarySortAscending = "SecondarySortAscending"; //bool, 次排序是否降序排列，默认是false（升序）
     public const string PrimarySortDescending = "PrimarySortDescending"; //bool, 主排序是否降序排列，默认是false（升序）
     public const string SecondarySortDescending = "SecondarySortDescending"; //bool, 次排序是否降序排列，默认是false（升序）
     public const string DefaultGameName = "defaultGameName"; //string, 默认游戏名称
@@ -185,7 +172,6 @@ public static class KeyValues
     public const string OAuthUpgraded = "OAuthUpgraded"; //BgmOAuth升级1
     public const string OAuthUpgraded2 = "OAuthUpgraded2"; //BgmOAuth升级2
     public const string SavePathUpgraded = "savePathUpgraded"; //存档路径升级
-    public const string GameSyncUpgraded = "gameSyncUpgraded"; //游戏同步升级
     public const string ToUpgradePluginFormatUpgraded = "toUpgradePluginFormatUpgraded"; //待升级插件列表格式升级
     public const string MixedPhraserOrderVersion = "mixedPhraserOrderVersion"; //int，当前配置中的混合搜刮器顺序的版本
     public const string AnnualReportTagScope = "annualReportTagScope"; //AnnualReportTagScope, 年度报告词云分页的标签统计口径
@@ -195,14 +181,7 @@ public static class KeyValues
     public const string BangumiToken = "bangumiToken";
     public const string BangumiOAuthState = "bangumiOAuthState"; //BgmAccount?, Bangumi账户, 若为null则未登录
     public const string GalgameFolders = "galgameFolders"; //旧游戏文件夹，仅用于升级
-    public const string SyncTo = "syncTo"; //map<mac:string, id:int>，每台设备merge到的commit id
     public const string SearchChildFolderDepth = "searchChildFolderDepth"; //int, 搜索子文件夹的深度，默认是0（不搜索），新版本改成智能搜索，不需要这个了
-    public const string UpdateBatchPath = "UpdateBatchPath";
     public const string SaveBackupMetadata = "saveBackupMetadata"; //bool, 是否备份元数据到存档文件夹（原来是全局设置，新版本改成支持各个库独立设置了）
-    public const string GalgamePageNewLayout = "galgamePageNewLayout"; //bool, 游戏页是否使用新界面（旧界面已迁移到插件里）
-    public const string GalgamePageOldLayout_ShowDescription = "galgamePageOldLayout_showDescription"; //bool, 旧版游戏页是否显示简介
-    public const string GalgamePageOldLayout_ShowTags = "galgamePageOldLayout_showTags"; //bool, 旧版游戏页是否显示标签
-    public const string GalgamePageOldLayout_ShowCharacters = "galgamePageOldLayout_showCharacters"; //bool, 旧版游戏页是否显示角色
-    public const string GalgamePageOldLayout_ShowStaff = "galgamePageOldLayout_showStaff"; //bool, 旧版游戏页是否显示Staff
     public const string GalgameSourcePageShowSubSourceGames = "galgameSourcePageShowSubSourceGames"; //bool, 游戏源页面是否显示子源游戏
 }

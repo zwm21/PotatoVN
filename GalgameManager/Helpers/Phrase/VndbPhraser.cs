@@ -466,40 +466,6 @@ public class VndbPhraser : IGalInfoPhraser, IGalStatusSync, IGalCharacterPhraser
         };
     }
 
-    public async Task<GalgameCharacter?> GetGalgameCharacterByName(string name)
-    {
-        VndbResponse<VndbCharacter> characterResponse = await _vndbApi.GetVnCharacterAsync(new VndbQuery
-        {
-            Fields =
-                "id, name, original, aliases, description, image.url, blood_type, height, weight, bust, waist, hips, cup, age, birthday, sex, vns.id, vns.role",
-            Filters = VndbFilters.Equal("search", name)
-        });
-        if (characterResponse.Count < 1 || characterResponse.Results == null ||
-            characterResponse.Results.Count < 1) return null;
-        VndbCharacter vnCharacter = characterResponse.Results[0];
-        GalgameCharacter character = new()
-        {
-            Name = vnCharacter.Name ?? "",
-            PreviewImageUrl = vnCharacter.Image?.Url,
-            ImageUrl = vnCharacter.Image?.Url,
-            Summary = vnCharacter.Description ?? "",
-            Gender = vnCharacter.Sex?[1] switch
-            {
-                "m" => Gender.Male,
-                "f" => Gender.Female,
-                _ => Gender.Unknown
-            },
-            Height = $"{vnCharacter.Height}cm",
-            Weight = $"{vnCharacter.Weight}cm",
-            BWH = $"B{vnCharacter.Bust}({vnCharacter.Cup})/W{vnCharacter.Waist}/H{vnCharacter.Hips}",
-            BloodType = vnCharacter.BloodType,
-            BirthMon = vnCharacter.Birthday?[0],
-            BirthDay = vnCharacter.Birthday?[1],
-            BirthDate = vnCharacter.Birthday != null ? $"{vnCharacter.Birthday?[0]}月{vnCharacter.Birthday?[1]}日":"-"
-        };
-        return character;
-    }
-
     /// <summary>
     /// 获取releaseId->VndbId的映射
     /// </summary>
