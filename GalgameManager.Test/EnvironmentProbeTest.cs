@@ -15,6 +15,6 @@ public class EnvironmentProbeTest
         // ResourceLoader静态初始化在无bootstrap的测试进程中不会炸，取不到的key会兜底返回key本身
         var result = string.Empty;
         Assert.DoesNotThrow(() => result = "DefinitivelyNotARealKey_12345".GetLocalized());
-        Assert.That(result, Is.Not.Null);
+        Assert.That(result, Is.EqualTo("DefinitivelyNotARealKey_12345"));
     }
 }

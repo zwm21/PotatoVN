@@ -222,7 +222,7 @@ public class FullBackupServiceTest
         // 手动写入一个很早以前的标记，模拟上次崩溃残留
         await File.WriteAllTextAsync(_marker,
             $"{{\"Kind\":\"{FullBackupService.RestoreKind}\",\"Path\":\"{zipPath.Replace("\\", "\\\\")}\"," +
-            $"\"CreatedAt\":\"{DateTime.Now.AddHours(-2):O}\"}}", Encoding.UTF8);
+            "\"CreatedAt\":\"2000-01-01T00:00:00\"}", Encoding.UTF8);
 
         FullBackupResult? result = await _service.RunPendingAsync();
 

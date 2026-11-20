@@ -133,7 +133,7 @@ public class BuildVersionScriptTest
     private string Collect(string startDir) => CollectAsync(startDir).Result;
 
     /// <summary>运行采集脚本并返回写出的资源行原文；<paramref name="manifestPath"/> 用于计算构建号。</summary>
-    private async Task<string> CollectAsync(string startDir, string? manifestPath = null)
+    private Task<string> CollectAsync(string startDir, string? manifestPath = null)
     {
         string outputPath = Path.Combine(_workRoot, "BuildVersionInfo.txt");
         if (File.Exists(outputPath)) File.Delete(outputPath);
@@ -156,7 +156,7 @@ public class BuildVersionScriptTest
 
         Assert.That(process.ExitCode, Is.EqualTo(0), $"脚本执行失败：{stdout}{stderr}");
         Assert.That(File.Exists(outputPath), Is.True, $"脚本未写出 {outputPath}");
-        return File.ReadAllText(outputPath).Trim();
+        return Task.FromResult(File.ReadAllText(outputPath).Trim());
     }
 
     private static void WriteAndCommit(string repo, string fileName, string content)
@@ -166,9 +166,9 @@ public class BuildVersionScriptTest
         RunGit(repo, "commit -q -m add-" + fileName);
     }
 
-    private static string CreateRepo()
+    private string CreateRepo()
     {
-        string dir = Path.Combine(Path.GetTempPath(), "potatovn-repo-" + Guid.NewGuid().ToString("N")[..8]);
+        string dir = Path.Combine(_workRoot, "repo-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
         RunGit(dir, "init -q");
         RunGit(dir, "config user.email buildversion@test.local");
@@ -224,7 +224,7 @@ public class BuildVersionScriptTest
             process.WaitForExit();
             return process.ExitCode == 0;
         }
-        catch
+        catch (System.ComponentModel.Win32Exception)
         {
             return false;
         }

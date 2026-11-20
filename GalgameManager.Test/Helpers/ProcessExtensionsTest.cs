@@ -9,9 +9,10 @@ public class ProcessExtensionsTest
     [Test]
     public void TryGetExecutablePath_CurrentProcess_ReturnsExistingFile()
     {
-        string? path = Process.GetCurrentProcess().TryGetExecutablePath();
+        using Process process = Process.GetCurrentProcess();
+        string? path = process.TryGetExecutablePath();
 
-        Assert.That(path, Is.Not.Null);
+        Assert.That(path, Is.EqualTo(Environment.ProcessPath).IgnoreCase);
         Assert.That(File.Exists(path), Is.True);
     }
 
@@ -25,6 +26,6 @@ public class ProcessExtensionsTest
         process.WaitForExit();
 
         // 进程已退出，不应抛出异常
-        Assert.DoesNotThrow(() => process.TryGetExecutablePath());
+        Assert.That(process.TryGetExecutablePath(), Is.Null);
     }
 }

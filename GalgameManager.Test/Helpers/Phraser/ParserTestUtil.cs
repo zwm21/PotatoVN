@@ -13,8 +13,8 @@ public static class ParserTestUtil
         Assert.That(result, Is.Not.Null, "Parse Failed: staff is null");
         Assert.That(result.Ids[(int)feed], Is.EqualTo(expectedId),
             $"Id is not equal, expected: {expectedId}, actual: {result.Ids[(int)feed]}");
-        if (!string.IsNullOrEmpty(expectedDescription) && result.Description?.Contains(expectedDescription) is not true)
-            Assert.Fail($"Description is not equal, expected: {expectedDescription}, actual: {result.Description}");
+        if (!string.IsNullOrEmpty(expectedDescription))
+            Assert.That(result.Description, Does.Contain(expectedDescription));
         if (!string.IsNullOrEmpty(expectedJapaneseName))
             Assert.That(result.JapaneseName, Is.EqualTo(expectedJapaneseName),
                 $"JapaneseName is not equal, expected: {expectedJapaneseName}, actual: {result.JapaneseName}");

@@ -22,17 +22,14 @@ public class CngalPhraserTest
     {
         Galgame? game = new(name);
         game = await _phraser.GetGalgameInfo(game);
-        if(game == null)
+        Assert.That(game, Is.Not.Null);
+        Assert.Multiple(() =>
         {
-            Assert.Fail();
-            return;
-        }
-
-        if(game.Name != "三色△绘恋") Assert.Fail();
-        if(game.Id != "80") Assert.Fail();
-        if(game.Developer != "绘恋制作组") Assert.Fail();
-        if(game.ReleaseDate != new DateTime(2017, 9, 21)) Assert.Fail();
-        if(game.Characters.Count != 9) Assert.Fail();
-        Assert.Pass();
+            Assert.That(game.Name.Value, Is.EqualTo("三色△绘恋"));
+            Assert.That(game.Id, Is.EqualTo("80"));
+            Assert.That(game.Developer.Value, Is.EqualTo("绘恋制作组"));
+            Assert.That(game.ReleaseDate.Value, Is.EqualTo(new DateTime(2017, 9, 21)));
+            Assert.That(game.Characters, Has.Count.EqualTo(9));
+        });
     }
 }

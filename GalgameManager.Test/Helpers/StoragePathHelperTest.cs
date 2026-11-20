@@ -20,14 +20,7 @@ public class StoragePathHelperTest
     [TearDown]
     public void TearDown()
     {
-        try
-        {
-            if (Directory.Exists(_testDir)) Directory.Delete(_testDir, recursive: true);
-        }
-        catch
-        {
-            // ignore
-        }
+        if (Directory.Exists(_testDir)) Directory.Delete(_testDir, recursive: true);
     }
 
     [Test]

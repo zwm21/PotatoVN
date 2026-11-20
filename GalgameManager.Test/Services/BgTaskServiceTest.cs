@@ -492,14 +492,14 @@ public class BgTaskServiceTest : ServiceTestBase
     [TestCase(true)]
     public void RecordPlayTimeTask_OnSearch_UsesLogicalGameId(bool uppercase)
     {
-        Galgame game = new();
+        Galgame game = new() { Uuid = Guid.Parse("abcdefab-cdef-abcd-efab-cdefabcdefab") };
         RecordPlayTimeTask task = new(Settings, GalgameCollectionService.Object) { Galgame = game };
         string key = game.Uuid.ToString("D");
         if (uppercase) key = key.ToUpperInvariant();
         Assert.Multiple(() =>
         {
             Assert.That(task.OnSearch(key), Is.True);
-            Assert.That(task.OnSearch(Guid.NewGuid().ToString("D")), Is.False);
+            Assert.That(task.OnSearch("12345678-1234-1234-1234-123456789abc"), Is.False);
             Assert.That(task.OnSearch(string.Empty), Is.False);
         });
         task.Galgame = null;

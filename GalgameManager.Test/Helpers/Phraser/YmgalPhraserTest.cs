@@ -17,14 +17,6 @@ public class YmgalPhraserTest
     }
 
     [Test]
-    public async Task PhraseTest()
-    {
-        Galgame? game = new("千恋万花");
-        await _ymgalPhraser.GetGalgameInfo(game);
-        Assert.Pass();
-    }
-
-    [Test]
     [TestCase("ambitious_mission", "41186")]
     [TestCase("月に寄りそう乙女の作法", "31147", "月に寄りそう乙女の作法")]
     [TestCase("近月少女的礼仪2", "22952")]

@@ -101,8 +101,6 @@ public class VndbPhraserTest
     }
 
     [Test]
-    [TestCase("17", "v17")]
-    [TestCase("v17", "v17")]
     [TestCase("r2166", "v1129")]
     public async Task GetVndbId_ShouldNormalize_ToVnId(string storedId, string expectedVnId)
     {

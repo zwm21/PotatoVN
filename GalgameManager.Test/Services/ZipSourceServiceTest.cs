@@ -1,6 +1,7 @@
 using System.Text;
 using GalgameManager.Contracts.Services;
 using GalgameManager.Core.Services;
+using GalgameManager.Helpers;
 using GalgameManager.Models;
 using GalgameManager.Models.BgTasks;
 using GalgameManager.Models.Sources;
@@ -142,7 +143,7 @@ public class ZipSourceServiceTest : ServiceTestBase
         string? result = service.CheckMoveOperateValid(target, null, game);
 
         // Assert
-        Assert.That(result, Is.Not.Null);
+        Assert.That(result, Is.EqualTo("ZipSourceService_NoLocalInstallation".GetLocalized()));
     }
 
     [Test]
@@ -239,7 +240,8 @@ public class ZipSourceServiceTest : ServiceTestBase
         Assert.Multiple(() =>
         {
             Assert.That(valid, Is.Null);
-            Assert.That(exists, Is.Not.Null);
+            Assert.That(exists, Is.EqualTo("ZipSourceService_TargetExists".GetLocalized(
+                Path.Combine(target.Path, "Example.part2.rar"))));
         });
     }
 
@@ -253,7 +255,7 @@ public class ZipSourceServiceTest : ServiceTestBase
         from.AddGalgame(game, Path.Combine(from.Path, "Example.zip")); // 压缩包不存在
 
         Assert.That(service.CheckMoveOperateValid(new GalgameZipSource(CreateDir("zipLibB")), from, game),
-            Is.Not.Null);
+            Is.EqualTo("GalgameFolder_UnpackGame_PackNotExist".GetLocalized(Path.Combine(from.Path, "Example.zip"))));
     }
 
     // 仅存在于压缩库的游戏（没有指定移出库）移入其他压缩库时，复制其压缩包，且保留原文件名
@@ -352,7 +354,8 @@ public class ZipSourceServiceTest : ServiceTestBase
         Assert.Multiple(() =>
         {
             Assert.That(valid, Is.Null);
-            Assert.That(exists, Is.Not.Null);
+            Assert.That(exists, Is.EqualTo("ZipSourceService_TargetExists".GetLocalized(
+                Path.Combine(target.Path, "MyGame.zip"))));
         });
     }
 

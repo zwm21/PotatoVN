@@ -3,7 +3,6 @@
 namespace GalgameManager.Test.Helpers.Phraser;
 
 [TestFixture]
-[Category("Phraser")]
 public class PhraseHelperTest
 {
     [Test]

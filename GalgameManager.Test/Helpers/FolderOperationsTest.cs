@@ -18,14 +18,10 @@ public class FolderOperationsTest
     [TearDown]
     public void TearDown()
     {
-        try
-        {
-            if (Directory.Exists(_root)) Directory.Delete(_root, true);
-        }
-        catch
-        {
-            // ignore
-        }
+        if (!Directory.Exists(_root)) return;
+        foreach (string file in Directory.GetFiles(_root, "*", SearchOption.AllDirectories))
+            File.SetAttributes(file, FileAttributes.Normal);
+        Directory.Delete(_root, true);
     }
 
     // 回归：曾只删除文件、最后用非递归Directory.Delete删除根目录，游戏文件夹含子文件夹时抛"目录不是空的"

@@ -687,13 +687,18 @@ public class GalgameCollectionServiceTest : ServiceTestBase
         await service.AddVirtualGalgameAsync(gameA);
         await service.AddVirtualGalgameAsync(gameB);
 
+        gameA.Name.Value = "保存后的游戏甲";
+        gameA.Developer.Value = "开发商甲";
+        gameB.Name.Value = "保存后的游戏乙";
+        gameB.Developer.Value = "开发商乙";
         await service.SaveGalgamesAsync();
 
-        Assert.Multiple(() =>
-        {
-            Assert.That(DbSet.FindById(gameA.Uuid), Is.Not.Null);
-            Assert.That(DbSet.FindById(gameB.Uuid), Is.Not.Null);
-        });
+        Assert.That(DbSet.FindAll().Select(game => (game.Uuid, game.Name.Value, game.Developer.Value)),
+            Is.EquivalentTo(new[]
+            {
+                (gameA.Uuid, "保存后的游戏甲", "开发商甲"),
+                (gameB.Uuid, "保存后的游戏乙", "开发商乙"),
+            }));
     }
 
     // 验证保存元数据到指定库：库不包含该游戏时抛PvnException；目标库为null时不报错

@@ -7,8 +7,7 @@ using GalgameManager.Models;
 namespace GalgameManager.Test.Helpers;
 
 /// <summary>
-/// 年度报告统计逻辑测试。年份相关用例不写死"今年是哪一年"，
-/// 一律以 <c>DateTime.Now.Year</c> 为基准，避免明年这些用例自己失效。
+/// 年度报告统计逻辑测试。统计数据使用固定年份，只有 ResolveYear 的当前年份契约读取系统年份。
 /// </summary>
 [TestFixture]
 public class AnnualReportStatsTest
@@ -17,23 +16,24 @@ public class AnnualReportStatsTest
         params string[] playedTimeKeys)
     {
         Galgame game = new();
-        game.AddTime = addTime ?? DateTime.Now;
+        game.AddTime = addTime ?? new DateTime(ReportYear, 6, 15);
         game.Tags = new ObservableCollection<string>(tags ?? []);
         foreach (string key in playedTimeKeys)
             game.PlayedTime[key] = 10;
         return game;
     }
 
-    private static int ThisYear => DateTime.Now.Year;
+    private const int ReportYear = 2020;
 
     #region ResolveYear
 
     [Test]
     public void ResolveYear_ShouldUseCurrentYear_WhenCurrentYearHasPlayTime()
     {
-        List<Galgame> games = [NewGame(playedTimeKeys: [$"{ThisYear}/3/1"]), NewGame(playedTimeKeys: ["2024/12/31"])];
+        int currentYear = DateTime.Now.Year;
+        List<Galgame> games = [NewGame(playedTimeKeys: [$"{currentYear}/3/1", $"{currentYear + 1}/1/1"])];
 
-        Assert.That(AnnualReportStats.ResolveYear(games), Is.EqualTo(ThisYear));
+        Assert.That(AnnualReportStats.ResolveYear(games), Is.InRange(currentYear, DateTime.Now.Year));
     }
 
     [Test]
@@ -52,8 +52,9 @@ public class AnnualReportStatsTest
     [Test]
     public void ResolveYear_ShouldUseCurrentYear_WhenThereIsNoPlayTimeAtAll()
     {
-        Assert.That(AnnualReportStats.ResolveYear([NewGame()]), Is.EqualTo(ThisYear));
-        Assert.That(AnnualReportStats.ResolveYear([]), Is.EqualTo(ThisYear));
+        int currentYear = DateTime.Now.Year;
+        Assert.That(AnnualReportStats.ResolveYear([NewGame()]), Is.InRange(currentYear, DateTime.Now.Year));
+        Assert.That(AnnualReportStats.ResolveYear([]), Is.InRange(currentYear, DateTime.Now.Year));
     }
 
     [Test]
@@ -73,12 +74,12 @@ public class AnnualReportStatsTest
     {
         List<Galgame> games =
         [
-            NewGame(new DateTime(ThisYear, 1, 1), ["tagA", "shared"]),
-            NewGame(new DateTime(ThisYear - 1, 1, 1), ["tagB", "shared"]),
+            NewGame(new DateTime(ReportYear, 1, 1), ["tagA", "shared"]),
+            NewGame(new DateTime(ReportYear - 1, 1, 1), ["tagB", "shared"]),
         ];
 
         Dictionary<string, int> result =
-            AnnualReportStats.CountTags(games, ThisYear, AnnualReportTagScope.AddedInYear);
+            AnnualReportStats.CountTags(games, ReportYear, AnnualReportTagScope.AddedInYear);
 
         Assert.That(result, Is.EquivalentTo(new Dictionary<string, int> { ["tagA"] = 1, ["shared"] = 1 }));
     }
@@ -88,12 +89,12 @@ public class AnnualReportStatsTest
     {
         List<Galgame> games =
         [
-            NewGame(tags: ["tagA", "shared"], playedTimeKeys: [$"{ThisYear}/2/2"]),
+            NewGame(tags: ["tagA", "shared"], playedTimeKeys: [$"{ReportYear}/2/2"]),
             NewGame(tags: ["tagB", "shared"], playedTimeKeys: ["2000/2/2"]),
         ];
 
         Dictionary<string, int> result =
-            AnnualReportStats.CountTags(games, ThisYear, AnnualReportTagScope.PlayedInYear);
+            AnnualReportStats.CountTags(games, ReportYear, AnnualReportTagScope.PlayedInYear);
 
         Assert.That(result, Is.EquivalentTo(new Dictionary<string, int> { ["tagA"] = 1, ["shared"] = 1 }));
     }
@@ -103,12 +104,12 @@ public class AnnualReportStatsTest
     {
         List<Galgame> games =
         [
-            NewGame(new DateTime(ThisYear, 1, 1), ["shared"]),
+            NewGame(new DateTime(ReportYear, 1, 1), ["shared"]),
             NewGame(new DateTime(1999, 1, 1), ["shared", "old"]),
         ];
 
         Dictionary<string, int> result =
-            AnnualReportStats.CountTags(games, ThisYear, AnnualReportTagScope.AllLibrary);
+            AnnualReportStats.CountTags(games, ReportYear, AnnualReportTagScope.AllLibrary);
 
         Assert.That(result, Is.EquivalentTo(new Dictionary<string, int> { ["shared"] = 2, ["old"] = 1 }));
     }
@@ -116,10 +117,10 @@ public class AnnualReportStatsTest
     [Test]
     public void CountTags_ShouldFilterBannedTagsAndYearLikeTags()
     {
-        List<Galgame> games = [NewGame(new DateTime(ThisYear, 1, 1), ["PC", "汉化", "Galgame", "2025", "2025-01", "keep"])];
+        List<Galgame> games = [NewGame(new DateTime(ReportYear, 1, 1), ["PC", "汉化", "Galgame", "2025", "2025-01", "keep"])];
 
         Dictionary<string, int> result =
-            AnnualReportStats.CountTags(games, ThisYear, AnnualReportTagScope.AddedInYear);
+            AnnualReportStats.CountTags(games, ReportYear, AnnualReportTagScope.AddedInYear);
 
         Assert.That(result.Keys, Is.EquivalentTo(new[] { "keep" }));
     }
@@ -128,13 +129,15 @@ public class AnnualReportStatsTest
     public void CountTags_ShouldOrderByFrequencyAndCapAtMax()
     {
         List<Galgame> games = [];
-        for (var i = 0; i < AnnualReportStats.TagFrequencyMax + 5; i++)
-            games.Add(NewGame(new DateTime(ThisYear, 1, 1), [$"tag{i:00}"]));
+        for (var tagIndex = 34; tagIndex >= 0; tagIndex--)
+            for (var occurrence = 0; occurrence < 35 - tagIndex; occurrence++)
+                games.Add(NewGame(tags: [$"tag{tagIndex:00}"]));
 
         Dictionary<string, int> result =
-            AnnualReportStats.CountTags(games, ThisYear, AnnualReportTagScope.AddedInYear);
+            AnnualReportStats.CountTags(games, ReportYear, AnnualReportTagScope.AddedInYear);
 
-        Assert.That(result, Has.Count.EqualTo(AnnualReportStats.TagFrequencyMax));
+        Assert.That(result.ToArray(), Is.EqualTo(Enumerable.Range(0, 30)
+            .Select(index => new KeyValuePair<string, int>($"tag{index:00}", 35 - index))));
     }
 
     [Test]
@@ -142,7 +145,7 @@ public class AnnualReportStatsTest
     {
         List<Galgame> games = [NewGame(new DateTime(1999, 1, 1), ["tagA"])];
 
-        Assert.That(AnnualReportStats.CountTags(games, ThisYear, AnnualReportTagScope.AddedInYear), Is.Empty);
+        Assert.That(AnnualReportStats.CountTags(games, ReportYear, AnnualReportTagScope.AddedInYear), Is.Empty);
     }
 
     #endregion
@@ -153,7 +156,7 @@ public class AnnualReportStatsTest
     public void PlayedTimeKeys_ShouldParseAsYearMonthDay()
     {
         // 年度报告依赖 PlayedTime 的键能被解析回日期；这条是口径的回归保护
-        Assert.That(Utils.TryParseDateGuessCulture($"{ThisYear}/11/18"), Is.EqualTo(new DateTime(ThisYear, 11, 18)));
+        Assert.That(Utils.TryParseDateGuessCulture($"{ReportYear}/11/18"), Is.EqualTo(new DateTime(ReportYear, 11, 18)));
         Assert.That(Utils.TryParseDateGuessCulture("not-a-date"), Is.EqualTo(DateTime.MinValue));
     }
 

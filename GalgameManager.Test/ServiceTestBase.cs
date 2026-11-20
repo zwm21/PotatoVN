@@ -58,14 +58,7 @@ public abstract class ServiceTestBase
     {
         SourceServiceFactory.SetResolverForTest(null);
         Database.Dispose();
-        try
-        {
-            if (Directory.Exists(TestDir)) Directory.Delete(TestDir, recursive: true);
-        }
-        catch
-        {
-            // ignore
-        }
+        if (Directory.Exists(TestDir)) Directory.Delete(TestDir, recursive: true);
     }
 
     /// 用真实ServiceCollection构造IServiceProvider，已注册mock的IGalgameCollectionService

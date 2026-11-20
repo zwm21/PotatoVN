@@ -11,16 +11,16 @@ public class GalInfoPhraserTests
     [TestCase("bacde", "abed", 0.672)]
     [TestCase("FAREMVIEL", "FARMVILLE", 0.88425)]
     [TestCase("AMBITIOUS MISSION", "ambitious mission", 1)]
-    public void SimilarityTest(string s1, string s2, double target)
+    [TestCase("", "abc", 0)]
+    [TestCase("abc", "xyz", 0)]
+    [TestCase("ＡＢＣ　ＤＥＦ", "abcdef", 1)]
+    public void SimilarityTest(string first, string second, double target)
     {
         // Arrange
         // Act
-        var result = IGalInfoPhraser.Similarity(s1, s2);
+        var result = IGalInfoPhraser.Similarity(first, second);
         // Console.WriteLine(result);
         // Assert
-        if (Math.Abs(result - target) > 0.001)
-            Assert.Fail();
-        else
-            Assert.Pass();
+        Assert.That(result, Is.EqualTo(target).Within(0.001));
     }
 }

@@ -1,3 +1,4 @@
+using GalgameManager.Contracts.Phrase;
 using GalgameManager.Enums;
 using GalgameManager.Helpers.Phrase;
 using GalgameManager.Models;
@@ -5,169 +6,150 @@ using GalgameManager.Models;
 namespace GalgameManager.Test.Helpers.Phraser;
 
 [TestFixture]
-[Category("Phraser")]
 public class MixedPhraserTest
 {
-    private MixedPhraser? _mixedPhraser;
-    private BgmPhraser _bgmPhraser = null!;
-    private VndbPhraser _vndbPhraser = null!;
-    private YmgalPhraser _ymgalPhraser = null!;
-    private SteamParser _steamParser = null!;
-    private HikarinagiPhraser _hikarinagiPhraser = null!;
-    
-    [SetUp]
-    public void Init()
-    {
-        var token = Environment.GetEnvironmentVariable("BGM_TOKEN"); // 请在环境变量中设置 BGM_TOKEN
-        BgmPhraserData data = new()
-        {
-            Token = string.IsNullOrEmpty(token) ? null : token
-        };
-        _bgmPhraser = new(data);
-        _vndbPhraser = new();
-        _ymgalPhraser = new();
-        _steamParser = new SteamParser("schinese");
-        _hikarinagiPhraser = new HikarinagiPhraser();
-        // 混合源默认已关闭Bangumi搜刮器（见MixedPhraserEnabled），本测试类断言了Bangumi的数据，故显式开启
-        _mixedPhraser = new MixedPhraser(_bgmPhraser, _vndbPhraser, _ymgalPhraser, _steamParser, _hikarinagiPhraser, new MixedPhraserData
-        {
-            Order = new MixedPhraserOrder().SetToDefault(),
-            Enabled = new MixedPhraserEnabled { BangumiEnabled = true },
-        });
-    }
-
     [Test]
-    [TestCase("近月少女的礼仪")]
-    public async Task PhraseTest(string name)
+    public async Task CustomOrder_SelectsEachFieldIndependently()
     {
-        // Arrange
-        Galgame? game = new(name);
-        // Act
-        game = await _mixedPhraser!.GetGalgameInfo(game);
-        // Assert
-        if(game == null)
-        {
-            Assert.Fail();
-            return;
-        }
-
-        switch (name)
-        {
-            case "近月少女的礼仪":
-                if(game.Name != "月に寄りそう乙女の作法") Assert.Fail();
-                Assert.That(game.Ids[(int)RssType.Bangumi], Is.EqualTo("44123"));
-                Assert.That(game.Ids[(int)RssType.Vndb], Is.EqualTo("10680"));
-                Assert.That(game.Ids[(int)RssType.Ymgal], Is.EqualTo("31147"));
-                if(!game.Description.Value!.StartsWith("主人公身为“大藏游星”")) Assert.Fail(); // from BGM
-                if(game.Developer != "Navel") Assert.Fail(); // from VNDB
-                // from STEAM
-                Assert.That(game.ImageUrl?.StartsWith("https://cdn.akamai.steamstatic.com/steam/apps/1776970/library_600x900.jpg"), Is.True);
-                break;
-        }
-        
-        Assert.Pass();
-    }
-    
-    [Test]
-    [TestCase("千恋万花")]
-    [TestCase("Ever17 -the out of infinity-")]
-    public async Task PhraseTestWithCustomOrder(string name)
-    {
-        // Arrange
-        Galgame? game = new(name);
         MixedPhraserOrder order = new MixedPhraserOrder().SetToDefault();
-        order.NameOrder = new() { RssType.Vndb, RssType.Bangumi };
-        order.ImageUrlOrder = new() { RssType.Bangumi, RssType.Vndb };
-        order.DescriptionOrder = new() { RssType.Vndb, RssType.Bangumi };
-        MixedPhraser phraser = new MixedPhraser(_bgmPhraser, _vndbPhraser, _ymgalPhraser, _steamParser, _hikarinagiPhraser, new MixedPhraserData
-        {
-            Order = order,
-            Enabled = new MixedPhraserEnabled { BangumiEnabled = true }, // 默认配置已关闭Bangumi，这里断言了Bangumi的数据，需显式开启
-        });
-        // Act
-        game = await phraser.GetGalgameInfo(game);
-        // Assert
-        if(game == null)
-        {
-            Assert.Fail();
-            return;
-        }
+        order.NameOrder = [RssType.Vndb, RssType.Bangumi];
+        order.DescriptionOrder = [RssType.Vndb, RssType.Bangumi];
+        order.DeveloperOrder = [RssType.Vndb, RssType.Bangumi];
+        order.ImageUrlOrder = [RssType.Bangumi, RssType.Vndb];
+        MixedPhraser phraser = CreatePhraser(order: order);
 
-        switch (name)
+        Galgame? result = await phraser.GetGalgameInfo(new Galgame("Query"));
+
+        Assert.That(result, Is.Not.Null);
+        Assert.Multiple(() =>
         {
-            case "千恋万花":
-                // VNDB搜不到游戏，fallback到Bangumi  update：VNDB已经有了（2024-11-13）
-                // Assert.That(game.Description.Value?.StartsWith("電車も通っていない山の中に"), Is.True); // 从BGM中获取
-                break;
-            case "Ever17 -the out of infinity-":
-                Assert.That(game.Name.Value, Is.EqualTo("Ever17 -the out of infinity-")); // 从VNDB中获取
-                Assert.That(game.Ids[(int)RssType.Bangumi], Is.EqualTo("1126")); // 未登录状态下无法找到游戏
-                Assert.That(game.Ids[(int)RssType.Vndb], Is.EqualTo("17"));
-                Assert.That(game.Ids[(int)RssType.Ymgal], Is.EqualTo("10799"));
-                Assert.That(game.Description.Value?.StartsWith("Ever17 is the tale of seven individuals"), Is.True); // 从VNDB中获取
-                Assert.That(game.ImageUrl?.StartsWith("https://lain.bgm.tv/"), Is.True); // 从BGM中获取
-                break;
-        }
-        
-        Assert.Pass();
-    }
-    
-    
-    [Test]
-    [TestCase("千恋＊万花")]
-    public async Task ParseTestWithCustomEnabled(string name)
-    {
-        // Arrange
-        Galgame? game = new(name);
-        MixedPhraserEnabled enabled = new()
-        {
-            BangumiEnabled = false,
-            VndbEnabled = false,
-        };
-        MixedPhraser phraser = new(_bgmPhraser, _vndbPhraser, _ymgalPhraser, _steamParser, _hikarinagiPhraser, new MixedPhraserData
-        {
-            Order = new MixedPhraserOrder().SetToDefault(),
-            Enabled = enabled,
+            Assert.That(result.Name.Value, Is.EqualTo("Fixture Game!"));
+            Assert.That(result.Description.Value, Is.EqualTo("VN description"));
+            Assert.That(result.Developer.Value, Is.EqualTo("VN studio"));
+            Assert.That(result.ImageUrl, Is.EqualTo("https://images.example/bgm.png"));
+            Assert.That(result.AlternateImageUrls, Is.EqualTo(new[] { "https://images.example/vndb.png" }));
+            Assert.That(result.Ids[(int)RssType.Bangumi], Is.EqualTo("bgm-42"));
+            Assert.That(result.Ids[(int)RssType.Vndb], Is.EqualTo("vn-42"));
         });
-        // Act
-        game = await phraser.GetGalgameInfo(game);
-        // Assert
-        if(game == null)
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task DisabledOrMissingSource_IsNotCalled_AndOtherSourceStillSucceeds(bool missing)
+    {
+        var calls = 0;
+        InMemoryPhraser bangumi = new(RssType.Bangumi, _ =>
         {
-            Assert.Fail();
-            return;
-        }
-        Assert.That(string.IsNullOrEmpty(game.Ids[(int)RssType.Bangumi]));
-        Assert.That(string.IsNullOrEmpty(game.Ids[(int)RssType.Vndb]));
-        Assert.That(game.Ids[(int)RssType.Ymgal], Is.EqualTo("22374"));
-        Assert.That(game.Ids[(int)RssType.Steam], Is.EqualTo("1144400"));
-        Assert.Pass();
+            calls++;
+            return Task.FromResult<Galgame?>(Metadata(RssType.Bangumi));
+        });
+        MixedPhraser phraser = CreatePhraser(bangumi: bangumi,
+            enabled: new MixedPhraserEnabled { BangumiEnabled = missing });
+        Galgame query = new("Query");
+        if (missing) query.Ids[(int)RssType.Bangumi] = "-1";
+
+        Galgame? result = await phraser.GetGalgameInfo(query);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(calls, Is.Zero);
+            Assert.That(result.Ids[(int)RssType.Bangumi], Is.EqualTo(missing ? "-1" : null));
+            Assert.That(result.Ids[(int)RssType.Vndb], Is.EqualTo("vn-42"));
+            Assert.That(result.Name.Value, Is.EqualTo("Fixture Game!"));
+            Assert.That(result.Description.Value, Is.EqualTo("VN description"));
+        });
     }
 
     [Test]
-    [TestCase("44123","10680")] // 近月少女的礼仪
-    public async Task PhraseTestWithId(string bgmId, string vndbId)
+    public async Task ParseById_PassesSourceSpecificIdsAndDoesNotModifyQuery()
     {
-        // Arrange
-        Galgame? game = new("极道胁迫！逆袭的运动部员们"); // 故意使用错误的名字
-        game.RssType = RssType.Mixed;
-        game.Id = $"bgm:{bgmId},vndb:{vndbId}";
-        // Act
-        game = await _mixedPhraser!.GetGalgameInfo(game);
-        // Assert
-        if(game == null)
-        {
-            Assert.Fail();
-            return;
-        }
+        InMemoryPhraser bangumi = new(RssType.Bangumi, query => Task.FromResult(
+            query.RssType == RssType.Bangumi && query.Id == "bgm-42" ? Metadata(RssType.Bangumi) : null));
+        InMemoryPhraser vndb = new(RssType.Vndb, query => Task.FromResult(
+            query.RssType == RssType.Vndb && query.Id == "vn-42" ? Metadata(RssType.Vndb) : null));
+        MixedPhraser phraser = CreatePhraser(bangumi, vndb);
+        Galgame query = new("Deliberately wrong name") { RssType = RssType.Mixed, Id = "bgm:bgm-42,vndb:vn-42" };
+        string?[] originalIds = (string?[])query.Ids.Clone();
 
-        switch (bgmId)
+        Galgame? result = await phraser.GetGalgameInfo(query);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.Multiple(() =>
         {
-            case "44123":
-                if(game.Developer != "Navel") Assert.Fail(); // 从VNDB中获取
-                break;
-        }
-        
-        Assert.Pass();
+            Assert.That(result.Name.Value, Is.EqualTo("Fixture Game"));
+            Assert.That(result.Ids[(int)RssType.Bangumi], Is.EqualTo("bgm-42"));
+            Assert.That(result.Ids[(int)RssType.Vndb], Is.EqualTo("vn-42"));
+            Assert.That(query.Name.Value, Is.EqualTo("Deliberately wrong name"));
+            Assert.That(query.Ids, Is.EqualTo(originalIds));
+            Assert.That(query.RssType, Is.EqualTo(RssType.Mixed));
+        });
     }
+
+    [Test]
+    public async Task AllSourcesReturnNull_ReturnsNull()
+    {
+        MixedPhraser phraser = CreatePhraser(new InMemoryPhraser(RssType.Bangumi, (Galgame?)null),
+            new InMemoryPhraser(RssType.Vndb, (Galgame?)null));
+
+        Assert.That(await phraser.GetGalgameInfo(new Galgame("Query")), Is.Null);
+    }
+
+    [Test]
+    public async Task FaultedSource_DoesNotDiscardSuccessfulMetadata()
+    {
+        MixedPhraser phraser = CreatePhraser(new InMemoryPhraser(RssType.Bangumi,
+            _ => Task.FromException<Galgame?>(new InvalidOperationException("Source unavailable"))));
+
+        Galgame? result = await phraser.GetGalgameInfo(new Galgame("Query"));
+
+        Assert.That(result, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Ids[(int)RssType.Bangumi], Is.Null);
+            Assert.That(result.Ids[(int)RssType.Vndb], Is.EqualTo("vn-42"));
+            Assert.That(result.Name.Value, Is.EqualTo("Fixture Game!"));
+            Assert.That(result.Description.Value, Is.EqualTo("VN description"));
+        });
+    }
+
+    [Test]
+    public async Task CustomOrder_WithNoAvailableSource_UsesFieldDefault()
+    {
+        MixedPhraserOrder order = new MixedPhraserOrder().SetToDefault();
+        order.DescriptionOrder = [RssType.Ymgal];
+        MixedPhraser phraser = CreatePhraser(order: order);
+
+        Galgame? result = await phraser.GetGalgameInfo(new Galgame("Query"));
+
+        Assert.That(result, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Name.Value, Is.EqualTo("Fixture Game"));
+            Assert.That(result.Description.Value, Is.Empty);
+            Assert.That(result.Ids[(int)RssType.Ymgal], Is.Null);
+        });
+    }
+
+    private static Galgame Metadata(RssType type) => new(type == RssType.Bangumi ? "Fixture Game" : "Fixture Game!")
+    {
+        RssType = type,
+        Id = type == RssType.Bangumi ? "bgm-42" : "vn-42",
+        Description = type == RssType.Bangumi ? "BGM description" : "VN description",
+        Developer = type == RssType.Bangumi ? "BGM studio" : "VN studio",
+        ImageUrl = type == RssType.Bangumi ? "https://images.example/bgm.png" : "https://images.example/vndb.png",
+    };
+
+    private static MixedPhraser CreatePhraser(IGalInfoPhraser? bangumi = null, IGalInfoPhraser? vndb = null,
+        MixedPhraserOrder? order = null, MixedPhraserEnabled? enabled = null) => new(
+        bangumi ?? new InMemoryPhraser(RssType.Bangumi, Metadata(RssType.Bangumi)),
+        vndb ?? new InMemoryPhraser(RssType.Vndb, Metadata(RssType.Vndb)),
+        new InMemoryPhraser(RssType.Ymgal, (Galgame?)null),
+        new InMemoryPhraser(RssType.Steam, (Galgame?)null),
+        new InMemoryPhraser(RssType.Hikarinagi, (Galgame?)null),
+        new MixedPhraserData
+        {
+            Order = order ?? new MixedPhraserOrder().SetToDefault(),
+            Enabled = enabled ?? new MixedPhraserEnabled { BangumiEnabled = true },
+        });
 }
