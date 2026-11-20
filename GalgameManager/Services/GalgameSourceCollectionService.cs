@@ -132,8 +132,8 @@ public partial class GalgameSourceCollectionService(
             }
         }
         
-        foreach (GalgameSourceBase source in _galgameSources.Where(f => f.ScanOnStart && f.IsAvailable)) 
-            _ = bgTaskService.AddBgTask(new GetGalgameInSourceTask(source));
+        foreach (GalgameSourceBase source in _galgameSources.Where(source => source.ScanOnStart))
+            Scan(source);
     }
     
     public ObservableCollection<GalgameSourceBase> GetGalgameSources() => _galgameSources;
@@ -384,9 +384,8 @@ public partial class GalgameSourceCollectionService(
     /// </summary>
     public void ScanAll()
     {
-        foreach(GalgameSourceBase b in _galgameSources.Where(s => s.IsAvailable))
-            bgTaskService.AddBgTask(new GetGalgameInSourceTask(b));
-
+        foreach (GalgameSourceBase source in _galgameSources)
+            Scan(source);
     }
 
     /// <summary>   
@@ -395,7 +394,7 @@ public partial class GalgameSourceCollectionService(
     /// <param name="source"></param>
     public void Scan(GalgameSourceBase source)
     {
-        if (!source.IsAvailable) return;
+        if (!source.IsAvailable || !source.IsSourceScanable) return;
         bgTaskService.AddBgTask(new GetGalgameInSourceTask(source));
     }
     

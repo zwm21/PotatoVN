@@ -26,24 +26,35 @@ public class MixedPhraser : IGalInfoPhraser, IGalCharacterPhraser, IGalStaffPars
     {
         if (!_init)
             Init();
-        string? result = null;
         foreach (var tag in galgame.Tags.Value!)
         {
+            string? result = null;
             double maxSimilarity = 0;
             foreach (var dev in _developerList)
             {
-                if (IGalInfoPhraser.Similarity(dev, tag) > maxSimilarity)
+                double similarity = IGalInfoPhraser.Similarity(dev, tag);
+                if (similarity > maxSimilarity)
                 {
-                    maxSimilarity = IGalInfoPhraser.Similarity(dev, tag);
+                    maxSimilarity = similarity;
                     result = dev;
                 }
             }
 
             if (result != null && maxSimilarity > 0.75) // magic number: 一个tag和开发商的相似度大于0.75就认为是开发商
-                break;
+                return result;
         }
 
-        return result;
+        return null;
+    }
+
+    private static Galgame CreateSourceRequest(Galgame galgame, RssType phraserType)
+    {
+        Galgame game = new();
+        game.Name.Value = galgame.Name.Value;
+        game.Name.IsLock = galgame.Name.IsLock;
+        game.RssType = phraserType;
+        game.Ids = (string?[])galgame.Ids.Clone();
+        return game;
     }
 
     private bool IsPhraserEnabled(RssType rssType)
@@ -82,9 +93,7 @@ public class MixedPhraser : IGalInfoPhraser, IGalCharacterPhraser, IGalStaffPars
             if (_phrasers.TryGetValue(phraserType, out IGalInfoPhraser? phraser) && phraser != null && IsPhraserEnabled(phraserType))
             {
                 if (galgame.Ids[(int)phraserType] == "-1") continue;
-                Galgame game = new() { Name = galgame.Name };
-                game.RssType = phraserType;
-                game.Ids = (string?[])galgame.Ids.Clone();
+                Galgame game = CreateSourceRequest(galgame, phraserType);
                 lock (lockObj)
                 {
                     phraserTasks[phraserType] = phraser.GetGalgameInfo(game);
@@ -145,54 +154,30 @@ public class MixedPhraser : IGalInfoPhraser, IGalCharacterPhraser, IGalStaffPars
 
         if (metas.Count == 0) return null;
 
-        // 对比所有的phraser的游戏名
-        // 如果有一个phraser的游戏名和当前的游戏名不一样，就认为是不同的游戏，重新获取
-
-        // 创建一个与metas长度相同的bool数组，初始值为false
-        List<bool> isSameGame = new List<bool>(new bool[metas.Count]);
-
-        for (int i = 0; i < metas.Count; i++)
+        List<RssType> sourceTypes = metas.Keys.ToList();
+        HashSet<RssType> matchingSources = new();
+        for (int index = 0; index < sourceTypes.Count; index++)
         {
-            for (int j = i + 1; j < metas.Count; j++)
+            for (int otherIndex = index + 1; otherIndex < sourceTypes.Count; otherIndex++)
             {
-                var name1 = metas.ElementAt(i).Value.Name.Value ?? string.Empty;
-                var name2 = metas.ElementAt(j).Value.Name.Value ?? string.Empty;
+                var name1 = metas[sourceTypes[index]].Name.Value ?? string.Empty;
+                var name2 = metas[sourceTypes[otherIndex]].Name.Value ?? string.Empty;
                 int threshold = (int)(Math.Max(name1.Length, name2.Length) * 0.3);
                 if (name1.Levenshtein(name2) <= threshold)
                 {
-                    // 如果两个游戏名的相似度大于等于0.3，就认为是同一个游戏
-                    // 如果游戏名长度为10时，有超过三个字符不一致时则认为是不同的游戏
-                    isSameGame[i] = true;
-                    isSameGame[j] = true;
+                    matchingSources.Add(sourceTypes[index]);
+                    matchingSources.Add(sourceTypes[otherIndex]);
                 }
             }
         }
 
-        // 如果所有的游戏名都不一样, 仅保留第一条记录
-        // 否则删除游戏名不一样的记录
-        if (isSameGame.All(x => x == false))
-        {
+        if (matchingSources.Count == 0)
+            matchingSources.Add(sourceTypes[0]);
 
-            while (metas.Count > 1)
-            {
-                var removedRssType = metas.ElementAt(metas.Count - 1).Key;
-                // 删除最后一个元素
-                metas.Remove(removedRssType);
-                result.Ids[(int)removedRssType] = null;
-            }
-        }
-        else if (isSameGame.Any(x => x == true))
+        foreach (RssType rssType in sourceTypes.Where(type => !matchingSources.Contains(type)))
         {
-            // 无事发生
-        }
-        else
-        {
-            foreach (var rssType in metas.Keys.ToList())
-            {
-                if (!isSameGame[(int)rssType])
-                    metas.Remove(rssType);
-                result.Ids[(int)rssType] = null;
-            }
+            metas.Remove(rssType);
+            result.Ids[(int)rssType] = null;
         }
 
         // 合并信息
@@ -304,9 +289,7 @@ public class MixedPhraser : IGalInfoPhraser, IGalCharacterPhraser, IGalStaffPars
             if (_phrasers.TryGetValue(phraserType, out IGalInfoPhraser? phraser) &&
                 phraser != null && phraser is IGalCoversParser coverParser)
             {
-                Galgame game = new() { Name = galgame.Name };
-                game.RssType = phraserType;
-                game.Ids = (string?[])galgame.Ids.Clone();
+                Galgame game = CreateSourceRequest(galgame, phraserType);
 
                 try
                 {

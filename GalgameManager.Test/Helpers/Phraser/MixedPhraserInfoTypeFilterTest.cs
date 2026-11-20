@@ -120,6 +120,31 @@ public class MixedPhraserInfoTypeFilterTest
         });
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task DeveloperFromUnrelatedTags_PreservesDefaultDeveloper(bool hasValidDeveloperTag)
+    {
+        MixedPhraserEnabled enabled = DisableAllFields();
+        enabled.DeveloperEnabled = true;
+        enabled.TagsEnabled = true;
+        Galgame preferred = CreateMetadata(RssType.Hikarinagi);
+        Galgame fallback = CreateMetadata(RssType.Vndb);
+        preferred.Developer = Galgame.DefaultString;
+        fallback.Developer = Galgame.DefaultString;
+        string unrelatedTag = new('x', 100);
+        preferred.Tags = new ObservableCollection<string> { unrelatedTag };
+        if (hasValidDeveloperTag)
+            preferred.Tags.Value!.Add("Navel");
+
+        Galgame result = await ParseAsync(enabled, preferred, fallback);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Developer.Value, Is.EqualTo(hasValidDeveloperTag ? "Navel" : Galgame.DefaultString));
+            Assert.That(result.Tags.Value, Is.EqualTo(hasValidDeveloperTag ? new[] { unrelatedTag, "Navel" } : new[] { unrelatedTag }));
+        });
+    }
+
     private static MixedPhraserEnabled DisableAllFields()
     {
         MixedPhraserEnabled enabled = new();

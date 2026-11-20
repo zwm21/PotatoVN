@@ -232,6 +232,62 @@ public class GalgameSourceCollectionServiceTest : ServiceTestBase
         BgTaskService.Verify(x => x.AddBgTask(It.IsAny<GetGalgameInSourceTask>()), Times.Never);
     }
 
+    [Test]
+    public async Task ScanAll_QueuesOnlyAvailableScannableSources()
+    {
+        GalgameSourceCollectionService service = await CreateInitializedServiceAsync();
+        await service.AddGalgameSourceAsync(GalgameSourceType.LocalFolder, CreateDir("scan-available"),
+            tryGetGalgame: false);
+        GalgameSourceBase unavailable = await service.AddGalgameSourceAsync(GalgameSourceType.LocalFolder,
+            CreateDir("scan-unavailable"), tryGetGalgame: false);
+        unavailable.IsAvailable = false;
+        BgTaskService.Invocations.Clear();
+
+        service.ScanAll();
+
+        BgTaskService.Verify(dependency => dependency.AddBgTask(It.IsAny<GetGalgameInSourceTask>()), Times.Once);
+    }
+
+    [TestCase(GalgameSourceType.LocalFolder, true, 1)]
+    [TestCase(GalgameSourceType.LocalFolder, false, 0)]
+    [TestCase(GalgameSourceType.Virtual, true, 0)]
+    [TestCase(GalgameSourceType.Virtual, false, 0)]
+    public void Scan_QueuesOnlyAvailableScannableSource(GalgameSourceType type, bool available, int expectedTasks)
+    {
+        GalgameSourceCollectionService service = CreateService();
+        GalgameSourceBase source = type == GalgameSourceType.Virtual
+            ? new VirtualSource()
+            : new GalgameFolderSource(TestDir);
+        source.IsAvailable = available;
+
+        service.Scan(source);
+
+        BgTaskService.Verify(dependency => dependency.AddBgTask(It.IsAny<GetGalgameInSourceTask>()),
+            Times.Exactly(expectedTasks));
+    }
+
+    [Test]
+    public async Task StartAsync_QueuesOnlyOptedInAvailableScannableSources()
+    {
+        GalgameSourceCollectionService service = await CreateInitializedServiceAsync();
+        GalgameSourceBase available = await service.AddGalgameSourceAsync(GalgameSourceType.LocalFolder,
+            CreateDir("startup-available"), tryGetGalgame: false);
+        available.ScanOnStart = true;
+        GalgameSourceBase unavailable = await service.AddGalgameSourceAsync(GalgameSourceType.LocalFolder,
+            CreateDir("startup-unavailable"), tryGetGalgame: false);
+        unavailable.ScanOnStart = true;
+        unavailable.IsAvailable = false;
+        GalgameSourceBase optedOut = await service.AddGalgameSourceAsync(GalgameSourceType.LocalFolder,
+            CreateDir("startup-opted-out"), tryGetGalgame: false);
+        optedOut.ScanOnStart = false;
+        service.GetGalgameSources().Single(source => source.SourceType == GalgameSourceType.Virtual).ScanOnStart = true;
+        BgTaskService.Invocations.Clear();
+
+        await service.StartAsync();
+
+        BgTaskService.Verify(dependency => dependency.AddBgTask(It.IsAny<GetGalgameInSourceTask>()), Times.Once);
+    }
+
     // 验证可用库中单个条目的被截断路径也会被修复，并连同 LocalConfig 一起落盘
     [Test]
     public async Task InitAsync_TruncatedEntryPath_RepairsEntryAndLocalConfig()
