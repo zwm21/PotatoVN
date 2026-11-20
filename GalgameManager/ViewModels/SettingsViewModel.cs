@@ -41,9 +41,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     private readonly IInfoService _infoService;
     private readonly IBgTaskService _bgTaskService;
     private readonly ISidebarService _sidebarService;
-    private readonly IAutoExportService _autoExportService;
     private string _versionDescription;
-    private bool _isCorrectingAutoExportToggle;
 
     #region UI_STRINGS //历史遗留，不要继续使用这种方式获取字符串
 
@@ -86,11 +84,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
     public async void OnNavigatedTo(object parameter)
     {
-        _localSettingsService.OnSettingChanged -= HandleAutoExportSettingChanged;
-        _localSettingsService.OnSettingChanged += HandleAutoExportSettingChanged;
-        _lastExportTime = await _localSettingsService.ReadSettingAsync<DateTime>(KeyValues.LastExportTime);
-        UpdateAutoExportDescriptions();
-
         // 设置页会被 Frame 缓存；外部入口（例如单游戏按键映射对话框）修改总开关后，
         // 每次返回设置页都重新读取，避免界面状态与真实启动配置不一致。
         GameReMapEnabled = await _localSettingsService.ReadSettingAsync<bool>(KeyValues.GameReMapEnabled);
@@ -107,7 +100,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
     public void OnNavigatedFrom()
     {
-        _localSettingsService.OnSettingChanged -= HandleAutoExportSettingChanged;
         _updateService.SettingBadgeEvent -= HandelSettingBadgeEvent;
         _galgameCollectionService.MetaSavedEvent -= SetSaveMetaPopUp;
     }
@@ -115,7 +107,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     public SettingsViewModel(IThemeSelectorService themeSelectorService, ILocalSettingsService localSettingsService,
         IGalgameCollectionService galgameService, IUpdateService updateService, INavigationService navigationService,
         ICategoryService categoryService, IInfoService infoService, IBgTaskService bgTaskService,
-        ISidebarService sidebarService, IAutoExportService autoExportService)
+        ISidebarService sidebarService)
     {
         _categoryService = categoryService;
         _themeSelectorService = themeSelectorService;
@@ -127,7 +119,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         _infoService = infoService;
         _bgTaskService = bgTaskService;
         _sidebarService = sidebarService;
-        _autoExportService = autoExportService;
 
         //THEME
         _elementTheme = themeSelectorService.Theme;
@@ -203,12 +194,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         CloseMode = _localSettingsService.ReadSettingAsync<WindowMode>(KeyValues.CloseMode).Result;
         DevelopmentMode = _localSettingsService.ReadSettingAsync<bool>(KeyValues.DevelopmentMode).Result;
         _isBetaChannel = _localSettingsService.ReadSettingAsync<bool>(KeyValues.IsBetaChannel).Result;
-        _isAutoExportEnabled = _localSettingsService.ReadSettingAsync<bool>(KeyValues.AutoExport).Result;
-        _autoExportInterval = _localSettingsService.ReadSettingAsync<double>(KeyValues.AutoExportInterval).Result;
-        _autoExportPath = _localSettingsService.ReadSettingAsync<string>(KeyValues.AutoExportPath).Result ?? Empty;
-        _lastExportTime = _localSettingsService.ReadSettingAsync<DateTime>(KeyValues.LastExportTime).Result;
-        _maxBackupNumber = _localSettingsService.ReadSettingAsync<int?>(KeyValues.MaxBackupNumber).Result ?? 999;
-        UpdateAutoExportDescriptions();
         List<string> extensionsList = _localSettingsService.ReadSettingAsync<List<string>>(KeyValues.CustomTextFileExtensions).Result ?? [];
         _customTextFileExtensionsString = Join(", ", extensionsList);
 
@@ -1134,13 +1119,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     [ObservableProperty] private WindowMode _closeMode;
     [ObservableProperty] private bool _developmentMode;
     [ObservableProperty] private bool _isBetaChannel;
-    [ObservableProperty] private bool _isAutoExportEnabled;
-    [ObservableProperty] private double _autoExportInterval;
-    [ObservableProperty] private string _autoExportIntervalDescription = string.Empty;
-    [ObservableProperty] private string _autoExportPathDescription = string.Empty;
-    [ObservableProperty] private int _maxBackupNumber;
-    private string _autoExportPath;
-    private DateTime _lastExportTime;
     public bool IsSideloadVersion => !App.IsStoreVersion();
     public readonly WindowMode[] WindowModes;
 
@@ -1169,127 +1147,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     {
         _localSettingsService.SaveSettingAsync(KeyValues.IsBetaChannel, value);
         _infoService.Info(InfoBarSeverity.Success, msg: "SettingsPage_Other_BetaChannel_Success".GetLocalized());
-    }
-
-    async partial void OnIsAutoExportEnabledChanged(bool value)
-    {
-        if (_isCorrectingAutoExportToggle) return;
-        try
-        {
-            if (!await _autoExportService.SetEnabledAsync(value))
-            {
-                _isCorrectingAutoExportToggle = true;
-                IsAutoExportEnabled = false;
-                _isCorrectingAutoExportToggle = false;
-                _infoService.Info(InfoBarSeverity.Error, msg: "SettingsPage_Other_AutoExport_PathInvalid".GetLocalized());
-                return;
-            }
-            _infoService.Info(InfoBarSeverity.Success, msg: "SettingSuccess".GetLocalized());
-        }
-        catch (Exception e)
-        {
-            _infoService.DeveloperEvent(e: e);
-        }
-    }
-
-    partial void OnAutoExportIntervalChanged(double value)
-    {
-        _localSettingsService.SaveSettingAsync(KeyValues.AutoExportInterval, value);
-        UpdateAutoExportDescriptions();
-    }
-
-    partial void OnMaxBackupNumberChanged(int value) => _localSettingsService.SaveSettingAsync(KeyValues.MaxBackupNumber, value);
-
-    private void UpdateAutoExportDescriptions()
-    {
-        AutoExportIntervalDescription = "SettingsPage_Other_AutoExport_Interval_Description".GetLocalized(_lastExportTime);
-        AutoExportPathDescription = IsNullOrEmpty(_autoExportPath)
-            ? "SettingsPage_Other_AutoExport_Path_NotSet".GetLocalized()
-            : "SettingsPage_Other_AutoExport_Path_Description".GetLocalized(_autoExportPath);
-    }
-
-    private void HandleAutoExportSettingChanged(string key, object? value)
-    {
-        if (key != KeyValues.LastExportTime || value is not DateTime lastExportTime) return;
-        _lastExportTime = lastExportTime;
-        UpdateAutoExportDescriptions();
-    }
-
-    [RelayCommand]
-    private async Task SelectAutoExportPath()
-    {
-        PvnFolderPicker openPicker = new();
-        if (openPicker.ShowDialog(App.MainWindow!.GetWindowHandle()) != PickerResult.OK
-            || string.IsNullOrEmpty(openPicker.SelectedPath)) return;
-        _autoExportPath = openPicker.SelectedPath;
-        UpdateAutoExportDescriptions();
-        await _localSettingsService.SaveSettingAsync(KeyValues.AutoExportPath, _autoExportPath);
-        _infoService.Info(InfoBarSeverity.Success, "SettingSuccess".GetLocalized());
-    }
-
-    [RelayCommand]
-    private async Task ExportData()
-    {
-        try
-        {
-            if (_bgTaskService.GetBgTask<ExportTask>(Empty) is not null)
-            {
-                _infoService.Info(InfoBarSeverity.Warning, "SettingsPage_Other_Export_Exporting".GetLocalized());
-                return;
-            }
-
-            PvnFolderPicker openPicker = new();
-            if (openPicker.ShowDialog(App.MainWindow!.GetWindowHandle()) != PickerResult.OK
-                || string.IsNullOrEmpty(openPicker.SelectedPath)) return;
-
-            // 手动导出走 AutoExportService（与启动时自动导出同一套逻辑）；
-            // 注意路径取自本分支的 PvnFolderPicker，不是上游 FolderPicker 流程里的 path 变量
-            if (!await _autoExportService.ExportAsync(openPicker.SelectedPath))
-                _infoService.Info(InfoBarSeverity.Warning, "SettingsPage_Other_Export_Exporting".GetLocalized());
-        }
-        catch (Exception e)
-        {
-            _infoService.Info(InfoBarSeverity.Error, "SettingsPage_Other_Export_Fail".GetLocalized(),
-                $"{e.Message}\n{e.StackTrace}");
-        }
-    }
-
-    [RelayCommand]
-    private async Task ImportData()
-    {
-        try
-        {
-            if (_bgTaskService.GetBgTask<ExportTask>(Empty) is not null)
-            {
-                _infoService.Info(InfoBarSeverity.Warning, "SettingsPage_Other_Export_Exporting".GetLocalized());
-                return;
-            }
-
-            FileOpenPicker openPicker = new();
-            WinRT.Interop.InitializeWithWindow.Initialize(openPicker, App.MainWindow!.GetWindowHandle());
-            openPicker.SuggestedStartLocation = PickerLocationId.HomeGroup;
-            openPicker.FileTypeFilter.Add(".zip");
-            StorageFile file = await openPicker.PickSingleFileAsync();
-            var path = file?.Path;
-            if (path is null) return;
-            if (file?.Name.EndsWith("pvnExport.zip") is not true)
-                throw new PvnException("SettingsPage_Other_Import_WrongFile".GetLocalized());
-
-            _infoService.Info(InfoBarSeverity.Success, msg: "SettingsPage_Other_Import_Copying".GetLocalized());
-            await Task.Run(() =>
-            {
-                File.Copy(path, Path.Combine(_localSettingsService.LocalFolder.FullName, file.Name));
-            });
-            _infoService.Info(InfoBarSeverity.Success, msg: "SettingsPage_Other_Import_Restart".GetLocalized(),
-                displayTimeMs: 1000 * 10);
-            await Task.Delay(10 * 1000);
-            AppInstance.Restart("/import"); // 并没有实现这个参数，只是为了和正常启动区分
-        }
-        catch (Exception e)
-        {
-            _infoService.Info(InfoBarSeverity.Error, "SettingsPage_Other_Import_Fail".GetLocalized(),
-                $"{e.Message}\n{e.StackTrace}");
-        }
     }
 
     /// <summary>
@@ -1327,7 +1184,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
     /// <summary>
     /// 恢复完整备份：用备份包替换当前的 UserData 与 Settings 文件夹。<br/>
-    /// 与 <see cref="ImportData"/> 同理需要重启后执行；导入前会自动备份当前数据，失败可回滚。
+    /// 需要重启后执行；恢复前会自动备份当前数据，失败可回滚。
     /// </summary>
     [RelayCommand]
     private async Task FullRestore()

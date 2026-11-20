@@ -65,6 +65,4 @@ public interface IStaffService
     /// <param name="staff"></param>
     /// <param name="sync">是否同步到pvn云端</param>
     public void Delete(Staff staff, bool sync = true);
-    
-    public Task ExportAsync(Action<string, int, int>? progress);
 }

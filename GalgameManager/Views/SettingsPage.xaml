@@ -756,53 +756,6 @@
                                     </ComboBox>
                                 </control:Setting>
                             </control:Panel>
-                            <!-- 导出数据 -->
-                            <control:Panel>
-                                <control:Setting x:Uid="SettingsPage_Other_Export">
-                                    <Button x:Uid="SettingsPage_Other_Export_Button"
-                                            MinWidth="{StaticResource ButtonMinWidth}"
-                                            Command="{x:Bind ViewModel.ExportDataCommand}"/>
-                                </control:Setting>
-                            </control:Panel>
-                            <!-- 自动导出数据 -->
-                            <control:Panel>
-                                <StackPanel Style="{StaticResource SettingStackPanelStyle}">
-                                    <local:SettingToggleSwitch x:Uid="SettingsPage_Other_AutoExport"
-                                                               IsOn="{x:Bind ViewModel.IsAutoExportEnabled, Mode=TwoWay}"/>
-                                    <!-- 导出时间间隔 -->
-                                    <control:Setting x:Uid="SettingsPage_Other_AutoExport_Interval"
-                                                     Description="{x:Bind ViewModel.AutoExportIntervalDescription, Mode=OneWay}"
-                                                     Visibility="{x:Bind ViewModel.IsAutoExportEnabled, Mode=OneWay}">
-                                        <NumberBox Value="{x:Bind ViewModel.AutoExportInterval, Mode=TwoWay}"
-                                                   SpinButtonPlacementMode="Compact"
-                                                   SmallChange="1" LargeChange="24" Minimum="1"
-                                                   Width="100"/>
-                                    </control:Setting>
-                                    <!-- 导出路径 -->
-                                    <control:Setting x:Uid="SettingsPage_Other_AutoExport_Path"
-                                                     Description="{x:Bind ViewModel.AutoExportPathDescription, Mode=OneWay}">
-                                        <Button x:Uid="SettingsPage_Other_AutoExport_Path_Button"
-                                                MinWidth="{StaticResource ButtonMinWidth}"
-                                                Command="{x:Bind ViewModel.SelectAutoExportPathCommand}"/>
-                                    </control:Setting>
-                                    <!-- 最多保存备份数 -->
-                                    <control:Setting x:Uid="SettingsPage_Other_AutoExport_MaxBackupNumber"
-                                                     Visibility="{x:Bind ViewModel.IsAutoExportEnabled, Mode=OneWay}">
-                                        <NumberBox Value="{x:Bind ViewModel.MaxBackupNumber, Mode=TwoWay}"
-                                                   SpinButtonPlacementMode="Compact"
-                                                   SmallChange="1" LargeChange="10" Minimum="1"
-                                                   Width="100"/>
-                                    </control:Setting>
-                                </StackPanel>
-                            </control:Panel>
-                            <!-- 导入数据 -->
-                            <control:Panel>
-                                <control:Setting x:Uid="SettingsPage_Other_Import">
-                                    <Button x:Uid="SettingsPage_Other_Import_Button"
-                                            MinWidth="{StaticResource ButtonMinWidth}"
-                                            Command="{x:Bind ViewModel.ImportDataCommand}"/>
-                                </control:Setting>
-                            </control:Panel>
                             <!-- 完整备份（UserData + Settings 整包） -->
                             <control:Panel>
                                 <control:Setting x:Uid="SettingsPage_Other_FullBackup">

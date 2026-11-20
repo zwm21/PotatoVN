@@ -150,22 +150,6 @@ public class StaffService : IStaffService
         if (sync) OnStaffDeleted?.Invoke(staff);
     }
 
-    public Task ExportAsync(Action<string, int, int>? progress)
-    {
-        return Task.Run(async () =>
-        {
-            List<Staff> toExport = _dbSet.Include(x => x.Games).FindAll().ToList();
-            foreach (Staff staff in toExport)
-            {
-                staff.ImagePath = await _settingsService.AddImageToExportAsync(staff.ImagePath);
-                progress?.Invoke("StaffService_Export".GetLocalized(staff.Name ?? string.Empty),
-                    toExport.IndexOf(staff), toExport.Count);
-            }
-
-            await _settingsService.AddToExportAsync("staff", toExport);
-        });
-    }
-
     private void OnGalgameMutated(object? sender, GalgameMutationEventArgs args)
     {
         var parsedGameInfo = args.ParsedTypes.HasFlag(GameParseType.GameInfo);

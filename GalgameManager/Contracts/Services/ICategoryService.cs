@@ -112,10 +112,4 @@ public interface ICategoryService
     /// <param name="category">要保存的分类</param>
     /// <param name="categoryGroup">要保存的分类组</param>
     public void Save(Category? category = null, CategoryGroup? categoryGroup = null);
-    
-    /// <summary>
-    /// 导出数据
-    /// </summary>
-    /// <returns></returns>
-    Task ExportAsync(Action<string, int, int>? progress);
 }

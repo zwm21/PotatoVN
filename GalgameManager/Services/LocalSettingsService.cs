@@ -18,7 +18,6 @@ namespace GalgameManager.Services;
 public class LocalSettingsService : ILocalSettingsService
 {
     private const string ErrorFileName ="You_Should_Not_See_This_File.Check_AppSettingsJson.json";
-    private const string TmpBackupFolderName = "Export";
     private const string FailDataFolderName = "FailData";
     private const string DatabaseFileName = "pvn_data.db";
     private const string SettingDatabaseFileName = "pvn_settings.db"; //这个数据库只在非MSIX模式下使用
@@ -448,55 +447,6 @@ public class LocalSettingsService : ILocalSettingsService
         await UiThreadInvokeHelper.InvokeAsync(() => OnSettingChanged?.Invoke(key, null));
     }
 
-    public async Task AddToExportAsync(string key, object value, List<JsonConverter>? converters = null,
-        bool typeNameHandling = false)
-    {
-        try
-        {
-            if (typeNameHandling) _serializerSettings.TypeNameHandling = TypeNameHandling.All;
-            converters?.ForEach(c => _serializerSettings.Converters.Add(c));
-            StorageFolder tmp = await GetTmpExportFolder();
-            _fileService.Save(tmp.Path, $"data.{key}.json", value, _serializerSettings);
-        }
-        finally
-        {
-            _serializerSettings.TypeNameHandling = TypeNameHandling.None; // 恢复默认值
-            // 无论如何都要移除新增的converter，防止崩溃保存的时候用到不应该用的converter
-            converters?.ForEach(c => _serializerSettings.Converters.Remove(c));
-        }
-    }
-
-    public async Task AddToExportDirectlyAsync(string key)
-    {
-        var filePath = Path.Combine(_applicationDataFolder, $"data.{key}.json");
-        if (File.Exists(filePath))
-        {
-            StorageFolder tmp = await GetTmpExportFolder();
-            StorageFile file = await StorageFile.GetFileFromPathAsync(filePath);
-            await file.CopyAsync(tmp, file.Name, NameCollisionOption.ReplaceExisting);
-        }
-    }
-
-    public async Task<string?> AddImageToExportAsync(string? imagePath)
-    {
-        if (imagePath.IsNullOrEmpty()) return null;
-        if (!File.Exists(imagePath)) return null;
-        try
-        {
-            StorageFolder tmp = await GetTmpExportFolder();
-            StorageFolder imageFolder = await tmp.CreateFolderAsync(FileHelper.FolderType.Images.ToString(),
-                CreationCollisionOption.OpenIfExists);
-            StorageFile image = await StorageFile.GetFileFromPathAsync(imagePath);
-            StorageFile result = await image.CopyAsync(imageFolder, Path.GetFileName(imagePath),
-                NameCollisionOption.GenerateUniqueName);
-            return $".\\{imageFolder.Name}\\{result.Name}";
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
-
     public async Task<string?> GetImageFromImportAsync(string? imagePath)
     {
         await Task.CompletedTask; // 预留异步坑位
@@ -512,13 +462,6 @@ public class LocalSettingsService : ILocalSettingsService
         {
             return null;
         }
-    }
-
-    public async Task<StorageFolder> GetTmpExportFolder()
-    {
-        StorageFolder tempRoot = await StorageFolder.GetFolderFromPathAsync(TemporaryFolder.FullName);
-        StorageFolder tmp = await tempRoot.CreateFolderAsync(TmpBackupFolderName, CreationCollisionOption.OpenIfExists);
-        return tmp;
     }
 
     public async Task<string> BackupFailedDataAsync(bool removeAfterBackup = false)

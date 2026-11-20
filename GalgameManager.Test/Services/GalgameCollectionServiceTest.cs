@@ -871,34 +871,4 @@ public class GalgameCollectionServiceTest : ServiceTestBase
 
     #endregion
 
-    #region 数据导出
-
-    // 验证导出：列表中的游戏以深克隆副本形式写入导出数据，进度回调逐游戏推进
-    [Test]
-    public async Task ExportAsync_ExportsDeepClonedGamesWithProgress()
-    {
-        GalgameCollectionService service = await CreateInitializedServiceAsync();
-        Galgame gameA = CreateGame("导出游戏A");
-        Galgame gameB = CreateGame("导出游戏B");
-        await service.AddVirtualGalgameAsync(gameA);
-        await service.AddVirtualGalgameAsync(gameB);
-        List<(int current, int total)> progress = [];
-
-        await service.ExportAsync((_, current, total) => progress.Add((current, total)));
-
-        Assert.That(Settings.Exported.ContainsKey(KeyValues.Galgames), Is.True);
-        Assert.That(Settings.Exported[KeyValues.Galgames], Is.TypeOf<ObservableCollection<Galgame>>());
-        var exported = (ObservableCollection<Galgame>)Settings.Exported[KeyValues.Galgames];
-        Assert.Multiple(() =>
-        {
-            Assert.That(exported.Select(g => g.Name.Value),
-                Is.EquivalentTo(new[] { "导出游戏A", "导出游戏B" }));
-            Assert.That(progress.Count, Is.EqualTo(2));
-            Assert.That(progress[1], Is.EqualTo((2, 2)));
-            // 导出的是深克隆副本，不是内存中的原对象
-            Assert.That(exported.Single(g => g.Name.Value == "导出游戏A"), Is.Not.SameAs(gameA));
-        });
-    }
-
-    #endregion
 }

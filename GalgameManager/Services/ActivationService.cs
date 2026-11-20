@@ -33,7 +33,6 @@ public class ActivationService : IActivationService
     private readonly IPvnService _pvnService;
     private readonly IPluginService _pluginService;
     private readonly IInfoService _infoService;
-    private readonly IAutoExportService _autoExportService;
 
     public ActivationService(
         IEnumerable<IActivationHandler> activationHandlers, IThemeSelectorService themeSelectorService,
@@ -43,8 +42,7 @@ public class ActivationService : IActivationService
         ICategoryService categoryService,IBgmOAuthService bgmOAuthService,
         IAuthenticationService authenticationService, ILocalSettingsService localSettingsService,
         IFilterService filterService, IPageService pageService, IBgTaskService bgTaskService, IPvnService pvnService,
-        IInfoService infoService, IStaffService staffService, IPluginService pluginService,
-        IAutoExportService autoExportService)
+        IInfoService infoService, IStaffService staffService, IPluginService pluginService)
     {
         _activationHandlers = activationHandlers;
         _themeSelectorService = themeSelectorService;
@@ -62,7 +60,6 @@ public class ActivationService : IActivationService
         _infoService = infoService;
         _staffService = staffService;
         _pluginService = pluginService;
-        _autoExportService = autoExportService;
     }
 
     public async Task LaunchedAsync(object activationArgs)
@@ -80,14 +77,6 @@ public class ActivationService : IActivationService
             }
         }
 
-        ImportWindow? importWindow = null;
-        if (await CheckImport() is { } import)
-        {
-            importWindow = new ImportWindow(import, _localSettingsService);
-            importWindow.Activate();
-            await importWindow.Import();
-        }
-
         try
         {
             await Task.Run(async () =>
@@ -98,9 +87,8 @@ public class ActivationService : IActivationService
                 await _categoryService.Init();
                 await _staffService.InitAsync();
                 await _filterService.InitAsync();
-                await _localSettingsService.ImportPageSettingsAsync(); // 导入时把导出包内的页面设置写回本机
+                await _localSettingsService.ImportPageSettingsAsync();
             });
-            importWindow?.Close();
         }
         catch (IOException) //数据库正在被占用
         {
@@ -110,21 +98,16 @@ public class ActivationService : IActivationService
         catch (Exception e)
         {
             var backup = string.Empty;
-            if (importWindow is not null)
-                await importWindow.Restore(e);
-            else
+            try
             {
-                try
-                {
-                    await _localSettingsService.BackupFailedDataAsync(removeAfterBackup: IsSafeMode());
-                }
-                catch (Exception exception)
-                {
-                    _infoService.DeveloperEvent(e: exception);
-                }
-                _localSettingsService.Database.Rebuild();
-                _localSettingsService.Database.Dispose();
+                await _localSettingsService.BackupFailedDataAsync(removeAfterBackup: IsSafeMode());
             }
+            catch (Exception exception)
+            {
+                _infoService.DeveloperEvent(e: exception);
+            }
+            _localSettingsService.Database.Rebuild();
+            _localSettingsService.Database.Dispose();
             if (IsSafeMode())
                 _infoService.Event(EventType.AppError, InfoBarSeverity.Error, title: "Oops",
                     msg: $"{"ActivationService_LoadDataError".GetLocalized(backup)} {e.Message}");
@@ -199,7 +182,6 @@ public class ActivationService : IActivationService
             activateWindow = !await _localSettingsService.ReadSettingAsync<bool>(KeyValues.MinToTrayWhenAutoStart);
         if (activateWindow) App.SetWindowMode(WindowMode.Normal);
         await _pluginService.InitAsync();
-        if (!isUpgradeUiTest) _autoExportService.Start();
         if (IsRestart() == false && !isUpgradeUiTest)
         {
             _pvnService.Startup();
@@ -312,16 +294,5 @@ public class ActivationService : IActivationService
             }
         }
         return false;
-    }
-
-    /// <summary>
-    /// 检查数据根目录下是否有导入压缩包
-    /// </summary>
-    private Task<FileInfo?> CheckImport()
-    {
-        if (!_localSettingsService.LocalFolder.Exists) return Task.FromResult<FileInfo?>(null);
-        FileInfo? zip = _localSettingsService.LocalFolder.GetFiles().FirstOrDefault(item =>
-            item.Name.EndsWith(".pvnExport.zip"));
-        return Task.FromResult(zip); // 给后面异步改造预留接口
     }
 }

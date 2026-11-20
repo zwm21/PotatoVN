@@ -7,6 +7,34 @@ namespace GalgameManager.Test;
 public class ProjectTest
 {
     [Test]
+    public void Settings_DataTransferEntryPointsAreRemoved_FullBackupCommandsRemain()
+    {
+        Type viewModel = typeof(GalgameManager.ViewModels.SettingsViewModel);
+        string[] removedProperties =
+        [
+            "ExportDataCommand", "ImportDataCommand", "SelectAutoExportPathCommand",
+            "IsAutoExportEnabled", "AutoExportInterval", "MaxBackupNumber",
+        ];
+        string[] removedTypes =
+        [
+            "GalgameManager.Services.AutoExportService",
+            "GalgameManager.Contracts.Services.IAutoExportService",
+            "GalgameManager.Models.BgTasks.ExportTask",
+            "GalgameManager.Views.ImportWindow",
+        ];
+
+        Assert.Multiple(() =>
+        {
+            foreach (string property in removedProperties)
+                Assert.That(viewModel.GetProperty(property), Is.Null, property);
+            foreach (string typeName in removedTypes)
+                Assert.That(viewModel.Assembly.GetType(typeName), Is.Null, typeName);
+            Assert.That(viewModel.GetProperty("FullBackupCommand"), Is.Not.Null);
+            Assert.That(viewModel.GetProperty("FullRestoreCommand"), Is.Not.Null);
+        });
+    }
+
+    [Test]
     public void Version_ShouldMatch_PackageAppxmanifest()
     {
         var manifestVersion = ReadPackageAppxManifestIdentityVersion();

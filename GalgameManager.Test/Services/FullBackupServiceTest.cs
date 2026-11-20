@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text;
+using GalgameManager.Enums;
 using GalgameManager.Services;
 
 namespace GalgameManager.Test.Services;
@@ -249,6 +250,44 @@ public class FullBackupServiceTest
         _service.RequestBackup(_target.FullName);
         await _service.RunPendingAsync();
         return GetBackupFile();
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task BackupAndRestore_PreservesLegacyDataTransferSettingsAndFiles(bool autoExportEnabled)
+    {
+        string legacySettings = $"{{\"{KeyValues.AutoExport}\":{autoExportEnabled.ToString().ToLowerInvariant()}," +
+                                $"\"{KeyValues.AutoExportInterval}\":1,\"{KeyValues.MaxBackupNumber}\":3}}";
+        const string dataStatus = "{\"ImportGalgame\":false,\"ImportPageSettings\":false}";
+        const string exportFileName = "PotatoVN_old.pvnExport.zip";
+        Write(_settings, "legacy-settings.json", legacySettings);
+        Write(_userData, "data.DataStatus.json", dataStatus);
+        string exportPath = Path.Combine(_userData.FullName, exportFileName);
+        using (ZipArchive exportArchive = ZipFile.Open(exportPath, ZipArchiveMode.Create))
+        {
+            using StreamWriter writer = new(exportArchive.CreateEntry("pvn_data.db").Open());
+            writer.Write("legacy-export-db");
+        }
+        byte[] exportBytes = File.ReadAllBytes(exportPath);
+        string backupPath = await CreateBackupZipAsync();
+        Write(_userData, "pvn_data.db", "changed-game-db");
+        Write(_settings, "legacy-settings.json", "changed-settings");
+        File.WriteAllText(exportPath, "changed-export");
+
+        _service.RequestRestore(backupPath);
+        FullBackupResult? result = await _service.RunPendingAsync();
+
+        Assert.That(result, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(result!.Success, Is.True);
+            Assert.That(Read(_userData, "pvn_data.db"), Is.EqualTo("game-db"));
+            Assert.That(Read(_settings, "pvn_settings.db"), Is.EqualTo("settings-db"));
+            Assert.That(Read(_settings, "legacy-settings.json"), Is.EqualTo(legacySettings));
+            Assert.That(Read(_userData, "data.DataStatus.json"), Is.EqualTo(dataStatus));
+            Assert.That(File.ReadAllBytes(exportPath), Is.EqualTo(exportBytes));
+            Assert.That(Read(_userData, Path.Combine("Images", "cover.png")), Is.EqualTo("cover"));
+        });
     }
 
     private string GetBackupFile() =>

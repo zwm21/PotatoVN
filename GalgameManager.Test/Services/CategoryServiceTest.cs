@@ -322,29 +322,6 @@ public class CategoryServiceTest : ServiceTestBase
         });
     }
 
-    // 验证导出：分类组深拷贝后连同分类一起写入导出存储（FakeLocalSettingsService.Exported）
-    [Test]
-    public async Task ExportAsync_WritesCategoryGroupsToExport()
-    {
-        CategoryService service = CreateService();
-        await service.Init();
-        CategoryGroup group = service.AddCategoryGroup("导出组");
-        Category category = new("导出分类");
-        service.AddCategoryToGroup(group, category);
-
-        await service.ExportAsync(null);
-
-        Assert.That(Settings.Exported, Does.ContainKey(KeyValues.CategoryGroups));
-        ObservableCollection<CategoryGroup> exported =
-            (ObservableCollection<CategoryGroup>)Settings.Exported[KeyValues.CategoryGroups];
-        CategoryGroup? exportedGroup = exported.FirstOrDefault(g => g.Name == "导出组");
-        Assert.Multiple(() =>
-        {
-            Assert.That(exportedGroup, Is.Not.Null);
-            Assert.That(exportedGroup!.Categories.Select(c => c.Id), Does.Contain(category.Id));
-        });
-    }
-
     // 验证手动编辑开发商字段（LockableProperty.Value）：游戏挂入新开发商分类；
     // 再次修改后从旧分类移除、挂入新分类
     [Test]

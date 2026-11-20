@@ -18,13 +18,9 @@
 请注意，样例中的 `x:Uid` 用于国际化，会自动设置 `Title` 属性。`Content` 区域被放置了一个 `NumberBox`。
 
 ```xml
-<control:Setting x:Uid="SettingsPage_Other_AutoExport_Interval"  
-                 Description="{x:Bind ViewModel.AutoExportIntervalDescription, Mode=OneWay}"  
-                 Visibility="{x:Bind ViewModel.IsAutoExportEnabled, Mode=OneWay}">  
-    <NumberBox Value="{x:Bind ViewModel.AutoExportInterval, Mode=TwoWay}"  
-               SpinButtonPlacementMode="Compact"  
-               SmallChange="1" LargeChange="24" Minimum="1"  
-               Width="100"/>  
+<control:Setting x:Uid="SettingsPage_Other_FullBackup">
+    <Button x:Uid="SettingsPage_Other_FullBackup_Button"
+            Command="{x:Bind ViewModel.FullBackupCommand}"/>
 </control:Setting>
 ```
 

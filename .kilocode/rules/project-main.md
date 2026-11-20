@@ -20,11 +20,10 @@ This document provides a high-level overview of the GalgameManager project, also
   * Translations are maintained **locally in this repo** — there is no Crowdin pipeline anymore (the `crowdin*.yml` workflows and root `crowdin.yml` were removed).
   * Edit `GalgameManager/Strings/<locale>/Resources.resw` through `GalgameManager/Strings/resw_tool.py` (search / update / delete / validate); never edit `.resw` by hand.
   * Supported languages are defined in `GalgameManager/Enums/LanguageEnum.cs` (currently includes Auto, ChineseSimplified, English, Japanese).
-* **Auto Export:**
-  * The application can automatically export user data at a set interval.
-  * Settings for this feature are stored in `KeyValues.cs` and include `AutoExport` (bool), `AutoExportInterval` (double, in hours), `AutoExportPath` (string), `LastExportTime` (DateTime), and `MaxBackupNumber` (int).
-  * Language-specific resources (`Resources.resw`) are located in subdirectories under `GalgameManager/Strings/` (e.g., `en-US/`, `zh-CN/`, `ja-JP/`).
-  * The display names for languages in the settings UI are localized (e.g., "English" in the English UI, "中文" in the Chinese UI, "日本語" in the Japanese UI).
+* **Full Backup and Restore:**
+  * `Services/FullBackupService.cs` preserves the complete `UserData` and `Settings` folders in `*.pvnBackup.zip`. Pending requests run at startup before any database is opened.
+  * The older `*.pvnExport.zip` data-export/import flow and automatic export are unavailable. Historical files and auto-export settings remain untouched, but no export scheduler or startup archive importer runs.
+  * Legacy data migrations and image/page-settings restoration remain active so old user data and complete backups stay readable.
 
 ## 2. Repository Structure and Key Files
 

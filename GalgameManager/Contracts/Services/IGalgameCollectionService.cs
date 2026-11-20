@@ -151,7 +151,5 @@ public interface IGalgameCollectionService
 
     public Task<List<string>> ParserGalImagesAsync(Galgame galgame, GameParseType parseType);
 
-    public Task ExportAsync(Action<string, int, int>? progress);
-
     public Task<(GalStatusSyncResult, string)> UploadPlayStatusAsync(Galgame galgame, RssType rssType);
 }

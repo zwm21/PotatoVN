@@ -8,7 +8,6 @@ using LiteDB;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Newtonsoft.Json;
-using Windows.Storage;
 
 namespace GalgameManager.Test;
 
@@ -155,23 +154,7 @@ public class FakeLocalSettingsService : ILocalSettingsService
         return Task.CompletedTask;
     }
 
-    public Task<string?> AddImageToExportAsync(string? imagePath) => Task.FromResult(imagePath);
-
     public Task<string?> GetImageFromImportAsync(string? imagePath) => Task.FromResult(imagePath);
-
-    /// 已导出的数据，key为导出项名
-    public Dictionary<string, object> Exported { get; } = new();
-
-    public Task AddToExportAsync(string key, object value, List<JsonConverter>? converters = null,
-        bool typeNameHandling = false)
-    {
-        Exported[key] = value;
-        return Task.CompletedTask;
-    }
-
-    public Task AddToExportDirectlyAsync(string key) => throw new NotImplementedException();
-
-    public Task<StorageFolder> GetTmpExportFolder() => throw new NotImplementedException();
 
     public Task<string> BackupFailedDataAsync(bool removeAfterBackup = true) => throw new NotImplementedException();
 
