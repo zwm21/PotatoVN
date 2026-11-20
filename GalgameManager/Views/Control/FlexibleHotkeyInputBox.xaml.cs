@@ -825,17 +825,6 @@ public sealed partial class FlexibleHotkeyInputBox : INotifyPropertyChanged
         }
     }
 
-    private string GetDisplayNameForKeyCode(int keyCode)
-    {
-        // 首先检查是否是鼠标按键
-        if (IsMouseKeyCode(keyCode))
-        {
-            return GetMouseDisplayName(keyCode);
-        }
-
-        return GetKeyDisplayName((VirtualKey)keyCode);
-    }
-
     private void EnsureDropdownInitialized()
     {
         try
