@@ -36,7 +36,7 @@ public sealed partial class SavePositionDialog : ContentDialog
         {
             InstructionTextBlock.Text = "SavePositionDialog_FindNewPath_Title".GetLocalized();
             HelperTextBlock.Text = "SavePositionDialog_FindNewPath_Helper".GetLocalized();
-            PathTextBlock.Text = "GalgameSettingPage_DetectedSavePosition".GetLocalized();
+            PathTextBlock.Text = "GalgameSettingPage_SavePositionNotSet".GetLocalized();
         }
 
         // 设置按钮文本

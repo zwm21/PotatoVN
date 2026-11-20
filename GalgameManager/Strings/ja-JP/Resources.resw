@@ -3414,12 +3414,8 @@
   <data name="Settings_Game_EditKeyMapping.Text" xml:space="preserve">
     <value>グローバルマッピングルールを編集</value>
   </data>
-  <data name="Settings_Game_AutoDetectSavePath.Title" xml:space="preserve">
-    <value>セーブデータ保存場所の自動検出</value>
-  </data>
-  <data name="Settings_Game_AutoDetectSavePath.Description" xml:space="preserve">
-    <value>ファイルの変更を監視し、セーブデータの保存場所を自動的に特定します。(これは実験的な機能であり、すべての検出を保証するものではありません)</value>
-  </data>
+
+
   <data name="Galgame_hotkey_common_QuickSave" xml:space="preserve">
     <value>クイックセーブ</value>
   </data>
@@ -3468,30 +3464,16 @@
   <data name="Galgame_hotkey_common_Cancel" xml:space="preserve">
     <value>キャンセル</value>
   </data>
-  <data name="GameSaveDetectorTask_Title" xml:space="preserve">
-    <value>ゲームセーブ位置検出タスク</value>
-  </data>
-  <data name="GameSaveDetector_Initializing" xml:space="preserve">
-    <value>セーブデータ検出を初期化中...</value>
-  </data>
-  <data name="GameSaveDetector_Monitoring" xml:space="preserve">
-    <value>ファイル変更を監視中... 検出された候補: {0}</value>
-  </data>
-  <data name="GameSaveDetector_Success" xml:space="preserve">
-    <value>セーブデータ検出完了: {0}</value>
-  </data>
-  <data name="GameSaveDetector_NotFound" xml:space="preserve">
-    <value>有効なセーブデータパスが見つかりませんでした。ゲームを手動で起動して保存してみてください。</value>
-  </data>
-  <data name="GameSaveDetector_Failed" xml:space="preserve">
-    <value>ファイルの変更は検出されましたが、最適なセーブデータディレクトリを特定できませんでした。</value>
-  </data>
+
+
+
+
+
+
   <data name="GalgameSettingPage_EditSavePosition.Text" xml:space="preserve">
     <value>パスを編集</value>
   </data>
-  <data name="GalgameSettingPage_DetectedSavePosition" xml:space="preserve">
-    <value>ゲーム内でいくつかの保存操作を実行してください</value>
-  </data>
+
   <data name="GalgameSettingPage_SavePositionUpdated" xml:space="preserve">
     <value>セーブ位置が更新されました</value>
   </data>
@@ -4352,5 +4334,8 @@
   </data>
   <data name="AnnualReportTagScope_AllLibrary" xml:space="preserve">
     <value>ライブラリ全体</value>
+  </data>
+  <data name="GalgameSettingPage_SavePositionNotSet" xml:space="preserve">
+    <value>セーブ場所が未設定です。セーブフォルダーを手動で選択してください。</value>
   </data>
 </root>

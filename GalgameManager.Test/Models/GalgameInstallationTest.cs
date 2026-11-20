@@ -1,3 +1,4 @@
+using GalgameManager.Helpers;
 using GalgameManager.Models;
 using GalgameManager.Models.Sources;
 using GalgameManager.Services;
@@ -196,6 +197,41 @@ public class GalgameInstallationTest
             Assert.That(restored.Game?.Name.Value, Is.EqualTo("Example"));
             Assert.That(restored.Installation?.ExePath, Is.EqualTo(@"D:\Library\Example\game.exe"));
             Assert.That(restored.Installation?.ExeArguments, Is.EqualTo("--launch"));
+        });
+    }
+
+    [TestCase(@"%GameRoot%\savedata", @"C:\Library\Example\savedata")]
+    [TestCase(@"C:\Saves\Example", @"C:\Saves\Example")]
+    public void SavedPaths_PreserveLegacyAndManualConfiguration_InMetadata(string portableSavePath,
+        string expectedSavePath)
+    {
+        LocalInstallationConfig config = new()
+        {
+            DetectedSavePath = new GamePortablePath
+            {
+                Mapping = new TokenPathMapping { Root = @"C:\Library\Example", Tag = "%GameRoot%" },
+                ParsedPath = portableSavePath,
+            },
+            SavePath = @"C:\LinkedSaves\Example",
+        };
+        GameMetaBackup backup = new()
+        {
+            Version = GameMetaBackup.CurrentVersion,
+            Game = new Galgame("Example"),
+            Installation = config,
+        };
+
+        GameMetaBackup restored = JsonConvert.DeserializeObject<GameMetaBackup>(
+            JsonConvert.SerializeObject(backup))!;
+        LocalInstallationConfig cloned = restored.Installation!.Clone();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(cloned.DetectedSavePath?.ToPath(), Is.EqualTo(expectedSavePath));
+            Assert.That(cloned.DetectedSavePath?.ToDisplay(), Is.EqualTo(portableSavePath));
+            Assert.That(cloned.SavePath, Is.EqualTo(@"C:\LinkedSaves\Example"));
+            Assert.That(config.DetectedSavePath?.ToPath(), Is.EqualTo(expectedSavePath));
+            Assert.That(config.SavePath, Is.EqualTo(@"C:\LinkedSaves\Example"));
         });
     }
 

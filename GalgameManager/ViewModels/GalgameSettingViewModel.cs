@@ -59,7 +59,7 @@ public partial class GalgameSettingViewModel : ObservableObject, INavigationAwar
     public bool IsLocalGame => Gal.IsLocalGame;
     public string SavePositionDescription =>
         SelectedInstallationConfig?.DetectedSavePath?.ToDisplay()
-        ?? "GalgameSettingPage_DetectedSavePosition".GetLocalized();
+        ?? "GalgameSettingPage_SavePositionNotSet".GetLocalized();
 
     public GalgameSettingViewModel(IGalgameCollectionService galCollectionService, INavigationService navigationService,
         IPvnService pvnService, IInfoService infoService, IGalgameSourceCollectionService sourceService,

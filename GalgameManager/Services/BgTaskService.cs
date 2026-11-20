@@ -40,7 +40,6 @@ public class BgTaskService : IBgTaskService
         RegisterBgTaskType(typeof(CallMagpieTask), "-callMagpie");
         RegisterBgTaskType(typeof(GameMuteTask), "-gameMute");
         RegisterBgTaskType(typeof(KeyMappingTask), "-keyMap");
-        RegisterBgTaskType(typeof(GameSaveDetectorTask), "-saveDetector");
 
         _converters.Add(new GalgameAndUidConverter());
         _converters.Add(new CategoryAndUuidConverter());

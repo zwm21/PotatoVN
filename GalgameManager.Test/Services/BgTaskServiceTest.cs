@@ -255,6 +255,36 @@ public class BgTaskServiceTest : ServiceTestBase
         });
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task Resolve_RemovedSaveDetector_SkipsLegacyTaskAndRestoresOtherTasks(bool detectorFirst)
+    {
+        BgTaskService service = CreateService();
+        service.RegisterBgTaskType(typeof(TestBgTask), "-test");
+        string taskToken = "-test " + JsonConvert.SerializeObject(new TestBgTask { Marker = "retained" }).ToBase64();
+        string detectorToken = "-saveDetector invalid-base64";
+        string savedTasks = detectorFirst ? $"{detectorToken} {taskToken}" : $"{taskToken} {detectorToken}";
+        string file = Path.Combine(AppStoragePaths.LocalDataPath, BgTaskFileName);
+        await File.WriteAllTextAsync(file, JsonConvert.SerializeObject(savedTasks));
+        List<BgTaskBase> restoredTasks = new();
+        service.BgTaskAdded += task => restoredTasks.Add(task);
+
+        await service.ResolvedBgTasksAsync();
+        await WaitUntilAsync(() => !service.GetBgTasks().Any(), "恢复任务未完成清理");
+
+        Assert.That(restoredTasks, Has.Count.EqualTo(1));
+        Assert.That(restoredTasks[0], Is.TypeOf<TestBgTask>());
+        TestBgTask restored = (TestBgTask)restoredTasks[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(restored.Marker, Is.EqualTo("retained"));
+            Assert.That(restored.Recovered, Is.True);
+            Assert.That(restored.Ran, Is.True);
+            Assert.That(service.GetBgTasks(), Is.Empty);
+            Assert.That(File.Exists(file), Is.False);
+        });
+    }
+
     // 验证后台任务的持久化与恢复闭环：SaveBgTasksString把运行中的任务写入文件，
     // 新实例ResolvedBgTasksAsync读回、反序列化、RecoverFromJson并重新运行，最后删除文件
     [Test]

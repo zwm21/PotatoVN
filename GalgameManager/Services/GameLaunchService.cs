@@ -204,9 +204,6 @@ public sealed class GameLaunchService(
             if (await localSettingsService.ReadSettingAsync<bool>(KeyValues.AlwaysMuteInBackground) ||
                 game.MuteInBackground)
                 _ = bgTaskService.AddBgTask(new GameMuteTask(game, process));
-            if (await localSettingsService.ReadSettingAsync<bool>(KeyValues.AutoDetectSavePath) &&
-                config.DetectedSavePath is null)
-                _ = bgTaskService.AddBgTask(new GameSaveDetectorTask(game, installation));
             if (!process.HasExited)
                 App.SetWindowMode(
                     await localSettingsService.ReadSettingAsync<WindowMode>(KeyValues.PlayingWindowMode));
