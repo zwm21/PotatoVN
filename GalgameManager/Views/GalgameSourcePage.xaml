@@ -10,7 +10,6 @@
     xmlns:control="using:GalgameManager.Views.Control"
     xmlns:views="using:GalgameManager.Views"
     xmlns:viewModels="using:GalgameManager.ViewModels"
-    xmlns:behaviors="using:CommunityToolkit.WinUI.Behaviors"
     xmlns:sources="using:GalgameManager.Models.Sources"
     xmlns:enums="using:GalgameManager.Enums"
     xmlns:cmtk="using:CommunityToolkit.WinUI.Controls"

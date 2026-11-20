@@ -22,7 +22,6 @@ public class ActivationService : IActivationService
     private readonly IUpdateService _updateService;
     private readonly IGalgameSourceCollectionService _galgameFolderCollectionService;
     private readonly IGalgameCollectionService _galgameCollectionService;
-    private readonly IAppCenterService _appCenterService;
     private readonly ICategoryService _categoryService;
     private readonly IStaffService _staffService;
     private readonly IAuthenticationService _authenticationService;
@@ -40,7 +39,7 @@ public class ActivationService : IActivationService
         IEnumerable<IActivationHandler> activationHandlers, IThemeSelectorService themeSelectorService,
         IGalgameSourceCollectionService galgameFolderCollectionService,
         IGalgameCollectionService galgameCollectionService,
-        IUpdateService updateService, IAppCenterService appCenterService,
+        IUpdateService updateService,
         ICategoryService categoryService,IBgmOAuthService bgmOAuthService,
         IAuthenticationService authenticationService, ILocalSettingsService localSettingsService,
         IFilterService filterService, IPageService pageService, IBgTaskService bgTaskService, IPvnService pvnService,
@@ -52,7 +51,6 @@ public class ActivationService : IActivationService
         _galgameFolderCollectionService = galgameFolderCollectionService;
         _galgameCollectionService = galgameCollectionService;
         _updateService = updateService;
-        _appCenterService = appCenterService;
         _categoryService = categoryService;
         _bgmOAuthService = bgmOAuthService;
         _authenticationService = authenticationService;
@@ -209,7 +207,6 @@ public class ActivationService : IActivationService
         }
         if (!isUpgradeUiTest)
         {
-            await _appCenterService.StartAsync();
             if (IsRestart() == false) await _bgmOAuthService.Init();
             await CheckFont();
         }

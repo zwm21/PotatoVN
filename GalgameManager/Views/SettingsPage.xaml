@@ -830,11 +830,6 @@
                                 <local:SettingToggleSwitch x:Uid="SettingsPage_Other_Memory"
                                                            IsOn="{x:Bind ViewModel.MemoryImprove, Mode=TwoWay}"/>
                             </control:Panel>
-                            <!-- 上传匿名事件日志 -->
-                            <control:Panel>
-                                <local:SettingToggleSwitch x:Uid="SettingsPage_Other_AppCenter"
-                                                           IsOn="{x:Bind ViewModel.UploadToAppCenter, Mode=TwoWay}"/>
-                            </control:Panel>
                             <!-- 指纹共享计划 -->
                             <control:Panel>
                                 <local:SettingToggleSwitch x:Uid="SettingsPage_Other_FingerprintPlan"

@@ -600,12 +600,8 @@ Since multiple data sources are involved, you need to configure relevant setting
   <data name="SettingsPage_Other.SettingDescription" xml:space="preserve">
     <value>Some other settings</value>
   </data>
-  <data name="SettingsPage_Other_AppCenter.Title" xml:space="preserve">
-    <value>Upload anonymous event log</value>
-  </data>
-  <data name="SettingsPage_Other_AppCenter.Description" xml:space="preserve">
-    <value>The uploaded content does not contain any personal data and is only used to measure the use of features and report error tracking.</value>
-  </data>
+
+
   <data name="SettingsPage_UpdateContent.Content" xml:space="preserve">
     <value>Change log</value>
   </data>

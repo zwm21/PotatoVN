@@ -198,7 +198,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         _eventPvnSync = _localSettingsService.ReadSettingAsync<bool>(KeyValues.EventPvnSyncNotify).Result;
         _eventPvnSyncEmpty = _localSettingsService.ReadSettingAsync<bool>(KeyValues.EventPvnSyncEmptyNotify).Result;
         //Other
-        UploadToAppCenter = _localSettingsService.ReadSettingAsync<bool>(KeyValues.UploadData).Result;
         MemoryImprove = _localSettingsService.ReadSettingAsync<bool>(KeyValues.MemoryImprove).Result;
         _fingerprintPlanEnabled = _localSettingsService.ReadSettingAsync<bool>(KeyValues.FingerprintPlanEnabled).Result;
         WindowModes = new[] { WindowMode.Normal, WindowMode.Close, WindowMode.SystemTray };
@@ -1134,7 +1133,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
     #region Other
 
-    [ObservableProperty] private bool _uploadToAppCenter;
     [ObservableProperty] private bool _fingerprintPlanEnabled;
     [ObservableProperty] private bool _memoryImprove;
     [ObservableProperty] private WindowMode _closeMode;
@@ -1149,8 +1147,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     private DateTime _lastExportTime;
     public bool IsSideloadVersion => !App.IsStoreVersion();
     public readonly WindowMode[] WindowModes;
-
-    partial void OnUploadToAppCenterChanged(bool value) => _localSettingsService.SaveSettingAsync(KeyValues.UploadData, value);
 
     async partial void OnFingerprintPlanEnabledChanged(bool value)
     {

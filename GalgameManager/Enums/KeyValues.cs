@@ -164,7 +164,6 @@ public static class KeyValues
 
     //软件本体设置相关
     public const string MemoryImprove = "memoryImprove"; //bool, 是否启用内存优化
-    public const string UploadData = "uploadData"; // bool,是否将匿名数据上传到AppCenter
     public const string CloseMode = "closeMode"; // WindowMode,关闭模式，Normal（表示未设定）/Close/SystemTray
     public const string DevelopmentMode = "developmentMode"; //bool, 是否开发模式
     public const string LastError = "lastError"; //string, 上次错误信息

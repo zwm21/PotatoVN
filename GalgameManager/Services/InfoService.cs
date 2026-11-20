@@ -17,12 +17,10 @@ public class InfoService : IInfoService
     public event Action<InfoBarSeverity, string?, string?, int>? OnInfo;
     public event Action<InfoBarSeverity, string?, string?, Action?, string?>? OnEvent;
     public ObservableCollection<Info> Infos { get; } = new();
-    private readonly IAppCenterService _appCenterService;
     private readonly ILocalSettingsService _localSettingsService;
 
-    public InfoService(IAppCenterService appCenterService, ILocalSettingsService localSettingsService)
+    public InfoService(ILocalSettingsService localSettingsService)
     {
-        _appCenterService = appCenterService;
         _localSettingsService = localSettingsService;
 
         var logDir = Path.Combine(_localSettingsService.LocalFolder.FullName, "Logs");
@@ -54,7 +52,6 @@ public class InfoService : IInfoService
             // 下面这句话有时会抛出System.Runtime.InteropServices.COMException (0x80004005)，但容器却能正常插入
             Infos.Insert(0, new Info(infoBarSeverity, title, exception?.ToString() ?? msg ?? string.Empty));
         });
-        _appCenterService.UploadEvent(title, exception, msg);
     }
 
     public void DeveloperEvent(InfoBarSeverity infoBarSeverity = InfoBarSeverity.Warning, string? msg = null,
