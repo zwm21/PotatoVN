@@ -55,38 +55,75 @@
   </PropertyGroup>
 
   <!--
-    便携发布专用：定向裁剪 Microsoft.Windows.SDK.NET.dll（26,086,944 B → 959,488 B，省 23.97 MiB）。
+    便携发布专用：定向裁剪，只放开 BCL 与 WinRT 投影参与 partial 裁剪。
 
     严格限定在 PotatoVnPortable=true 且 Release 下生效——也就是只有
     BuildScripts/Publish-Portable.ps1 那条命令链会走到。普通 Debug 构建、dotnet test
     （测试项目引用本工程时既不带 PotatoVnPortable 也不是 Release）完全不受影响，
     不参与 trim 分析、不拖慢日常编译。
 
-    TrimMode=partial + 下面的 ScopeTrimToSdkNetOnly 钩子配合：partial 让 trimmer 只处理
-    标记为可裁的程序集，钩子再把除 Microsoft.Windows.SDK.NET.dll 以外的每一个
-    ManagedAssemblyToLink 显式设成 TrimMode=copy（照原样拷贝、不分析不改代码），
-    于是实际被裁的只有那一个 WinRT 投影程序集。
-    实测其余 289 个程序集逐字节不变（含 System.Private.CoreLib / Microsoft.WinUI /
-    GalgameManager 自身），插件依赖的反射面因此完好。
+    裁剪范围（T1）：
+      * link（交给 trimmer）：.NET 运行时包里标记 IsTrimmable 的 BCL 程序集
+        + Microsoft.Windows.SDK.NET.dll（26,086,944 B -> 959,488 B）
+      * copy（原样拷贝、不分析不改代码）：29 个业务/第三方程序集
+        （GalgameManager* / LiteDB / Newtonsoft.Json / Refit / SQLite-net /
+        CommunityToolkit.* / SharpCompress / SevenZipSharp / LiveChartsCore* / SkiaSharp*）
+        以及全部 WinAppSDK / WinUI 托管投影（Microsoft.WinUI.dll /
+        Microsoft.InteractiveExperiences.Projection.dll 等）
+    实测 T1 后未压缩 172.17 -> 128.50 MiB（省 43.67 MiB）；上述 29 个程序集与
+    GalgameManager.WinApp.Base 的公开 API 表面积（80 导出类型 / 1097 公开成员 /
+    78 个外部签名类型）逐字节 / 逐条不变。
 
-    钩子挂的是 PrepareForILLink 的 AfterTargets——microsoft.net.illink.tasks 的
-    Microsoft.NET.ILLink.targets 里该目标的注释明确写着这就是给外部改 per-assembly
-    IsTrimmable / TrimMode 的扩展点。
+    两个必须记住的机制：
+      * TrimMode=partial 下不给元数据等于不处理，所以必须显式给想裁的程序集设 link，
+        不能只是"不设 copy"（早期版本踩过：那样 T1/T2 与不裁逐字节相同）。
+      * 钩子挂 PrepareForILLink 的 AfterTargets——microsoft.net.illink.tasks 的
+        Microsoft.NET.ILLink.targets 里该目标的注释明确写着这就是给外部改 per-assembly
+        IsTrimmable / TrimMode 的扩展点。
+
+    剩余风险（无法离线验证）：第三方插件经 AssemblyLoadContext 加载后，可能调用主程序
+    未静态引用的 BCL API。BCL 被裁掉未被直接引用的类型，这类调用会抛
+    MissingMethodException / FileNotFoundException。已用探针工程离线验证 17 条高危路径
+    全部存活（dynamic x3、表达式树、Activator.CreateInstance、GetInterfaces、
+    Assembly.GetTypes、AssemblyLoadContext.LoadFromAssemblyPath、LiteDB、
+    Newtonsoft 自定义 Converter、TypeDescriptor 排序、sqlite-net-pcl ORM），
+    但插件动态调用这一项只能靠实机压测。
   -->
   <PropertyGroup Condition="'$(PotatoVnPortable)' == 'true' And '$(Configuration)' == 'Release'">
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>
   </PropertyGroup>
-  <Target Name="ScopeTrimToSdkNetOnly"
+  <!--
+    BCL 清单动态生成：从 NuGet 缓存的 .NET 8 运行时包 glob，不写死。
+    路径限定 8.0.*\runtimes\win-x64\lib\net8.0，因此 9.x / 10.0 的包不会混进来。
+    Distinct 防止本机缓存里同时存在多个 8.0.x 版本时产生重复项。
+    取纯文件名（不含扩展名）是为了与下方 JoinItems 的 LeftKey="FileName" 对应。
+  -->
+  <ItemGroup Condition="'$(PotatoVnPortable)' == 'true' And '$(Configuration)' == 'Release'">
+    <_BclTrim Include="$(NuGetPackageRoot)microsoft.netcore.app.runtime.win-x64\8.0.*\runtimes\win-x64\lib\net8.0\*.dll" />
+    <_BclName Include="@(_BclTrim->'%(Filename)'->Distinct())" />
+    <_BclName Include="Microsoft.Windows.SDK.NET" />
+  </ItemGroup>
+  <Target Name="ScopeTrimToBcl"
           AfterTargets="PrepareForILLink"
           Condition="'$(PotatoVnPortable)' == 'true' And '$(Configuration)' == 'Release'">
     <ItemGroup>
-      <ManagedAssemblyToLink Condition="'%(Filename)%(Extension)' != 'Microsoft.Windows.SDK.NET.dll'">
-        <TrimMode>copy</TrimMode>
-      </ManagedAssemblyToLink>
+      <!-- 1) 先全部设 copy -->
+      <ManagedAssemblyToLink><TrimMode>copy</TrimMode></ManagedAssemblyToLink>
+    </ItemGroup>
+    <!-- 2) 把 BCL + SDK.NET 挑出来设回 link。
+         复刻 SDK 自己处理 TrimmableAssembly 的写法（见 Microsoft.NET.ILLink.targets
+         的 PrepareForILLink：JoinItems LeftKey="FileName" + Right=TrimmableAssembly）。 -->
+    <JoinItems Left="@(ManagedAssemblyToLink)" LeftKey="FileName" LeftMetadata="*"
+               Right="@(_BclName)" RightKey="" RightMetadata="" ItemSpecToUse="Left">
+      <Output TaskParameter="JoinResult" ItemName="_KeepTrim" />
+    </JoinItems>
+    <ItemGroup>
+      <ManagedAssemblyToLink Remove="@(_KeepTrim)" />
+      <ManagedAssemblyToLink Include="@(_KeepTrim)" TrimMode="link" />
     </ItemGroup>
     <Message Importance="high"
-             Text="ScopeTrimToSdkNetOnly: 参与链接 @(ManagedAssemblyToLink->Count()) 个程序集，其中显式 copy @(ManagedAssemblyToLink->WithMetadataValue('TrimMode','copy')->Count()) 个，仅 Microsoft.Windows.SDK.NET.dll 交给 trimmer" />
+             Text="ScopeTrimToBcl: 参与链接 @(ManagedAssemblyToLink->Count()) 个程序集，其中 link @(ManagedAssemblyToLink->WithMetadataValue('TrimMode','link')->Count()) 个（BCL + WinRT 投影），copy @(ManagedAssemblyToLink->WithMetadataValue('TrimMode','copy')->Count()) 个（业务/第三方/WinAppSDK 托管投影）" />
   </Target>
 
   <!-- 从 Package.appxmanifest 读取 Identity Version，供程序集版本属性与动态版本共用 -->
