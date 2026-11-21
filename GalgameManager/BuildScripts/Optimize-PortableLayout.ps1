@@ -16,12 +16,17 @@
     * workloads*.json / .exe / GalgameManager.dll / *.deps.json / *.runtimeconfig.json：
       执行提供包清单与宿主、apphost 的同目录约定。
 
-    可以处理的只有两类：
+    可以处理的只有三类：
     * *.winmd：WinRT 元数据仅在 XAML 编译期使用；运行时把全部 .winmd 删掉应用仍能启动并渲染
       （实测），也不存在 Type.GetType / ApiInformation 之类的运行时 winmd 查找。
       默认搬进 lib/，-DeleteWinmd 可直接删。
-    * AI/ML 栈（onnxruntime / DirectML / Microsoft.Windows.AI.* / Microsoft.Windows.Workloads.*）：
-      Windows App SDK 的可选 workload，应用源码零引用、运行期一个都不加载，直接删。
+    * AI/ML 栈（onnxruntime / DirectML / Microsoft.Windows.AI.* / Microsoft.Windows.Workloads.* /
+      System.Numerics.Tensors.dll）：Windows App SDK 的可选 workload，应用源码零引用、
+      运行期一个都不加载，直接删。
+    * 调试器支撑文件（Microsoft.DiaSymReader.Native.*.dll / mscordaccore*.dll / mscordbi.dll /
+      createdump.exe）：只供**外部调试器附加**与崩溃转储使用，不在 Exception.ToString() 的
+      调用路径上。.NET 8 的 portable PDB 由运行时内置的托管读取器解析，实测把这 5 类全删后
+      栈跟踪仍带源文件名与行号（5 种删法逐一验证）。*.pdb 本身仍按上面的理由保留。
 
     语言目录：每个目录只含 WinUI 内置控件的 *.mui；应用自身三语言文案在 resources.pri 里。
     仅保留应用支持的三种语言，其余目录删除（MRT 会按主语言回退）。
@@ -43,9 +48,16 @@
 
 .PARAMETER RemoveAiMlStack
     删除 Windows App SDK 传递带入的 AI/ML 栈（onnxruntime / DirectML / Microsoft.Windows.AI.* /
-    Microsoft.Windows.Workloads.* / workloads*.json）。应用源码零引用、运行期一个都不加载，
-    属可选 workload 组件。注意 **不删** Microsoft.Graphics.Imaging.*：那是通用图像投影，
-    DownloadHelper 在用它。
+    Microsoft.Windows.Workloads.* / workloads*.json / System.Numerics.Tensors.dll）。
+    应用源码零引用、运行期一个都不加载，属可选 workload 组件。
+    注意 **不删** Microsoft.Graphics.Imaging.*：那是通用图像投影，DownloadHelper 在用它。
+
+.PARAMETER RemoveDebuggerSupportFiles
+    删除调试器支撑文件：Microsoft.DiaSymReader.Native.*.dll、mscordaccore.dll、
+    mscordaccore_amd64_*.dll（平台专用 DAC）、mscordbi.dll、createdump.exe。
+    这些只服务于外部调试器附加与崩溃转储，不在栈跟踪的符号解析路径上——.NET 8 读 portable PDB
+    走运行时内置的托管读取器，实测删光后 Exception.ToString() 与 new StackTrace(true) 仍带
+    源文件名与行号（对 5 种删法逐一验证过）。*.pdb 不在删除范围内，仍然保留。
 
 .PARAMETER MovePatterns
     额外要从根目录搬走的文件名通配符，**默认为空**。
@@ -64,6 +76,7 @@ param(
     [string[]]$MovePatterns = @(),
     [string[]]$KeepLanguages = @('zh-CN', 'en-us', 'ja-JP'),
     [bool]$RemoveAiMlStack = $true,
+    [bool]$RemoveDebuggerSupportFiles = $true,
     [bool]$DeleteWinmd = $false
 )
 
@@ -177,6 +190,10 @@ $aiMlFiles = @(
     'workloads.lnl.json'
     'workloads.qnn.json'
     'workloads.stx.json'
+    # AI/ML 栈的孤儿：反向依赖只有 microsoft.windows.ai.machinelearning，而上面那些
+    # Microsoft.Windows.AI.* / Microsoft.ML.OnnxRuntime 已被删光，它只是没进过删除清单。
+    # 实测 .NET 8 运行期不加载它（裁剪实验里 TrimMode=partial 能把它从 1,015,808 B 压到 172,032 B）。
+    'System.Numerics.Tensors.dll'
 )
 $removedAiMl = 0
 $removedAiMlBytes = 0L
@@ -188,6 +205,31 @@ if ($RemoveAiMlStack) {
             $removedAiMlBytes += (Get-Item -LiteralPath $path).Length
             Remove-Item -LiteralPath $path -Force
             $removedAiMl++
+        }
+    }
+}
+
+# ---------- 4. 删除调试器支撑文件（*.pdb 刻意保留，见文件头说明） ----------
+# DiaSymReader 与 DAC 的平台相关部分文件名带架构/版本后缀，只能用通配符；
+# 其余三个是固定名。全部只服务于外部调试器附加与崩溃转储，不在 Exception.ToString() 路径上。
+$debuggerPatterns = @(
+    'Microsoft.DiaSymReader.Native.*.dll'
+    'mscordaccore.dll'
+    'mscordaccore_*.dll'
+    'mscordbi.dll'
+    'createdump.exe'
+)
+$removedDebugger = 0
+$removedDebuggerBytes = 0L
+if ($RemoveDebuggerSupportFiles) {
+    foreach ($pattern in $debuggerPatterns) {
+        foreach ($file in @(Get-ChildItem -LiteralPath $Target -Filter $pattern -File -Force)) {
+            # 防御：绝不碰 .pdb，哪怕以后有人往 patterns 里加了奇怪的通配符
+            if ($file.Extension -eq '.pdb') { continue }
+            if ($protectedPatterns -contains $file.Name) { continue }
+            $removedDebuggerBytes += $file.Length
+            Remove-Item -LiteralPath $file.FullName -Force
+            $removedDebugger++
         }
     }
 }
@@ -211,4 +253,8 @@ Write-Host ("根目录整理: {0} -> {1} 个条目（文件 {2} -> {3}，目录 
 Write-Host ("  winmd: 搬入 $LibDir/ $movedWinmd 个，删除 $deletedWinmd 个；额外搬移 $moved 个；删除语言目录 $removedLangs 个（保留 $($KeepLanguages -join ', ')）")
 if ($RemoveAiMlStack) {
     Write-Host ("  删除 AI/ML 栈: $removedAiMl 个文件 / {0:N1} MB" -f ($removedAiMlBytes/1MB))
+}
+if ($RemoveDebuggerSupportFiles) {
+    Write-Host ("  删除调试器支撑文件: $removedDebugger 个文件 / {0:N1} MB（*.pdb 保留 {1} 个）" -f `
+            ($removedDebuggerBytes/1MB), @(Get-ChildItem -LiteralPath $Target -Filter '*.pdb' -File -Force).Count)
 }
