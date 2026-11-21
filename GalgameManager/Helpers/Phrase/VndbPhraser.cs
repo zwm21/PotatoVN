@@ -749,14 +749,7 @@ public class VndbPhraser : IGalInfoPhraser, IGalStatusSync, IGalCharacterPhraser
 
         async Task<string?> GetHeader(string vid, int depth)
         {
-            ExVndb.ExVn? result = await ExVndb.TryGetExVnAsync(vid);
-            if (result is not null && (result.BestHeaderImage is not null || result.AlternativeHeaderImage is not null))
-            {
-                var imageId = result.BestHeaderImage ?? result.AlternativeHeaderImage;
-                var lastTwo = imageId![^2..];
-                return $"https://t.vndb.org/sf/{lastTwo}/{imageId[2..]}.jpg";
-            }
-            // 没有在数据库中搜到图片，尝试从在线api获取截图
+            // 直接从在线 API 取截图
             VndbResponse<VndbVn>? vndbResponse = await CallVndbApiAsync(() => _vndbApi.GetVisualNovelAsync(new VndbQuery
             {
                 Fields = "screenshots.url, screenshots.sexual, screenshots.violence, relations.id",
@@ -790,14 +783,6 @@ public class VndbPhraser : IGalInfoPhraser, IGalStatusSync, IGalCharacterPhraser
 
         async Task GetHeader(string vid, int depth)
         {
-            ExVndb.ExVn? exVn = await ExVndb.TryGetExVnAsync(vid);
-            if (exVn is not null && (exVn.BestHeaderImage is not null || exVn.AlternativeHeaderImage is not null))
-            {
-                var imageId = exVn.BestHeaderImage ?? exVn.AlternativeHeaderImage;
-                var lastTwo = imageId![^2..];
-                result.Add($"https://t.vndb.org/sf/{lastTwo}/{imageId[2..]}.jpg");
-            }
-
             VndbResponse<VndbVn>? vndbResponse = await CallVndbApiAsync(() => _vndbApi.GetVisualNovelAsync(new VndbQuery
             {
                 Fields = "screenshots.url, screenshots.sexual, screenshots.violence, relations.id",

@@ -4,7 +4,6 @@ using GalgameManager.Models;
 using NugetPackage;
 using PotatoDBMapper.Models;
 using SQLite;
-using Windows.Storage;
 
 namespace GalgameManager.Helpers.Phrase;
 
@@ -103,85 +102,5 @@ public static class PhraseHelper
         _isUsing = false;
         // 结果由库按相似度从高到低排好序，取第一个即可
         return result.Count > 0 ? result[0].model : null;
-    }
-}
-
-public static class ExVndb
-{
-    private const string DbFile = @"Assets\Data\ex-vndb.db";
-    private const string LocalDbFile = "ex-vndb.db";
-    private static SQLiteAsyncConnection? _db;
-    private static Task? _unloadDbTask;
-    private static bool _isUsing;
-
-    private static void Init()
-    {
-        if (_db is not null) return;
-        Assembly assembly = Assembly.GetExecutingAssembly();
-        var sourceFile = Path.Combine(Path.GetDirectoryName(assembly.Location)!, DbFile);
-
-        // 获取数据文件夹路径（便携模式下位于程序目录旁）
-        var localStateFolder = AppStoragePaths.LocalDataPath;
-        var localDbPath = Path.Combine(localStateFolder, LocalDbFile);
-
-        // 如果LocalState中不存在数据库文件，则从安装目录复制
-        if (!File.Exists(localDbPath) && File.Exists(sourceFile))
-        {
-            try
-            {
-                File.Copy(sourceFile, localDbPath, true);
-            }
-            catch (Exception)
-            {
-                // 如果复制失败，尝试直接使用源文件
-                if (File.Exists(sourceFile))
-                    _db = new SQLiteAsyncConnection(sourceFile);
-                return;
-            }
-        }
-
-        // 使用LocalState文件夹中的数据库
-        if (File.Exists(localDbPath))
-        {
-            _db = new SQLiteAsyncConnection(localDbPath);
-
-            if (_unloadDbTask is not null)
-                _unloadDbTask = Task.Run(async () =>
-                {
-                    do
-                    {
-                        await Task.Delay(1000 * 60 * 5); // 5 minutes
-                        if (_isUsing) continue;
-                        await _db.CloseAsync();
-                        _db = null;
-                        _unloadDbTask = null;
-                    }while (_db is not null);
-                });
-        }
-    }
-
-    public static async Task<ExVn?> TryGetExVnAsync(string id)
-    {
-        _isUsing = true;
-        Init();
-        ExVn? result = await _db!.Table<ExVn>().Where(v => v.Id == id).FirstOrDefaultAsync();
-        _isUsing = false;
-        return result;
-    }
-
-    [Table("Vns")]
-    public class ExVn
-    {
-        [MaxLength(50)]
-        public string Id { get; set; } = null!;
-
-        [MaxLength(50)]
-        public string? BestHeaderImage { get; set; }
-
-        [MaxLength(50)]
-        public string? AlternativeHeaderImage { get; set; }
-
-        [MaxLength(3)]
-        public string? HeaderImageVersion { get; set; }
     }
 }
