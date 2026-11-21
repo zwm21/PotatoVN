@@ -146,6 +146,18 @@
     <Content Update="Assets\WindowIcon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <!-- 以下三个文件不在默认 Content glob 内（WinUI 项目只收显式声明的资产），
+         漏掉会导致发布包里没有角色默认头像、跳转列表图标与 Win10 字体安装入口。
+         Debug 构建走全量 glob 看不出问题，只有 Release publish 会丢。 -->
+    <Content Update="Assets\default_character.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Assets\heart.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Assets\Fonts\Segoe Fluent Icons.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Remove="Views\Control\HomeItem.xaml" />
