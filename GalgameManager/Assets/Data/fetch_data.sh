@@ -8,6 +8,17 @@ curl --fail --location --retry 3 --retry-all-errors \
   --output vn_mapper.db \
   https://github.com/GoldenPotato137/PotatoDBMapper/releases/download/db-latest/vn_mapper.db
 
+# 立刻瘦身：上游库里 title 表的主键是字符串 Title，SQLite 会为此额外建一个隐式索引
+# sqlite_autoindex_title_1，并且表本身仍保留 rowid——同一份 Title 字符串存了两遍。
+# title 有 11.3 万行，这部分重复约 5 MiB。改成 WITHOUT ROWID 后随包发布能少 5.22 MiB，
+# 且 PotatoVnDBMapper（sqlite-net-pcl）查询行为不变（已全量比对验证）。
+# 脚本幂等：已经是 WITHOUT ROWID 就直接跳过；schema 与预期不符时会拒绝改动。
+if ! command -v pwsh >/dev/null 2>&1; then
+  echo "错误: 找不到 pwsh，无法执行 Slim-VnMapperDb.ps1 瘦身 vn_mapper.db" >&2
+  exit 1
+fi
+pwsh -NoProfile -File Slim-VnMapperDb.ps1
+
 # vndb 标签库：上游直接给 .gz，**保持压缩态随包发布**（运行期由 GzipJsonFile 流式解压，
 # 见 GalgameManager/Helpers/GzipJsonFile.cs），所以下载完不要再解压。
 curl --fail --location --retry 3 --retry-all-errors \
