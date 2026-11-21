@@ -1,5 +1,4 @@
-using System.Collections.ObjectModel;
-using AutoMapper;
+﻿using System.Collections.ObjectModel;
 using GalgameManager.Contracts.Services;
 using GalgameManager.Enums;
 using GalgameManager.Models;
@@ -23,8 +22,7 @@ public class PvnServiceTest : ServiceTestBase
         Galgame game = new("同步游戏");
         GalgameCollectionService.SetupGet(x => x.Galgames).Returns(new ObservableCollection<Galgame> { game });
         _ = new PvnService(Settings, config, new Mock<IBgmOAuthService>().Object, BgTaskService.Object,
-            GalgameCollectionService.Object, new Mock<IStaffService>().Object, InfoService.Object,
-            new Mock<IMapper>().Object);
+            GalgameCollectionService.Object, new Mock<IStaffService>().Object, InfoService.Object);
 
         GalgameCollectionService.Raise(x => x.GalgameMutated += null,
             new GalgameMutationEventArgs(game, GalgameChangeKind.Added, GalgameChangeOrigin.PvnSync));

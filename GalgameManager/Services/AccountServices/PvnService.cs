@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Authentication;
 using GalgameManager.Contracts.Services;
@@ -12,14 +12,12 @@ using Microsoft.UI.Xaml.Controls;
 using PotatoVN.Client.Api;
 using PotatoVN.Client.Client;
 using PotatoVN.Client.Model;
-using IMapper = AutoMapper.IMapper;
 using PlayType = PotatoVN.Client.Model.PlayType;
 
 namespace GalgameManager.Services;
 
 public class PvnService : IPvnService
 {
-    private readonly IMapper _mapper;
     private readonly ILocalSettingsService _settingsService;
     private readonly IBgmOAuthService _bgmService;
     private readonly IConfiguration _config;
@@ -36,9 +34,8 @@ public class PvnService : IPvnService
 
     public PvnService(ILocalSettingsService settingsService, IConfiguration config, IBgmOAuthService bgmService,
         IBgTaskService bgTaskService, IGalgameCollectionService gameService, IStaffService staffService,
-        IInfoService infoService, IMapper mapper)
+        IInfoService infoService)
     {
-        _mapper = mapper;
         _settingsService = settingsService;
         _bgmService = bgmService;
         _config = config;

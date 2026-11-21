@@ -1,10 +1,10 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using AutoMapper;
 using GalgameManager.Contracts.Services;
 using GalgameManager.Core.Helpers;
 using GalgameManager.Enums;
 using GalgameManager.Helpers;
+using GalgameManager.Models.MapperProfile;
 using PotatoVN.Client.Model;
 using PlayType = GalgameManager.Enums.PlayType;
 
@@ -15,8 +15,7 @@ namespace GalgameManager.Models.BgTasks;
 public class PvnSyncTaskPullGame(
     IGalgameCollectionService gameService,
     ILocalSettingsService settingsService,
-    IInfoService infoService,
-    IMapper mapper)
+    IInfoService infoService)
     : QueueTaskBase<GalgameDto>
 {
     protected override int MaxRunning() => 5;
@@ -122,7 +121,7 @@ public class PvnSyncTaskPullGame(
 
                     for (var i = 0; i < item.Characters.Count; i++)
                     {
-                        GalgameCharacter newC = mapper.Map<GalgameCharacter>(item.Characters[i]);
+                        GalgameCharacter newC = CharacterMapping.ToCharacter(item.Characters[i]);
                         newC.ImagePath = await fetchImageTask[i] ?? Galgame.DefaultImagePath;
                         newC.PreviewImagePath = await fetchPreviewImageTask[i] ?? Galgame.DefaultImagePath;
                         UiThreadInvokeHelper.IgnoreComException(game.Characters.Add, newC);

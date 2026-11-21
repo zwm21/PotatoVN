@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text;
 using GalgameManager.Helpers;
 using Newtonsoft.Json.Linq;

@@ -1,8 +1,8 @@
-using AutoMapper;
-using GalgameManager.Contracts.Services;
+﻿using GalgameManager.Contracts.Services;
 using GalgameManager.Core.Helpers;
 using GalgameManager.Enums;
 using GalgameManager.Helpers;
+using GalgameManager.Models.MapperProfile;
 using GalgameManager.Services;
 using Microsoft.UI.Xaml.Controls;
 using PotatoVN.Client.Api;
@@ -20,7 +20,6 @@ public class PvnSyncTask : BgTaskBase
     private readonly IStaffService _staffService = App.GetService<IStaffService>();
     private readonly IInfoService _infoService = App.GetService<IInfoService>();
     private readonly IBgTaskService _bgTaskService = App.GetService<IBgTaskService>();
-    private readonly IMapper _mapper = App.GetService<IMapper>();
     private PvnServerInfo _serverInfo = null!;
 
     public string Result { get; set; } = string.Empty;
@@ -85,14 +84,13 @@ public class PvnSyncTask : BgTaskBase
     private async Task PullUpdates(IPvnService pvnService, GalgameCollectionService gameService,
         ILocalSettingsService settingsService, long latest)
     {
-        IMapper mapper = App.GetService<IMapper>();
         ChangeProgress(0, 1, "PvnSyncTask_GettingModifiedList".GetLocalized());
         List<GalgameDto> changedGalgames = await pvnService.GetChangedGalgamesAsync();
         List<int> deletedGalgames = await pvnService.GetDeletedGalgamesAsync();
         if (changedGalgames.Count > 0)
         {
             ChangeProgress(0, 1, "PvnSyncTask_PullingGames".GetLocalized());
-            PvnSyncTaskPullGame pullTask = new(gameService, _settingsService, _infoService, mapper);
+            PvnSyncTaskPullGame pullTask = new(gameService, _settingsService, _infoService);
             pullTask.Init(changedGalgames);
             await _bgTaskService.AddBgTask(pullTask);
         }
@@ -388,7 +386,7 @@ public class PvnSyncTask : BgTaskBase
             List<Task> uploadImgTasks = [];
             foreach (GalgameCharacter c in galgame.Characters)
             {
-                CharacterUpdateDto dto = _mapper.Map<CharacterUpdateDto>(c);
+                CharacterUpdateDto dto = CharacterMapping.ToUpdateDto(c);
                 payload.Characters.Add(dto);
                 uploadImgTasks.Add(Task.Run(() =>
                 {
