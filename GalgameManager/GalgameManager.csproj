@@ -122,15 +122,24 @@
     <Content Update="Assets\Pictures\Akkarin.webp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="Assets\Data\vndb-tags-latest.json">
+    <!--
+      三个 JSON 数据文件随包发 gzip 版（Assets\Data\*.json.gz），运行期由 GzipJsonFile 流式解压。
+      未压缩的 *.json 仍留在仓库里作为源数据（改数据改它，再重新生成 .gz），
+      但不参与发布、也不进测试输出目录；GzipJsonFileTest 会校验 .gz 解压后与 .json 逐字节一致。
+      压缩前合计 2.51 MiB，压缩后 0.64 MiB，净省 1.87 MiB。
+    -->
+    <Content Update="Assets\Data\vndb-tags-latest.json.gz">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="Assets\Data\vndb-tags-translation.json">
+    <Content Update="Assets\Data\vndb-tags-translation.json.gz">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="Assets\Data\producers.json">
+    <Content Update="Assets\Data\producers.json.gz">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Remove="Assets\Data\vndb-tags-latest.json" />
+    <Content Remove="Assets\Data\vndb-tags-translation.json" />
+    <Content Remove="Assets\Data\producers.json" />
     <Content Update="Assets\Libs\x64\7za.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

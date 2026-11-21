@@ -1,4 +1,5 @@
-﻿*
+*
 !*.json
+!*.json.gz
 !*.sh
 !*.db

@@ -1,5 +1,4 @@
-using System.Collections.ObjectModel;
-using System.Reflection;
+﻿using System.Collections.ObjectModel;
 using GalgameManager.Contracts.Phrase;
 using GalgameManager.Enums;
 using GalgameManager.Helpers.API;
@@ -20,11 +19,11 @@ public class VndbPhraser : IGalInfoPhraser, IGalStatusSync, IGalCharacterPhraser
     private readonly Dictionary<string, string> _releaseToVndbId = [];
     private readonly Dictionary<string, VndbRelease> _releaseCache = []; //因为这个被频繁使用，缓存下来
     private bool _init;
-    private const string TagDbFile = @"Assets\Data\vndb-tags-latest.json";
+    private const string TagDbFile = @"Assets\Data\vndb-tags-latest.json.gz";
     // 标签翻译文件来源: https://greasyfork.org/zh-CN/scripts/445990-vndbtranslatorlib
     // 作者: rui li 2
     // 协议: MIT
-    private const string TagTranslationFile = @"Assets\Data\vndb-tags-translation.json";
+    private const string TagTranslationFile = @"Assets\Data\vndb-tags-translation.json.gz";
     /// <summary>
     /// id eg:g530[1..]=530=(int)530
     /// </summary>
@@ -92,15 +91,14 @@ public class VndbPhraser : IGalInfoPhraser, IGalStatusSync, IGalCharacterPhraser
         return 0;
     }
 
-    private async Task Init()
+    private void Init()
     {
         _init = true;
-        Assembly assembly = Assembly.GetExecutingAssembly();
-        var file = Path.Combine(Path.GetDirectoryName(assembly.Location)!, TagDbFile);
-        if (!File.Exists(file)) return;
+        // 数据文件不在就跳过（与旧的 File.Exists 短路一致）；GzipJsonFile.Parse 负责解压
+        JToken? json = GzipJsonFile.Parse(TagDbFile);
+        if (json is null) return;
 
         _tagDb.Clear();
-        JToken json = JToken.Parse(await File.ReadAllTextAsync(file));
         List<JToken>? tags = json.ToObject<List<JToken>>();
         tags!.ForEach(tag => _tagDb.Add(int.Parse(tag["id"]!.ToString()), tag));
 
@@ -108,13 +106,11 @@ public class VndbPhraser : IGalInfoPhraser, IGalStatusSync, IGalCharacterPhraser
         if (_isChineseCulture && _translateTags)
         {
             // 加载翻译文件
-            var translationFile = Path.Combine(Path.GetDirectoryName(assembly.Location)!, TagTranslationFile);
-            if (!File.Exists(translationFile)) return;
+            JToken? translationJson = GzipJsonFile.Parse(TagTranslationFile);
+            if (translationJson is null) return;
 
             try
             {
-                JToken translationJson = JObject.Parse(await File.ReadAllTextAsync(translationFile));
-
                 // 遍历所有标签，应用翻译
                 foreach (var tag in _tagDb.Values)
                 {
@@ -162,7 +158,7 @@ public class VndbPhraser : IGalInfoPhraser, IGalStatusSync, IGalCharacterPhraser
 
     public async Task<Galgame?> GetGalgameInfo(Galgame galgame)
     {
-        if (!_init) await Init();
+        if (!_init) Init();
         Galgame result = new();
         try
         {
@@ -690,7 +686,7 @@ public class VndbPhraser : IGalInfoPhraser, IGalStatusSync, IGalCharacterPhraser
 
     public async Task<List<StaffRelation>> GetStaffsAsync(Galgame game)
     {
-        if (!_init) await Init();
+        if (!_init) Init();
         if (string.IsNullOrEmpty(game.Ids[(int)RssType.Vndb])) await TryGetId(game);
         if (string.IsNullOrEmpty(game.Ids[(int)RssType.Vndb])) return new List<StaffRelation>();
 

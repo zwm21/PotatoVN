@@ -1,20 +1,19 @@
-﻿using System.Reflection;
+﻿using GalgameManager.Helpers;
 using Newtonsoft.Json.Linq;
 
 namespace GalgameManager.Helpers;
 
 public static class ProducerDataHelper
 {
-    private const string ProducerFile = @"Assets\Data\producers.json";
+    private const string ProducerFile = @"Assets\Data\producers.json.gz";
     private static bool _isInit = false;
     private static List<Producer> _producers = new ();
     private static void Init()
     {
-        Assembly assembly = Assembly.GetExecutingAssembly();
-        var file = Path.Combine(Path.GetDirectoryName(assembly.Location)!, ProducerFile);
-        if (!File.Exists(file)) return;
+        // 数据文件不在就跳过（与旧的 File.Exists 短路一致）；GzipJsonFile.Parse 负责解压
+        JToken? json = GzipJsonFile.Parse(ProducerFile);
+        if (json is null) return;
 
-        JToken json = JToken.Parse(File.ReadAllTextAsync(file).Result);
         List<JToken>? producersJson = json.ToObject<List<JToken>>();
         producersJson!.ForEach(dev =>
         {
