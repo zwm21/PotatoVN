@@ -27,6 +27,8 @@
       createdump.exe）：只供**外部调试器附加**与崩溃转储使用，不在 Exception.ToString() 的
       调用路径上。.NET 8 的 portable PDB 由运行时内置的托管读取器解析，实测把这 5 类全删后
       栈跟踪仍带源文件名与行号（5 种删法逐一验证）。*.pdb 本身仍按上面的理由保留。
+    * Widgets 运行时（Microsoft.Windows.Widgets.dll / .Projection.dll）：WinAppSDK 伴随组件，
+      源码零引用，已实机冒烟通过，默认删除（-RemoveWidgetsRuntime 可单独关掉）。
 
     语言目录：每个目录只含 WinUI 内置控件的 *.mui；应用自身三语言文案在 resources.pri 里。
     仅保留应用支持的三种语言，其余目录删除（MRT 会按主语言回退）。
@@ -65,9 +67,13 @@
     搬走会让 Exception.ToString() / CrashDiagnostics 的崩溃日志丢掉文件名和行号（已实测复现）。
     也不要把 *.pri 放进来：MRT 只在应用根目录发现资源映射，搬走直接 ms-appx 加载失败。
 
-.PARAMETER DeleteWinmd
-    把 *.winmd 直接删掉（而不是搬进 lib/）。WinRT 元数据只在 XAML 编译期使用，运行期不需要；
-    默认 false。已用导入真实备份的全页面实测确认无影响后才在调用方开启。
+.PARAMETER RemoveWidgetsRuntime
+    删除 Windows App SDK 的 Widgets 运行时：Microsoft.Windows.Widgets.dll（2,469,688 B）与
+    Microsoft.Windows.Widgets.Projection.dll（380,928 B），合计 2,850,616 B（2.72 MiB）。
+    应用源码对 Widgets / Widget 零命中。它属于 WinAppSDK 运行时的伴随组件而非纯传递依赖，
+    因此引入时先做成默认关闭、要求调用方显式传参，等实机冒烟通过后才改为默认开启
+    （已验证：启动、托盘、跳转列表、通知、后台任务、设置页均无异常）。
+    若日后发现回归，传 -RemoveWidgetsRuntime:$false 即可单独关掉这一项。
 #>
 [CmdletBinding()]
 param(
@@ -77,6 +83,7 @@ param(
     [string[]]$KeepLanguages = @('zh-CN', 'en-us', 'ja-JP'),
     [bool]$RemoveAiMlStack = $true,
     [bool]$RemoveDebuggerSupportFiles = $true,
+    [bool]$RemoveWidgetsRuntime = $true,
     [bool]$DeleteWinmd = $false
 )
 
@@ -234,6 +241,26 @@ if ($RemoveDebuggerSupportFiles) {
     }
 }
 
+# ---------- 4b. 删除 Widgets 运行时 ----------
+# Windows App SDK 的伴随组件，应用源码对 Widgets / Widget 零命中，
+# 运行期也不加载（未实机冒烟前不要开启删除，见 -RemoveWidgetsRuntime 注释）。
+$widgetFiles = @(
+    'Microsoft.Windows.Widgets.dll'
+    'Microsoft.Windows.Widgets.Projection.dll'
+)
+$removedWidgets = 0
+$removedWidgetsBytes = 0L
+if ($RemoveWidgetsRuntime) {
+    foreach ($name in $widgetFiles) {
+        $path = Join-Path $Target $name
+        if (Test-Path -LiteralPath $path) {
+            $removedWidgetsBytes += (Get-Item -LiteralPath $path).Length
+            Remove-Item -LiteralPath $path -Force
+            $removedWidgets++
+        }
+    }
+}
+
 # ---------- 5. 校验：宿主/加载器必需的同目录文件、以及资源映射，一个都不能少 ----------
 foreach ($required in @('GalgameManager.exe', 'GalgameManager.dll', 'GalgameManager.deps.json',
                        'GalgameManager.runtimeconfig.json', 'resources.pri', 'appsettings.json')) {
@@ -257,4 +284,7 @@ if ($RemoveAiMlStack) {
 if ($RemoveDebuggerSupportFiles) {
     Write-Host ("  删除调试器支撑文件: $removedDebugger 个文件 / {0:N1} MB（*.pdb 保留 {1} 个）" -f `
             ($removedDebuggerBytes/1MB), @(Get-ChildItem -LiteralPath $Target -Filter '*.pdb' -File -Force).Count)
+}
+if ($RemoveWidgetsRuntime) {
+    Write-Host ("  删除 Widgets 运行时: $removedWidgets 个文件 / {0:N1} MB" -f ($removedWidgetsBytes/1MB))
 }
