@@ -54,6 +54,41 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
   </PropertyGroup>
 
+  <!--
+    便携发布专用：定向裁剪 Microsoft.Windows.SDK.NET.dll（26,086,944 B → 959,488 B，省 23.97 MiB）。
+
+    严格限定在 PotatoVnPortable=true 且 Release 下生效——也就是只有
+    BuildScripts/Publish-Portable.ps1 那条命令链会走到。普通 Debug 构建、dotnet test
+    （测试项目引用本工程时既不带 PotatoVnPortable 也不是 Release）完全不受影响，
+    不参与 trim 分析、不拖慢日常编译。
+
+    TrimMode=partial + 下面的 ScopeTrimToSdkNetOnly 钩子配合：partial 让 trimmer 只处理
+    标记为可裁的程序集，钩子再把除 Microsoft.Windows.SDK.NET.dll 以外的每一个
+    ManagedAssemblyToLink 显式设成 TrimMode=copy（照原样拷贝、不分析不改代码），
+    于是实际被裁的只有那一个 WinRT 投影程序集。
+    实测其余 289 个程序集逐字节不变（含 System.Private.CoreLib / Microsoft.WinUI /
+    GalgameManager 自身），插件依赖的反射面因此完好。
+
+    钩子挂的是 PrepareForILLink 的 AfterTargets——microsoft.net.illink.tasks 的
+    Microsoft.NET.ILLink.targets 里该目标的注释明确写着这就是给外部改 per-assembly
+    IsTrimmable / TrimMode 的扩展点。
+  -->
+  <PropertyGroup Condition="'$(PotatoVnPortable)' == 'true' And '$(Configuration)' == 'Release'">
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+  </PropertyGroup>
+  <Target Name="ScopeTrimToSdkNetOnly"
+          AfterTargets="PrepareForILLink"
+          Condition="'$(PotatoVnPortable)' == 'true' And '$(Configuration)' == 'Release'">
+    <ItemGroup>
+      <ManagedAssemblyToLink Condition="'%(Filename)%(Extension)' != 'Microsoft.Windows.SDK.NET.dll'">
+        <TrimMode>copy</TrimMode>
+      </ManagedAssemblyToLink>
+    </ItemGroup>
+    <Message Importance="high"
+             Text="ScopeTrimToSdkNetOnly: 参与链接 @(ManagedAssemblyToLink->Count()) 个程序集，其中显式 copy @(ManagedAssemblyToLink->WithMetadataValue('TrimMode','copy')->Count()) 个，仅 Microsoft.Windows.SDK.NET.dll 交给 trimmer" />
+  </Target>
+
   <!-- 从 Package.appxmanifest 读取 Identity Version，供程序集版本属性与动态版本共用 -->
   <Target Name="ReadMsixIdentityVersion" Condition="Exists('$(MSBuildProjectDirectory)\Package.appxmanifest')">
     <XmlPeek XmlInputPath="$(MSBuildProjectDirectory)\Package.appxmanifest" Query="/*[local-name()='Package']/*[local-name()='Identity']/@Version">
