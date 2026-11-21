@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 using Windows.ApplicationModel.Activation;
 using Windows.Storage;
 using GalgameManager.Activation;
@@ -82,6 +83,12 @@ public class ActivationService : IActivationService
             await Task.Run(async () =>
             {
                 _localSettingsService.InitDatabase();
+                // 图片路径重定位：必须在任何 Service 把数据读进内存之前执行。
+                // 便携包移动/重命名/跨版本升级、或从其他机器恢复备份后，DB 里持久化的
+                // 旧绝对路径会全部失联；此处统一重定向到当前托管的 Images 目录。
+                // 早于下方各 InitAsync()，也就早于 UI 绑定与 BgTask 里的 File.Delete。
+                ImagePathRelocator.Relocate(_localSettingsService.Database,
+                    Path.Combine(AppStoragePaths.LocalDataPath, "Images"));
                 await _galgameCollectionService.InitAsync();
                 await _galgameFolderCollectionService.InitAsync();
                 await _categoryService.Init();
