@@ -183,7 +183,18 @@
     <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.1.240916" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.TokenizingTextBox" Version="8.1.240916" />
     <PackageReference Include="CommunityToolkit.WinUI.Converters" Version="8.2.241112-preview1" />
-    <PackageReference Include="CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView" Version="2.4.18" />
+    <!--
+      图表栈：直引 Uno 版，不再经 CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView 这个胶水包。
+      后者除 LiveChartsCore.SkiaSharpView.Uno.WinUI 外还额外钉住 CSharpMarkup.WinUI
+      （2.80 MiB，源码对 CSharpMarkup / .Build() / [XamlCompilation] 零命中）与它自身（86 KB），
+      合计 3.03 MiB 纯冗余。保持 2.0.0-rc2 不跨大版本；Uno.WinUI 显式钉 5.2.108，
+      与改动前的解析结果一致（原先就是被这个胶水包钉到 5.2.108 的）。
+      XAML 的 xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI" 由
+      LiveChartsCore.SkiaSharpView.Uno.WinUI.dll 提供——该程序集同时声明 WinUI 与
+      Uno.WinUI 两个命名空间，CartesianChart / PieChart 就在前者里，不受影响。
+    -->
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.Uno.WinUI" Version="2.0.0-rc2" />
+    <PackageReference Include="Uno.WinUI" Version="5.2.108" />
     <PackageReference Include="DependencyPropertyGenerator" Version="1.4.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
