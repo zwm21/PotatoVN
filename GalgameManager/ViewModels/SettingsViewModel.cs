@@ -34,7 +34,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 {
     private readonly ILocalSettingsService _localSettingsService;
     private readonly GalgameCollectionService _galgameCollectionService;
-    private readonly IUpdateService _updateService;
     private readonly IThemeSelectorService _themeSelectorService;
     private readonly ICategoryService _categoryService;
     private readonly IInfoService _infoService;
@@ -86,32 +85,20 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         // 设置页会被 Frame 缓存；外部入口（例如单游戏按键映射对话框）修改总开关后，
         // 每次返回设置页都重新读取，避免界面状态与真实启动配置不一致。
         GameReMapEnabled = await _localSettingsService.ReadSettingAsync<bool>(KeyValues.GameReMapEnabled);
-        try
-        {
-            await _updateService.UpdateSettingsBadgeAsync(); //通过这句话来触发更新弹窗提醒（如果这个版本没触发过的话）
-            UpdateAvailable = await _updateService.IsUpdateAvailableAsync();
-        }
-        catch (Exception ex)
-        {
-            _infoService.Info(InfoBarSeverity.Informational, ex.Message);
-        }
     }
 
     public void OnNavigatedFrom()
     {
-        _updateService.SettingBadgeEvent -= HandelSettingBadgeEvent;
         _galgameCollectionService.MetaSavedEvent -= SetSaveMetaPopUp;
     }
 
     public SettingsViewModel(IThemeSelectorService themeSelectorService, ILocalSettingsService localSettingsService,
-        IGalgameCollectionService galgameService, IUpdateService updateService,
+        IGalgameCollectionService galgameService,
         ICategoryService categoryService, IInfoService infoService, IBgTaskService bgTaskService,
         ISidebarService sidebarService)
     {
         _categoryService = categoryService;
         _themeSelectorService = themeSelectorService;
-        _updateService = updateService;
-        updateService.SettingBadgeEvent += HandelSettingBadgeEvent;
         _versionDescription = GetVersionDescription();
         _localSettingsService = localSettingsService;
         _infoService = infoService;
@@ -191,7 +178,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         WindowModes = new[] { WindowMode.Normal, WindowMode.Close, WindowMode.SystemTray };
         CloseMode = _localSettingsService.ReadSettingAsync<WindowMode>(KeyValues.CloseMode).Result;
         DevelopmentMode = _localSettingsService.ReadSettingAsync<bool>(KeyValues.DevelopmentMode).Result;
-        _isBetaChannel = _localSettingsService.ReadSettingAsync<bool>(KeyValues.IsBetaChannel).Result;
         List<string> extensionsList = _localSettingsService.ReadSettingAsync<List<string>>(KeyValues.CustomTextFileExtensions).Result ?? [];
         _customTextFileExtensionsString = Join(", ", extensionsList);
 
@@ -224,43 +210,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         await Task.Delay(time);
         if (index == _displayIndex)
             IsInfoBarOpen = false;
-    }
-
-    #endregion
-
-    #region UPDATE
-
-    [ObservableProperty] private bool _updateAvailable;
-
-    private async Task ShowUpdateNotification()
-    {
-        // 获取可用的更新版本
-        var availableVersion = await _updateService.GetAvailableUpdateVersionAsync();
-        if (availableVersion == null) return;
-
-        // 显示更新确认对话框
-        var userChoice = await _updateService.ShowUpdateConfirmationAsync();
-        switch (userChoice)
-        {
-            case 1: // 立即更新
-                await _updateService.PerformUpdateAsync();
-                break;
-            case 2: // 忽略这个版本
-                await _updateService.IgnoreVersionAsync(availableVersion);
-                _infoService.Info(InfoBarSeverity.Informational, "UpdateService_Version_Ignored".GetLocalized());
-                break;
-            default:
-                // 设置本次启动已取消更新标记，避免重复弹窗
-                _updateService.SetUpdateCancelledThisSession();
-                break;
-        }
-    }
-
-    private async void HandelSettingBadgeEvent(bool result)
-    {
-        if (result == false) return;
-        await ShowUpdateNotification();
-        await _updateService.UpdateSettingsBadgeAsync();
     }
 
     #endregion
@@ -1116,8 +1065,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     [ObservableProperty] private bool _memoryImprove;
     [ObservableProperty] private WindowMode _closeMode;
     [ObservableProperty] private bool _developmentMode;
-    [ObservableProperty] private bool _isBetaChannel;
-    public bool IsSideloadVersion => !App.IsStoreVersion();
     public readonly WindowMode[] WindowModes;
 
     async partial void OnFingerprintPlanEnabledChanged(bool value)
@@ -1140,12 +1087,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     partial void OnCloseModeChanged(WindowMode value) => _localSettingsService.SaveSettingAsync(KeyValues.CloseMode, value);
 
     partial void OnDevelopmentModeChanged(bool value) => _localSettingsService.SaveSettingAsync(KeyValues.DevelopmentMode, value);
-
-    partial void OnIsBetaChannelChanged(bool value)
-    {
-        _localSettingsService.SaveSettingAsync(KeyValues.IsBetaChannel, value);
-        _infoService.Info(InfoBarSeverity.Success, msg: "SettingsPage_Other_BetaChannel_Success".GetLocalized());
-    }
 
     /// <summary>
     /// 完整备份：把 UserData 与 Settings 两个文件夹整体打包。<br/>
@@ -1242,41 +1183,6 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     #endregion
 
     #region ABOUT
-    [RelayCommand]
-    private async Task CheckForUpdates()
-    {
-        var availableVersion = await _updateService.GetAvailableUpdateVersionAsync();
-        if (availableVersion != null)
-        {
-            var userChoice = await _updateService.ShowUpdateConfirmationAsync();
-            switch (userChoice)
-            {
-                case 1: // 立即更新
-                    await _updateService.PerformUpdateAsync();
-                    break;
-                case 2: // 忽略这个版本
-                    await _updateService.IgnoreVersionAsync(availableVersion);
-                    _infoService.Info(InfoBarSeverity.Informational, "UpdateService_Version_Ignored".GetLocalized());
-                    break;
-                default:
-                    // 设置本次启动已取消更新标记，避免重复弹窗
-                    _updateService.SetUpdateCancelledThisSession();
-                    break;
-            }
-        }
-        else
-        {
-            _infoService.Info(InfoBarSeverity.Informational, "UpdateService_NoUpdate_Title".GetLocalized(), "UpdateService_NoUpdate_Content".GetLocalized());
-        }
-    }
-
-    [RelayCommand]
-    private async Task OpenUpdateWeb()
-    {
-        var storeUrl = await _localSettingsService.ReadSettingAsync<string>(KeyValues.UpdateUrl) ??
-                       "https://apps.microsoft.com/detail/9p9cbkd5hr3w";
-        await Launcher.LaunchUriAsync(new Uri(storeUrl));
-    }
 
     private static string GetVersionDescription()
     {

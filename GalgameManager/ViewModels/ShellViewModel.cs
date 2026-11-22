@@ -17,7 +17,6 @@ public partial class ShellViewModel : ObservableObject
     private int _unreadInfos;
     private readonly IBgTaskService _bgTaskService;
     private string? _forcedTitle;
-    [ObservableProperty] private bool _updateBadgeVisibility;
     [ObservableProperty] private string? _title;
     [ObservableProperty] private bool _infoPageBadgeVisibility;
     [ObservableProperty] private int _infoPageBadgeCount;
@@ -63,7 +62,7 @@ public partial class ShellViewModel : ObservableObject
     }
 
     public ShellViewModel(INavigationService navigationService, INavigationViewService navigationViewService,
-        IUpdateService updateService, IBgTaskService bgTaskService, ILocalSettingsService localSettingsService,
+        IBgTaskService bgTaskService, ILocalSettingsService localSettingsService,
         IInfoService infoService)
     {
         NavigationService = navigationService;
@@ -73,7 +72,6 @@ public partial class ShellViewModel : ObservableObject
         _isDeveloperMode = localSettingsService.ReadSettingAsync<bool>(KeyValues.DevelopmentMode).Result;
 
         NavigationService.Navigated += OnNavigated;
-        updateService.SettingBadgeEvent += result => UpdateBadgeVisibility = result;
         _bgTaskService.BgTaskAdded += _ => UpdateInfoPageBadge();
         _bgTaskService.BgTaskRemoved += _ => UpdateInfoPageBadge();
         infoService.Infos.CollectionChanged += (_, _) =>

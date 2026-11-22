@@ -20,7 +20,6 @@ public class ActivationService : IActivationService
     public static object? ActivationArgs { get; private set; }
     private readonly IEnumerable<IActivationHandler> _activationHandlers;//
     private readonly IThemeSelectorService _themeSelectorService; //
-    private readonly IUpdateService _updateService;
     private readonly IGalgameSourceCollectionService _galgameFolderCollectionService;
     private readonly IGalgameCollectionService _galgameCollectionService;
     private readonly ICategoryService _categoryService;
@@ -39,7 +38,6 @@ public class ActivationService : IActivationService
         IEnumerable<IActivationHandler> activationHandlers, IThemeSelectorService themeSelectorService,
         IGalgameSourceCollectionService galgameFolderCollectionService,
         IGalgameCollectionService galgameCollectionService,
-        IUpdateService updateService,
         ICategoryService categoryService,IBgmOAuthService bgmOAuthService,
         IAuthenticationService authenticationService, ILocalSettingsService localSettingsService,
         IFilterService filterService, IPageService pageService, IBgTaskService bgTaskService, IPvnService pvnService,
@@ -49,7 +47,6 @@ public class ActivationService : IActivationService
         _themeSelectorService = themeSelectorService;
         _galgameFolderCollectionService = galgameFolderCollectionService;
         _galgameCollectionService = galgameCollectionService;
-        _updateService = updateService;
         _categoryService = categoryService;
         _bgmOAuthService = bgmOAuthService;
         _authenticationService = authenticationService;
@@ -192,7 +189,6 @@ public class ActivationService : IActivationService
         if (IsRestart() == false && !isUpgradeUiTest)
         {
             _pvnService.Startup();
-            await _updateService.UpdateSettingsBadgeAsync();
         }
         if (!isUpgradeUiTest)
         {

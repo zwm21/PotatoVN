@@ -163,7 +163,7 @@
     <value>プライバシーポリシー</value>
   </data>
   <data name="SettingsPage_PrivacyTermsLink.NavigateUri" xml:space="preserve">
-    <value>https://github.com/GoldenPotato137/GalgameManager/blob/main/PrivacyPolicy.md</value>
+    <value>https://github.com/zwm21/PotatoVN/blob/dev/PrivacyPolicy.md</value>
   </data>
   <data name="Shell_Library.Content" xml:space="preserve">
     <value>ライブラリ</value>
@@ -432,7 +432,7 @@
 
 
   <data name="SettingsPage_RepositoryLink.NavigateUri" xml:space="preserve">
-    <value>https://github.com/GoldenPotato137/GalgameManager</value>
+    <value>https://github.com/zwm21/PotatoVN</value>
   </data>
   <data name="SettingsPage_RepositoryLink.Content" xml:space="preserve">
     <value>リポジトリのアドレス</value>
@@ -548,12 +548,8 @@
   <data name="Shell_SettingsText.Text" xml:space="preserve">
     <value>設定</value>
   </data>
-  <data name="SettingsPage_UpdateNotification_Title" xml:space="preserve">
-    <value>更新が利用可能です！</value>
-  </data>
-  <data name="SettingsPage_UpdateNotification_Msg" xml:space="preserve">
-    <value>新しい更新が検出されました。アプリストアで最新バージョンに更新できます。</value>
-  </data>
+
+
   <data name="SettingsPage_SeeWhatsNew" xml:space="preserve">
     <value>更新を確認</value>
   </data>
@@ -1193,9 +1189,7 @@
     <value>スキャン完了、記録を保存中</value>
   </data>
 
-  <data name="SettingsPage_About_UpdateAvailable.Content" xml:space="preserve">
-    <value>新しいバージョンがあります ヾ(✿ﾟ▽ﾟ)ノ</value>
-  </data>
+
   <data name="GalgamePage_SelectThread.Label" xml:space="preserve">
     <value>ゲームプロセスを手動で指定</value>
   </data>
@@ -4312,7 +4306,7 @@
     <value>完全バックアップを処理しています。しばらくお待ちください</value>
   </data>
   <data name="SettingsPage_UpdateContent.NavigateUri" xml:space="preserve">
-    <value>https://potatovn.net/upgrade-log/</value>
+    <value>https://github.com/zwm21/PotatoVN/releases</value>
   </data>
   <data name="SettingsPage_Help.Content" xml:space="preserve">
     <value>ヘルプ</value>

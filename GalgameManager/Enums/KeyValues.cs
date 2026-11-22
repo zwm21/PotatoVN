@@ -15,8 +15,6 @@ public static class KeyValues
     public const string GameFolderShouldContain = "gameFolderShouldContain";
     public const string CustomPasswordSaverName = "PotatoVN";
     public const string CustomPasswordDisplayName = "CustomPassword";
-    public const string LastUpdateCheckResult = "lastUpdateCheckResult"; // bool,上次检查更新的结果
-    public const string IgnoredUpdateVersions = "IgnoredUpdateVersions";
     public const string AutoCategory = "autoCategory"; // bool,是否自动分类
     public const string AuthenticationType = "authenticationType"; // AuthenticationType,身份验证类型
     public const string FontInstalled = "fontInstalled"; //bool, 是否安装了Segoe Fluent Icons字体
@@ -156,9 +154,6 @@ public static class KeyValues
     public const string BackgroundMaterial = "backgroundMaterial"; //string, 背景素材，Mica, Mica Alt,Desktop Acrylic, Glass
     public const string GlassAlpha = "glassAlpha"; //int, 透明玻璃透明度 0-255，默认5
     public const string GlassColor = "glassColor"; //string, 透明玻璃颜色 hex RGB，如 "FFFFFF"
-    public const string UpdateType = "UpdateType";
-    public const string UpdateUrl = "UpdateUrl";
-    public const string IsBetaChannel = "isBetaChannel";
     public const string FingerprintPlanEnabled = "fingerprintPlanEnabled"; //bool, 是否加入指纹共享计划
     public const string FingerprintUploadedMap = "fingerprintUploadedMap"; //Dictionary<string,bool>, 指纹上传状态
 

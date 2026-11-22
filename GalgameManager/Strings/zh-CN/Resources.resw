@@ -163,7 +163,7 @@
     <value>隐私声明</value>
   </data>
   <data name="SettingsPage_PrivacyTermsLink.NavigateUri" xml:space="preserve">
-    <value>https://github.com/GoldenPotato137/GalgameManager/blob/main/PrivacyPolicy.md</value>
+    <value>https://github.com/zwm21/PotatoVN/blob/dev/PrivacyPolicy.md</value>
   </data>
   <data name="Shell_Library.Content" xml:space="preserve">
     <value>游戏库</value>
@@ -444,7 +444,7 @@
 
 
   <data name="SettingsPage_RepositoryLink.NavigateUri" xml:space="preserve">
-    <value>https://github.com/GoldenPotato137/GalgameManager</value>
+    <value>https://github.com/zwm21/PotatoVN</value>
   </data>
   <data name="SettingsPage_RepositoryLink.Content" xml:space="preserve">
     <value>仓库地址</value>
@@ -597,12 +597,8 @@
   <data name="Shell_SettingsText.Text" xml:space="preserve">
     <value>设置</value>
   </data>
-  <data name="SettingsPage_UpdateNotification_Title" xml:space="preserve">
-    <value>更新可用！</value>
-  </data>
-  <data name="SettingsPage_UpdateNotification_Msg" xml:space="preserve">
-    <value>检测到有新更新，可以在应用商店更新到最新版本哦~</value>
-  </data>
+
+
   <data name="SettingsPage_SeeWhatsNew" xml:space="preserve">
     <value>查看更新</value>
   </data>
@@ -1284,9 +1280,7 @@
     <value>扫描完成，保存记录中</value>
   </data>
 
-  <data name="SettingsPage_About_UpdateAvailable.Content" xml:space="preserve">
-    <value>有新版本 ヾ(✿ﾟ▽ﾟ)ノ</value>
-  </data>
+
   <data name="GalgamePage_SelectThread.Label" xml:space="preserve">
     <value>手动指定游戏进程</value>
   </data>
@@ -3229,237 +3223,83 @@
   <data name="SettingsPage_Game_MagpieHotkeys_HotkeyInputBox.PlaceholderText" xml:space="preserve">
     <value>点击设置Magpie快捷键</value>
   </data>
-  <data name="UpdateService_UpdateAvailable_Title" xml:space="preserve">
-    <value>发现新版本</value>
-  </data>
-  <data name="UpdateService_StoreUpdate_Content" xml:space="preserve">
-    <value>有新版本可用，是否前往Microsoft Store进行更新？</value>
-  </data>
-  <data name="UpdateService_SideloadUpdate_Content" xml:space="preserve">
-    <value>有新版本可用，是否下载并安装更新？</value>
-  </data>
-  <data name="UpdateService_Update_Confirm" xml:space="preserve">
-    <value>更新</value>
-  </data>
-  <data name="UpdateService_Update_Cancel" xml:space="preserve">
-    <value>取消</value>
-  </data>
-  <data name="UpdateService_Dialog_Error" xml:space="preserve">
-    <value>显示更新对话框失败</value>
-  </data>
-  <data name="UpdateService_Update_Error" xml:space="preserve">
-    <value>执行更新失败</value>
-  </data>
-  <data name="UpdateService_Store_Opened" xml:space="preserve">
-    <value>已打开Microsoft Store，请前往更新</value>
-  </data>
-  <data name="UpdateService_Store_Error" xml:space="preserve">
-    <value>无法打开Microsoft Store</value>
-  </data>
-  <data name="UpdateService_Download_Started" xml:space="preserve">
-    <value>开始下载更新...</value>
-  </data>
-  <data name="UpdateService_Download_Completed" xml:space="preserve">
-    <value>下载完成，开始安装...</value>
-  </data>
-  <data name="UpdateService_Download_Error" xml:space="preserve">
-    <value>下载更新失败</value>
-  </data>
-  <data name="UpdateService_Install_Success" xml:space="preserve">
-    <value>安装成功</value>
-  </data>
-  <data name="UpdateService_Install_Error" xml:space="preserve">
-    <value>安装失败</value>
-  </data>
-  <data name="UpdateService_Install_Exception" xml:space="preserve">
-    <value>安装过程中出现异常</value>
-  </data>
-  <data name="UpdateService_Restart_Title" xml:space="preserve">
-    <value>更新完成</value>
-  </data>
-  <data name="UpdateService_Restart_Content" xml:space="preserve">
-    <value>更新已完成，是否立即重启应用以应用更新？</value>
-  </data>
-  <data name="UpdateService_Restart_Confirm" xml:space="preserve">
-    <value>立即重启</value>
-  </data>
-  <data name="UpdateService_Restart_Later" xml:space="preserve">
-    <value>稍后重启</value>
-  </data>
-  <data name="UpdateService_Restart_Error" xml:space="preserve">
-    <value>显示重启对话框失败</value>
-  </data>
-  <data name="UpdateService_NoUpdate_Title" xml:space="preserve">
-    <value>没有可用更新</value>
-  </data>
-  <data name="UpdateService_NoUpdate_Content" xml:space="preserve">
-    <value>当前版本已经是最新版本</value>
-  </data>
-  <data name="UpdateService_Update_Ignore" xml:space="preserve">
-    <value>忽略这个版本</value>
-  </data>
-  <data name="UpdateService_Version_Ignored" xml:space="preserve">
-    <value>已忽略此版本的更新</value>
-  </data>
-  <data name="UpdateService_IgnoreVersion_Error" xml:space="preserve">
-    <value>忽略版本失败</value>
-  </data>
-  <data name="UpdateService_Install_Content" xml:space="preserve">
-    <value>更新包已下载完成。由于技术限制，应用需要退出后才能安装更新。点击"立即安装"将退出应用并自动安装更新。</value>
-  </data>
-  <data name="UpdateService_Install_Confirm" xml:space="preserve">
-    <value>立即安装</value>
-  </data>
-  <data name="UpdateService_Install_Dialog_Error" xml:space="preserve">
-    <value>显示安装对话框失败</value>
-  </data>
-  <data name="UpdateService_Install_Execute_Error" xml:space="preserve">
-    <value>执行安装失败</value>
-  </data>
-  <data name="UpdateService_Install_Later" xml:space="preserve">
-    <value>稍后安装</value>
-  </data>
-  <data name="UpdateService_Install_Title" xml:space="preserve">
-    <value>安装更新</value>
-  </data>
-  <data name="UpdateService_Install_Script_NotFound" xml:space="preserve">
-    <value>安装脚本文件不存在</value>
-  </data>
-  <data name="UpdateService_PowerShell_NotAvailable" xml:space="preserve">
-    <value>PowerShell 不可用，无法执行更新安装</value>
-  </data>
-  <data name="UpdateService_PowerShell_Start_Failed" xml:space="preserve">
-    <value>无法启动 PowerShell 进程</value>
-  </data>
-  <data name="UpdateService_Create_Script_Failed" xml:space="preserve">
-    <value>创建安装脚本失败</value>
-  </data>
-  <data name="UpdateService_Install_Started" xml:space="preserve">
-    <value>更新安装已开始，请查看PowerShell窗口</value>
-  </data>
-  <data name="UpdateService_Install_UAC_Cancelled" xml:space="preserve">
-    <value>用户取消了管理员权限确认，更新安装已取消</value>
-  </data>
-  <data name="UpdateService_Manual_Install_Title" xml:space="preserve">
-    <value>手动安装更新</value>
-  </data>
-  <data name="UpdateService_Manual_Install_Content" xml:space="preserve">
-    <value>自动更新失败，您可以选择手动安装更新包。</value>
-  </data>
-  <data name="UpdateService_Manual_Install_RunScript" xml:space="preserve">
-    <value>运行安装脚本</value>
-  </data>
-  <data name="UpdateService_Manual_Install_OpenFolder" xml:space="preserve">
-    <value>打开文件夹</value>
-  </data>
-  <data name="UpdateService_Manual_Install_Error" xml:space="preserve">
-    <value>显示手动安装对话框失败</value>
-  </data>
-  <data name="UpdateService_Manual_Install_Script_NotFound" xml:space="preserve">
-    <value>手动安装脚本文件不存在</value>
-  </data>
-  <data name="UpdateService_Manual_Script_Started" xml:space="preserve">
-    <value>安装脚本已启动，请查看PowerShell窗口</value>
-  </data>
-  <data name="UpdateService_Manual_Script_Error" xml:space="preserve">
-    <value>启动安装脚本失败</value>
-  </data>
-  <data name="UpdateService_Update_Folder_Opened" xml:space="preserve">
-    <value>已打开更新文件夹</value>
-  </data>
-  <data name="UpdateService_Update_Folder_Error" xml:space="preserve">
-    <value>打开更新文件夹失败</value>
-  </data>
-  <data name="UpdateService_Script_Preparing" xml:space="preserve">
-    <value>正在准备安装更新...</value>
-  </data>
-  <data name="UpdateService_Script_DoNotClose" xml:space="preserve">
-    <value>请不要关闭此窗口，安装过程将自动进行</value>
-  </data>
-  <data name="UpdateService_Script_WaitingClose" xml:space="preserve">
-    <value>等待应用完全关闭...</value>
-  </data>
-  <data name="UpdateService_Script_Installing" xml:space="preserve">
-    <value>正在安装更新包...</value>
-  </data>
-  <data name="UpdateService_Script_FilePath" xml:space="preserve">
-    <value>MSIX 文件路径</value>
-  </data>
-  <data name="UpdateService_Script_InstallSuccess" xml:space="preserve">
-    <value>更新安装成功!</value>
-  </data>
-  <data name="UpdateService_Script_WaitingComplete" xml:space="preserve">
-    <value>等待安装完成...</value>
-  </data>
-  <data name="UpdateService_Script_Restarting" xml:space="preserve">
-    <value>正在重新启动应用...</value>
-  </data>
-  <data name="UpdateService_Script_Restarted" xml:space="preserve">
-    <value>应用已重新启动!</value>
-  </data>
-  <data name="UpdateService_Script_InstallFailed" xml:space="preserve">
-    <value>更新安装失败</value>
-  </data>
-  <data name="UpdateService_Script_ManualInstall" xml:space="preserve">
-    <value>请手动安装更新包</value>
-  </data>
-  <data name="UpdateService_Script_PressKey" xml:space="preserve">
-    <value>按任意键退出...</value>
-  </data>
-  <data name="UpdateService_Script_CleaningFiles" xml:space="preserve">
-    <value>正在清理临时文件...</value>
-  </data>
-  <data name="UpdateService_Script_FilesCleaned" xml:space="preserve">
-    <value>临时文件已清理</value>
-  </data>
-  <data name="UpdateService_Script_CleanError" xml:space="preserve">
-    <value>清理临时文件时出现错误</value>
-  </data>
-  <data name="UpdateService_Script_InstallComplete" xml:space="preserve">
-    <value>更新安装完成!</value>
-  </data>
-  <data name="UpdateService_Script_AutoClose" xml:space="preserve">
-    <value>窗口将在 3 秒后自动关闭...</value>
-  </data>
-  <data name="UpdateService_Last_Install_Incomplete" xml:space="preserve">
-    <value>上次更新安装可能未完成</value>
-  </data>
-  <data name="UpdateService_Last_Install_Cancelled" xml:space="preserve">
-    <value>上次更新安装被用户取消</value>
-  </data>
-  <data name="UpdateService_Last_Install_Error" xml:space="preserve">
-    <value>上次更新安装遇到错误</value>
-  </data>
-  <data name="UpdateService_Install_Log_Title" xml:space="preserve">
-    <value>更新安装日志</value>
-  </data>
-  <data name="UpdateService_No_Install_Log" xml:space="preserve">
-    <value>没有找到更新安装日志</value>
-  </data>
-  <data name="UpdateService_Show_Log_Error" xml:space="preserve">
-    <value>显示更新日志失败</value>
-  </data>
-  <data name="UpdateService_Manual_Install_HasLog" xml:space="preserve">
-    <value>检测到上次安装日志，您可以查看日志了解失败原因。</value>
-  </data>
-  <data name="UpdateService_Manual_Install_ViewLog" xml:space="preserve">
-    <value>查看日志</value>
-  </data>
-  <data name="UpdateService_Manual_Install_File_NotFound" xml:space="preserve">
-    <value>未找到更新安装包文件</value>
-  </data>
-  <data name="UpdateService_Manual_Install_MSIX_Content" xml:space="preserve">
-    <value>自动更新失败，您可以选择直接打开MSIX安装包进行手动安装。</value>
-  </data>
-  <data name="UpdateService_Manual_Install_Open_MSIX" xml:space="preserve">
-    <value>打开安装包</value>
-  </data>
-  <data name="UpdateService_MSIX_File_Opened" xml:space="preserve">
-    <value>已打开MSIX安装包，请按照提示完成安装</value>
-  </data>
-  <data name="UpdateService_MSIX_File_Open_Error" xml:space="preserve">
-    <value>打开MSIX安装包失败</value>
-  </data>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <data name="GetGalgameInFolderTask_CheckResult" xml:space="preserve">
     <value>查看扫描结果</value>
   </data>
@@ -3532,18 +3372,10 @@
   <data name="PvnSyncTask_PullingStaffs" xml:space="preserve">
     <value>正在下载staff信息中</value>
   </data>
-  <data name="UpdateService_FailedToGetVersion" xml:space="preserve">
-    <value>无法获取当前最新版本</value>
-  </data>
-  <data name="SettingsPage_Other_BetaChannel.Title" xml:space="preserve">
-    <value>使用测试通道获取更新</value>
-  </data>
-  <data name="SettingsPage_Other_BetaChannel.Description" xml:space="preserve">
-    <value>你将会更早地获取到新功能与bug修复，但这可能是不稳定的。</value>
-  </data>
-  <data name="SettingsPage_Other_BetaChannel_Success" xml:space="preserve">
-    <value>设置成功，重启软件后生效</value>
-  </data>
+
+
+
+
   <data name="GalgameCollectionService_SavePathIsSymbolicLink" xml:space="preserve">
     <value>这个存档看起来已经在云端了，已修改本游戏云存档位置记录值~</value>
   </data>
@@ -5176,7 +5008,7 @@
     <value>目标文件夹中已存在同名备份文件：{0}</value>
   </data>
   <data name="SettingsPage_UpdateContent.NavigateUri" xml:space="preserve">
-    <value>https://potatovn.net/upgrade-log/</value>
+    <value>https://github.com/zwm21/PotatoVN/releases</value>
   </data>
   <data name="SettingsPage_Help.Content" xml:space="preserve">
     <value>帮助</value>

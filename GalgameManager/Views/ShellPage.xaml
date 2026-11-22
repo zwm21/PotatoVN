@@ -337,13 +337,6 @@
                                 FontSize="12"
                                 TextAlignment="Center"
                                 TextWrapping="NoWrap" />
-
-                            <InfoBadge
-                                Margin="0,4,4,0"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Top"
-                                Visibility="{x:Bind ViewModel.UpdateBadgeVisibility, Mode=OneWay}"
-                                Value="1" />
                         </Grid>
                     </NavigationViewItem.Content>
                 </NavigationViewItem>

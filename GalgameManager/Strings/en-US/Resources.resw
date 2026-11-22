@@ -163,7 +163,7 @@
     <value>Privacy Policy</value>
   </data>
   <data name="SettingsPage_PrivacyTermsLink.NavigateUri" xml:space="preserve">
-    <value>https://github.com/GoldenPotato137/GalgameManager/blob/main/PrivacyPolicy.md</value>
+    <value>https://github.com/zwm21/PotatoVN/blob/dev/PrivacyPolicy.md</value>
   </data>
   <data name="Shell_Library.Content" xml:space="preserve">
     <value>Library</value>
@@ -432,7 +432,7 @@ This software will use regular expressions to match game folder names and take t
 
 
   <data name="SettingsPage_RepositoryLink.NavigateUri" xml:space="preserve">
-    <value>https://github.com/GoldenPotato137/GalgameManager</value>
+    <value>https://github.com/zwm21/PotatoVN</value>
   </data>
   <data name="SettingsPage_RepositoryLink.Content" xml:space="preserve">
     <value>Repository URL</value>
@@ -548,12 +548,8 @@ Disable: Data is only saved internally by the software and can be manually backe
   <data name="Shell_SettingsText.Text" xml:space="preserve">
     <value>Settings</value>
   </data>
-  <data name="SettingsPage_UpdateNotification_Title" xml:space="preserve">
-    <value>Updates available!</value>
-  </data>
-  <data name="SettingsPage_UpdateNotification_Msg" xml:space="preserve">
-    <value>New updates have been detected. You can update to the latest version in the Microsoft App Store!</value>
-  </data>
+
+
   <data name="SettingsPage_SeeWhatsNew" xml:space="preserve">
     <value>What's New</value>
   </data>
@@ -1193,9 +1189,7 @@ If play time can record correctly, just cancel this popup.
     <value>Scan finished, saving record</value>
   </data>
 
-  <data name="SettingsPage_About_UpdateAvailable.Content" xml:space="preserve">
-    <value>New version available!</value>
-  </data>
+
   <data name="GalgamePage_SelectThread.Label" xml:space="preserve">
     <value>Manually specify game process</value>
   </data>
@@ -3014,12 +3008,8 @@ If play time can record correctly, just cancel this popup.
   <data name="PvnSyncTask_PullStaff_Error" xml:space="preserve">
     <value>Staff {0} sync failed</value>
   </data>
-  <data name="SettingsPage_Other_BetaChannel.Title" xml:space="preserve">
-    <value>Use beta channel to get updates</value>
-  </data>
-  <data name="SettingsPage_Other_BetaChannel.Description" xml:space="preserve">
-    <value>You will get new features and bug fixes earlier, but it may be unstable.</value>
-  </data>
+
+
   <data name="AccountPage_Pvn_SyncHeaderImage.Title" xml:space="preserve">
     <value>Sync Header Images</value>
   </data>
@@ -4383,7 +4373,7 @@ Open the log folder now?</value>
     <value>Scanning {0} ...</value>
   </data>
   <data name="SettingsPage_UpdateContent.NavigateUri" xml:space="preserve">
-    <value>https://potatovn.net/upgrade-log/</value>
+    <value>https://github.com/zwm21/PotatoVN/releases</value>
   </data>
   <data name="SettingsPage_Help.Content" xml:space="preserve">
     <value>Help</value>
