@@ -45,13 +45,28 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
     private Border? _tipBorder;
     private TextBlock? _tipText;
     private DateTime _selectedDate;
+    private ElementTheme _currentTheme = ElementTheme.Light;
 
     public AnnualReportSubPageHeatmapViewModel(IGalgameCollectionService gameService)
     {
         _gameService = gameService;
     }
 
+    /// <summary>当前生效的热力色板，下标 0 = 无记录，1~4 对应热力等级</summary>
+    private string[] Palette => _currentTheme == ElementTheme.Dark ? DarkPalette : LightPalette;
+
     [ObservableProperty] private AnnualReportData _annualReportData = new();
+
+    /// <summary>图例 5 个色块的笔刷，与格子共用同一套色板，随主题切换</summary>
+    [ObservableProperty] private Brush _level0Brush = new SolidColorBrush(Color.FromArgb(255, 0xEB, 0xED, 0xF0));
+
+    [ObservableProperty] private Brush _level1Brush = new SolidColorBrush(Color.FromArgb(255, 0x9B, 0xE9, 0xA8));
+
+    [ObservableProperty] private Brush _level2Brush = new SolidColorBrush(Color.FromArgb(255, 0x40, 0xC4, 0x63));
+
+    [ObservableProperty] private Brush _level3Brush = new SolidColorBrush(Color.FromArgb(255, 0x30, 0xA1, 0x4E));
+
+    [ObservableProperty] private Brush _level4Brush = new SolidColorBrush(Color.FromArgb(255, 0x21, 0x6E, 0x39));
 
     /// <summary>热力图宿主 Grid，由代码侧填充 7×N 格子与月份标签</summary>
     [ObservableProperty] private Grid? _heatmapHost;
@@ -116,9 +131,43 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
     {
         if (value is null) return;
         // 主题切换时重新上色，保证浅色 / 深色各自使用 GitHub 绿色板
-        value.ActualThemeChanged += (_, _) => RenderCells();
+        value.ActualThemeChanged += (_, _) => RefreshTheme();
         // 指针离开热力图区域时收起浮动提示
         value.PointerExited += (_, _) => HideTip();
+    }
+
+    /// <summary>
+    /// 解析当前生效的主题。<br/>
+    /// 直接读 <see cref="FrameworkElement.ActualTheme"/> 在元素尚未挂载进可视化树时会得到
+    /// <see cref="ElementTheme.Default"/>（此时会误判成浅色），因此沿可视化树向上回退查找；
+    /// 主题是由 ThemeSelectorService 写在 App.MainWindow.Content 上的，向上走一定能遇到。
+    /// 全部落空时兜底为浅色。
+    /// </summary>
+    private ElementTheme ResolveEffectiveTheme()
+    {
+        FrameworkElement? element = HeatmapHost;
+        while (element is not null)
+        {
+            if (element.ActualTheme != ElementTheme.Default) return element.ActualTheme;
+            element = VisualTreeHelper.GetParent(element) as FrameworkElement;
+        }
+        return App.MainWindow?.Content is FrameworkElement root && root.ActualTheme != ElementTheme.Default
+            ? root.ActualTheme
+            : ElementTheme.Light;
+    }
+
+    /// <summary>主题变化：同步刷新格子配色与图例笔刷</summary>
+    private void RefreshTheme()
+    {
+        if (HeatmapHost is null) return;
+        _currentTheme = ResolveEffectiveTheme();
+        string[] palette = Palette;
+        Level0Brush = new SolidColorBrush(ParseColor(palette[0]));
+        Level1Brush = new SolidColorBrush(ParseColor(palette[1]));
+        Level2Brush = new SolidColorBrush(ParseColor(palette[2]));
+        Level3Brush = new SolidColorBrush(ParseColor(palette[3]));
+        Level4Brush = new SolidColorBrush(ParseColor(palette[4]));
+        RenderCells();
     }
 
     /// <summary>
@@ -147,6 +196,8 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
     private void Rebuild()
     {
         _result = PlayHeatmapStats.Build(_gameService.Galgames, DateTime.Now, SelectedRange?.Year);
+        // 此时页面已挂载进可视化树，才能解析到真实主题
+        RefreshTheme();
 
         RangeSummary = "AnnualReportPage_Heatmap_RangeSummary".GetLocalized(
             SelectedRange?.DisplayName ?? RangeLastYearName, FormatDuration(_result.TotalMinutes));
@@ -155,7 +206,6 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
         LongestStreak = _result.LongestStreak;
         CurrentStreak = _result.CurrentStreak;
 
-        RenderCells();
         SelectDate(_result.DefaultSelectedDate);
     }
 
@@ -178,7 +228,7 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
         HeatmapHost.RowDefinitions.Clear();
         HeatmapHost.ColumnDefinitions.Clear();
 
-        string[] palette = HeatmapHost.ActualTheme == ElementTheme.Dark ? DarkPalette : LightPalette;
+        string[] palette = Palette;
         int columns = _result.ColumnCount;
 
         // 行 0 放月份标签，行 1~7 依次是周日..周六

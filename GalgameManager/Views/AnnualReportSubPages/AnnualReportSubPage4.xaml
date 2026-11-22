@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <Page
     x:Class="GalgameManager.Views.AnnualReportSubPage4"
@@ -39,7 +39,7 @@
                                    Style="{ThemeResource DisplayTextBlockStyle}"
                                    FontSize="72"
                                    HorizontalAlignment="Center"
-                                   Foreground="{ThemeResource SystemControlForegroundAccentBrush}" />
+                                   Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                         <TextBlock Text="天"
                                    Style="{ThemeResource BodyStrongTextBlockStyle}"
                                    HorizontalAlignment="Center" />
@@ -62,34 +62,44 @@
                             <Grid Grid.Row="1"/>
                             <TextBlock Grid.Row="2" Text="{x:Bind ViewModel.AnnualReportData.LongestStreakGame.Name.Value}"
                                        Style="{ThemeResource SubtitleTextBlockStyle}"
-                                       Foreground="{ThemeResource SystemControlForegroundAccentBrush}"
-                                       Margin="5,0,5,0" HorizontalAlignment="Center" />
+                                       Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                       Margin="0"
+                                       HorizontalAlignment="Left"
+                                       TextWrapping="Wrap" />
                             <Grid Grid.Row="3"/>
                             <Grid Grid.Row="4" ColumnDefinitions="Auto,Auto,Auto" ColumnSpacing="5">
                                 <TextBlock Grid.Column="0" Text="共" VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1" VerticalAlignment="Center"
                                     Text="{x:Bind ViewModel.AnnualReportData.LongestStreakGameTime, Converter={StaticResource DoubleToStringConverter}, ConverterParameter=N1}"
                                     Style="{ThemeResource SubtitleTextBlockStyle}"
-                                    Foreground="{ThemeResource SystemControlForegroundAccentBrush}"/>
+                                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
                                 <TextBlock Grid.Column="2" Text="小时" VerticalAlignment="Center"/>
                             </Grid>
                         </Grid>
                     </Grid>
-                    
+
                 </control:Panel>
             </Grid>
 
-            <!-- 时长统计图表 -->
-            <Grid Grid.Column="1" RowDefinitions="Auto,*">
-                <TextBlock Text="每周游玩时长统计"
+            <!-- 时长统计图表：包进与左侧风格一致的卡片 -->
+            <Border Grid.Column="1"
+                    CornerRadius="5"
+                    Padding="15"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0" Text="每周游玩时长统计"
                            Style="{ThemeResource SubtitleTextBlockStyle}"
                            HorizontalAlignment="Center"
                            Margin="0,0,0,10" />
-                <lvc:CartesianChart Grid.Row="1"
+                    <lvc:CartesianChart Grid.Row="1"
                                     Series="{x:Bind ViewModel.DayOfWeekSeries}"
                                     XAxes="{x:Bind ViewModel.DayOfWeekXAxes}"
+                                    YAxes="{x:Bind ViewModel.DayOfWeekYAxes}"
                                     TooltipPosition="Top" />
-            </Grid>
+                </Grid>
+            </Border>
         </Grid>
 
         <!-- 今年一部都没玩过：整页给空态 -->

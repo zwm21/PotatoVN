@@ -171,44 +171,32 @@
                     </ScrollViewer>
                 </Grid>
 
-                <!-- 图例：少 □ □ □ □ □ 多 -->
-                <StackPanel Grid.Row="2"
+                    <!-- 图例：少 □ □ □ □ □ 多。色块与格子共用同一套主题色板 -->
+                    <StackPanel Grid.Row="2"
                             Orientation="Horizontal"
                             HorizontalAlignment="Right"
                             Margin="0,8,0,0">
-                    <TextBlock x:Uid="AnnualReportPage_Heatmap_LegendLess"
+                        <TextBlock x:Uid="AnnualReportPage_Heatmap_LegendLess"
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                VerticalAlignment="Center"
                                Opacity="0.7"
                                Margin="0,0,6,0"/>
-                    <Border Width="12" Height="12" CornerRadius="2" Margin="2"
-                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"/>
-                    <Border Width="12" Height="12" CornerRadius="2" Margin="2">
-                        <Border.Background>
-                            <SolidColorBrush Color="#9BE9A8"/>
-                        </Border.Background>
-                    </Border>
-                    <Border Width="12" Height="12" CornerRadius="2" Margin="2">
-                        <Border.Background>
-                            <SolidColorBrush Color="#40C463"/>
-                        </Border.Background>
-                    </Border>
-                    <Border Width="12" Height="12" CornerRadius="2" Margin="2">
-                        <Border.Background>
-                            <SolidColorBrush Color="#30A14E"/>
-                        </Border.Background>
-                    </Border>
-                    <Border Width="12" Height="12" CornerRadius="2" Margin="2">
-                        <Border.Background>
-                            <SolidColorBrush Color="#216E39"/>
-                        </Border.Background>
-                    </Border>
-                    <TextBlock x:Uid="AnnualReportPage_Heatmap_LegendMore"
+                        <Border Width="12" Height="12" CornerRadius="2" Margin="2"
+                                Background="{x:Bind ViewModel.Level0Brush, Mode=OneWay}"/>
+                        <Border Width="12" Height="12" CornerRadius="2" Margin="2"
+                                Background="{x:Bind ViewModel.Level1Brush, Mode=OneWay}"/>
+                        <Border Width="12" Height="12" CornerRadius="2" Margin="2"
+                                Background="{x:Bind ViewModel.Level2Brush, Mode=OneWay}"/>
+                        <Border Width="12" Height="12" CornerRadius="2" Margin="2"
+                                Background="{x:Bind ViewModel.Level3Brush, Mode=OneWay}"/>
+                        <Border Width="12" Height="12" CornerRadius="2" Margin="2"
+                                Background="{x:Bind ViewModel.Level4Brush, Mode=OneWay}"/>
+                        <TextBlock x:Uid="AnnualReportPage_Heatmap_LegendMore"
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                VerticalAlignment="Center"
                                Opacity="0.7"
                                Margin="6,0,0,0"/>
-                </StackPanel>
+                    </StackPanel>
 
                 <!--
                   浮动悬停提示层：覆盖整卡、不拦截命中、默认隐藏。
