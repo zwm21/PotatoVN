@@ -1006,18 +1006,14 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
                 var workDir = AppContext.BaseDirectory;
                 var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "WindowIcon.ico");
 
-                Type? shellType = Type.GetTypeFromProgID("WScript.Shell");
-                if (shellType == null) throw new Exception("WScript.Shell is not available");
-                dynamic shell = Activator.CreateInstance(shellType)!;
-                dynamic shortcut = shell.CreateShortcut(shortcutPath);
-                shortcut.TargetPath = exePath;
-                shortcut.WorkingDirectory = workDir;
-                shortcut.Description = "PotatoVN";
-                if (File.Exists(iconPath))
-                {
-                    shortcut.IconLocation = iconPath;
-                }
-                shortcut.Save();
+                // 用显式 ComImport 的 IShellLinkW 创建，不用 dynamic 调 WScript.Shell：
+                // 后者需要 DLR 运行期生成 IL 并做 IDispatch 后期绑定，在 PublishTrimmed 下会直接崩
+                DesktopShortcutHelper.Create(
+                    shortcutPath,
+                    exePath,
+                    iconLocation: File.Exists(iconPath) ? iconPath : null,
+                    workingDirectory: workDir,
+                    description: "PotatoVN");
                 isPinnedSuccessfully = true;
             }
             catch (Exception e)
@@ -1028,41 +1024,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
 
         if (isPinnedSuccessfully)
         {
-            try
-            {
-                string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "WindowIcon.ico");
-
-                if (File.Exists(iconPath) && File.Exists(shortcutPath))
-                {
-                    // 使用PowerShell命令修改快捷方式图标
-                    string command = $@"$shell = New-Object -ComObject WScript.Shell; " +
-                                    $@"$shortcut = $shell.CreateShortcut('{shortcutPath.Replace("\\", "\\\\")}'); " +
-                                    $@"$shortcut.IconLocation = '{iconPath.Replace("\\", "\\\\")}'; " +
-                                    $@"$shortcut.Save()";
-
-                    var process = new System.Diagnostics.Process
-                    {
-                        StartInfo = new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = "powershell.exe",
-                            Arguments = $"-Command \"{command}\"",
-                            UseShellExecute = false,
-                            CreateNoWindow = true,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true
-                        }
-                    };
-
-                    process.Start();
-                    await process.WaitForExitAsync();
-                }
-                await DisplayMsgAsync(InfoBarSeverity.Success, "SettingsPage_Start_DesktopShortcut_Success".GetLocalized());
-            }
-            catch (Exception ex)
-            {
-                _infoService.Info(InfoBarSeverity.Warning, "SettingsPage_Start_DesktopShortcut_IconFail".GetLocalized(),
-                    ex.Message);
-            }
+            await DisplayMsgAsync(InfoBarSeverity.Success, "SettingsPage_Start_DesktopShortcut_Success".GetLocalized());
         }
     }
 
