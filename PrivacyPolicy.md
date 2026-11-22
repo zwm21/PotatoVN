@@ -9,7 +9,7 @@
 ## 登录信息管理
 当您使用PotatoVN并输入Bangumi个人令牌后，应用将在您使用Bangumi获取galgame信息时调用bangumi提供的开发者API并将个人令牌塞入HTTP请求头中。
 
-个人令牌信息将存储于应用文件夹:`C:\Users\你的用户名\AppData\Local\Packages\某个随机字符串文件夹`中。
+个人令牌与全部用户数据均存储于便携版程序同级的 `UserData/` 与 `Settings/` 目录中，不会上传至任何服务器。
 
 ## 彻底清空个人信息
-PotatoVN 管理的所有数据都存储于应用文件夹中，删除应用后系统将自动清除所有应用数据。
+PotatoVN 管理的所有数据都保存在程序同级的 `UserData/` 与 `Settings/` 目录中，直接删除该目录即可彻底清空。

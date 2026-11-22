@@ -1,76 +1,99 @@
 <p align="center">
-<img src="GalgameManager/Assets/Pictures/Potato.png" width="80px"/>
+  <img src="GalgameManager/Assets/Pictures/Potato.png" width="80px" alt="PotatoVN" />
 </p>
 
 <div align="center">
-    
-# PotatoVN
-  
-[简体中文](https://github.com/GoldenPotato137/PotatoVN/blob/dev/README.md) 
-|
-[English](https://github.com/GoldenPotato137/PotatoVN/tree/dev/docs/README_EN.md)
 
+# PotatoVN (Portable Fork)
 
-![123](https://img.shields.io/endpoint?color=blue&label=Microsoft%20Store%20Rating&url=https%3A%2F%2Fmicrosoft-store-badge.fly.dev%2Fapi%2Frating%3FstoreId%3D9P9CBKD5HR3W)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FGoldenPotato137%2FPotatoVN.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FGoldenPotato137%2FPotatoVN?ref=badge_shield)
-[![Telegram](https://img.shields.io/badge/Telegram%E5%90%B9%E6%B0%B4%E7%BE%A4-Join-green)](https://t.me/potato_vn)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20x64-blue)](https://github.com/zwm21/PotatoVN/releases)
+[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/)
+[![Build](https://github.com/zwm21/PotatoVN/actions/workflows/build.yml/badge.svg)](https://github.com/zwm21/PotatoVN/actions/workflows/build.yml)
 
-一个VisualNovel管理工具，旨在为galgame屯屯鼠们提供一个方便的游戏管理平台。
+一个面向 Windows 的 VisualNovel 管理工具。  
+本仓库为 [GoldenPotato137/PotatoVN](https://github.com/GoldenPotato137/PotatoVN) 的个人精简便携版 Fork，用于自用留档与分享。
+
+[下载便携版](https://github.com/zwm21/PotatoVN/releases) · [上游项目](https://github.com/GoldenPotato137/PotatoVN)
+
 </div>
 
-## 功能
-* 自动检索文件夹内的游戏
-* 自动从多个数据库中获取游戏信息 （目前支持[bangumi](https://bgm.tv/)、[visual novel database](https://vndb.org/)），并从账户中同步游玩状态
-* 将游戏存档与云端同步 (此功能需要电脑上具有任意一款同步软件来同步存档文件夹，如OneDrive、NextCloud、坚果云、百度云同步盘等)
-* 统计游戏游玩时间
-* 从压缩包中自动解压游戏，并自动识别且添加到游戏库中
+## 关于本 Fork
 
-## 安装
-> **对于windows10用户:** windows10用户需要额外安装[Segoe Fluent 图标字体](https://aka.ms/SegoeFluentIcons)
+- **原始项目**：PotatoVN 由 [GoldenPotato137](https://github.com/GoldenPotato137/PotatoVN) 及上游贡献者开发；如需官方版本、微软商店安装或完整社区支持，请前往上游仓库。
+- **本仓库定位**：专注 **Windows x64 零外部依赖自包含便携版**，移除了 MSIX / 微软商店打包流程与自建服务端 `GalgameManager.Server`，围绕便携包体积压缩与跨目录迁移体验做了深度定制。
 
-<p align="center">
-    <a href="https://apps.microsoft.com/detail/9p9cbkd5hr3w?cid=github&mode=full">
-        <img src="https://get.microsoft.com/images/zh-cn%20dark.svg" alt="Microsoft Store"/>
-    </a>
-    &nbsp; <!-- 添加一个空格，防止两个按钮紧贴着 -->
-    <a href="https://github.com/GoldenPotato137/PotatoVN/releases">
-        <img src="docs/DownloadBadge.svg" height="43" alt="Sideload Download"/>
-    </a>
-</p>
+## 核心功能
 
-## 翻译
+- 自动扫描本地目录并管理游戏库
+- 从 [Bangumi](https://bgm.tv/)、[VNDB](https://vndb.org/) 等站点搜刮游戏信息并同步游玩状态
+- 记录与统计游玩时间、生成年度报告
+- 配合外部网盘工具同步游戏存档
+- 支持自动解压游戏压缩包并入库、完整备份与恢复用户数据
 
-PotatoVN 的界面文案全部放在 `GalgameManager/Strings/<语言>/Resources.resw` 里，由仓库**本地维护**（已不使用 Crowdin）。
-新增或修改文案请使用 `GalgameManager/Strings/resw_tool.py`（在该目录下运行）：
+## 相对上游的主要改动
 
-```bash
-python resw_tool.py search "Settings_*"                                               # 搜索 key
-python resw_tool.py update "NewKey.Text" en-US="English" ja-JP="日本語" zh-CN="中文"   # 新增 / 修改
-python resw_tool.py delete "ObsoleteKey.Text"                                         # 删除
-python resw_tool.py validate                                                          # 校验三种语言是否合法
+### 1. 便携包深度轻量化（~500 MiB → ~123 MiB，7z 约 33 MiB）
+
+| 优化项 | 说明 |
+|---|---|
+| 关闭 ReadyToRun | 便携发布设 `PublishReadyToRun=false`，避免托管程序集预编译膨胀 |
+| 定向 BCL + WinRT 投影裁剪 | 仅在便携 Release 构建下对 BCL 与 `Microsoft.Windows.SDK.NET.dll` 启用 `partial` 裁剪；业务程序集、WinAppSDK 托管投影及核心第三方库保持 `TrimMode=copy`，同时保留 `BuiltInComInteropSupport` |
+| `vn_mapper.db` 结构瘦身 | 通过 `GalgameManager/Assets/Data/Slim-VnMapperDb.ps1` 将 `title` 表重建为 `WITHOUT ROWID` 并 `VACUUM INTO`，离线零解压体积减半 |
+| 静态数据压缩 | `producers.json`、`vndb-tags-latest.json`、`vndb-tags-translation.json` 改为 `.json.gz` 随包分发，运行期流式解压 |
+| 清理冗余运行时与依赖 | 便携布局脚本默认移除 `.winmd`、多余语言目录、AI/ML 栈、Widgets 运行时与外部调试器支撑文件（保留应用 `.pdb` 以维持崩溃堆栈行号）；移除 `CSharpMarkup.WinUI`、`AutoMapper` 及未用依赖 |
+
+### 2. 便携体验与工程改进
+
+- **启动期托管图片路径自动重定位**：移动便携包目录、跨版本升级或换机恢复完整备份后，启动时自动将 `UserData\Images` 下的旧绝对路径重定向到当前位置，避免全库图片失联。
+- **确定性构建版本号**：构建期自动结合仓库信息生成便携包版本号与发布目录名，便于区分各次构建。
+- **数据备份聚焦**：移除旧版导入导出与自动导出功能，保留完整备份与恢复。
+
+### 3. 移除项
+
+- MSIX / 微软商店打包与侧载签名流水线
+- 服务端项目 `GalgameManager.Server` 及其测试项目
+- 从未随包发布的 `ExVndb` 死路径
+- Crowdin 翻译流水线（改为使用 `GalgameManager/Strings/resw_tool.py` 本地维护）
+
+## 使用方式
+
+> **Windows 10 用户提示**：若图标显示异常，请安装 [Segoe Fluent 图标字体](https://aka.ms/SegoeFluentIcons)。
+
+1. 前往 [Releases](https://github.com/zwm21/PotatoVN/releases) 下载最新的 `PotatoVN-<版本>-x64-portable.7z`。
+2. 解压到任意目录，直接运行 `GalgameManager.exe`（无需预先安装 .NET 运行时或 Windows App Runtime）。
+3. 所有用户数据与配置均保存在程序同级的 `UserData/` 与 `Settings/` 目录下，可整目录拷贝迁移。
+
+## 本地构建与测试
+
+环境仅需 **.NET 8 SDK**（Windows App SDK 与构建工具通过 NuGet 获取，参考 [WinUI 开发环境文档](https://learn.microsoft.com/zh-cn/windows/apps/windows-app-sdk/set-up-your-development-environment)）。
+
+```powershell
+# 还原依赖
+dotnet restore GalgameManager.sln
+
+# 构建 Windows x64 自包含便携包（输出到 publish/PotatoVN-<版本>-x64-portable）
+pwsh -File GalgameManager/BuildScripts/Publish-Portable.ps1
+
+# 运行离线测试（默认排除需联网的 Phraser 分类）
+dotnet test GalgameManager.Test/GalgameManager.Test.csproj
+
 ```
 
-**不要直接手改 `.resw`**。新增语言时除 `Resources.resw` 外还需同步 `GalgameManager/Enums/LanguageEnum.cs`。
+推送至 `dev` 或手动触发 `.github/workflows/build.yml` 时，CI 会自动执行相同的便携构建、打包 7z 并发布至 GitHub Releases。
 
-## 开发者相关
-本程序是一个WinUI3的应用，要编译本程序，请参考[微软文档](https://learn.microsoft.com/zh-cn/windows/apps/windows-app-sdk/set-up-your-development-environment?tabs=cs-vs-community%2Ccpp-vs-community%2Cvs-2022-17-1-a%2Cvs-2022-17-1-b)
-安装相应的开发环境。
+## 本地化维护
 
-本程序使用MVVM架构，基于[TemplateStudio](https://github.com/microsoft/TemplateStudio/tree/main/docs/WinUI)生成的框架开发。
+界面文案位于 `GalgameManager/Strings/<语言>/Resources.resw`，请勿直接手改 XML，请在 `GalgameManager/Strings/` 目录下通过 `resw_tool.py` 操作：
 
-欢迎各位感兴趣的dalao在[这里](https://github.com/GoldenPotato137/PotatoVN/discussions/categories/%E5%BC%80%E5%8F%91%E7%8A%B6%E6%80%81)查看目前急需解决的问题，PotatoVN永远欢迎各位的加入~
+```bash
+python resw_tool.py search "Settings_*"
+python resw_tool.py update "NewKey.Text" en-US="English" ja-JP="日本語" zh-CN="中文"
+python resw_tool.py delete "ObsoleteKey.Text"
+python resw_tool.py validate
 
-## 致谢
-感谢以下组织对本项目的支持❤️
+```
 
-| 赞助方 | 支持内容 |
-|----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
-| <p align="center"><a href="https://signpath.io/"><img src="https://github.com/user-attachments/assets/2de96f21-4e01-4d2b-8d22-72aae5784906" alt="signpath logo" width="160"></a></p> | 为PotatoVN提供了免费的侧载版安装包签名，极大方便了不方便使用微软商店的用户的下载与安装 |
-| <p align="center"><a href="https://www.repoflow.io/"><img src="https://github.com/user-attachments/assets/f755e596-bba1-441d-bf61-5f073c95aa61" alt="repoflow logo" width="160px"></a></p> | [RepoFlow](https://www.repoflow.io)，一个支持自托管的包管理平台，为我们的插件管理平台提供了正版授权，极大方便了用户下载插件与开发者上传自己的插件 |
-| <a href="https://www.jetbrains.com/"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.png" alt="JetBrains logo." width="160px"></a> | 提供了免费正版授权的强大IDE，其中的.Net开发工具`Rider`极大方便了PotatoVN的开发 |
+## 开源协议
 
-## Code signing policy
-* Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
-* Committerss: [PotatoVN Committers](https://github.com/GoldenPotato137/PotatoVN/graphs/contributors)
-* Approver: [GoldenPotato137](https://github.com/GoldenPotato137)
-* Privacy policy: [Privacy policy](https://potatovn.net/usage/how-to-use/privacy-policy.html)
+本项目沿用上游的 [Apache License 2.0](LICENSE) 开源协议，版权与主要开发工作归属上游项目 [GoldenPotato137/PotatoVN](https://github.com/GoldenPotato137/PotatoVN) 及各位贡献者。
