@@ -23,6 +23,8 @@ public sealed partial class AnnualReportSubPage1 : Page
     {
         ViewModel = new ReportSubPage1ViewModel();
         this.InitializeComponent();
+        // 主题锚点：图表坐标轴与图例颜色要随深浅主题切换
+        ViewModel.ThemeAnchor = this;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

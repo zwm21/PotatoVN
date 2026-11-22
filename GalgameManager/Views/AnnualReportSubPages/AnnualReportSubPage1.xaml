@@ -85,8 +85,9 @@
                     <lvc:CartesianChart
                         Series="{x:Bind ViewModel.PlayHoursSeries, Mode=OneWay}"
                         XAxes="{x:Bind ViewModel.PlayHoursXAxes, Mode=OneWay}"
+                        YAxes="{x:Bind ViewModel.PlayHoursYAxes, Mode=OneWay}"
                         TooltipPosition="Top"
-                        Height="300"/>
+                        Width="340" Height="300"/>
                 </TeachingTip>
 
                 <!-- 游戏完成数 & 游戏完成度分析 -->
@@ -128,9 +129,10 @@
                             ShouldConstrainToRootBounds="True">
                     <lvc:PieChart
                         Series="{x:Bind ViewModel.GamesPlayedSeries, Mode=OneWay}"
+                        LegendPosition="Right"
+                        LegendTextPaint="{x:Bind ViewModel.LegendTextPaint, Mode=OneWay}"
                         TooltipPosition="Top"
-                        Height="300"
-                        Width="300"/>
+                        Width="360" Height="300"/>
                 </TeachingTip>
 
                 <!-- 最活跃的月份 && 月度活跃度分析 -->
@@ -173,8 +175,9 @@
                     <lvc:CartesianChart
                         Series="{x:Bind ViewModel.ActiveMonthSeries, Mode=OneWay}"
                         XAxes="{x:Bind ViewModel.MonthXAxes, Mode=OneWay}"
+                        YAxes="{x:Bind ViewModel.MonthYAxes, Mode=OneWay}"
                         TooltipPosition="Top"
-                        Height="300"/>
+                        Width="340" Height="300"/>
                 </TeachingTip>
 
                 <!-- 平均游戏时长 & 游玩时长分布 -->
@@ -218,8 +221,9 @@
                     <lvc:CartesianChart
                         Series="{x:Bind ViewModel.AverageHoursSeries, Mode=OneWay}"
                         XAxes="{x:Bind ViewModel.AverageHoursXAxes, Mode=OneWay}"
+                        YAxes="{x:Bind ViewModel.AverageHoursYAxes, Mode=OneWay}"
                         TooltipPosition="Top"
-                        Height="300"/>
+                        Width="360" Height="300"/>
                 </TeachingTip>
 
                 <!-- 最喜欢游戏 -->
