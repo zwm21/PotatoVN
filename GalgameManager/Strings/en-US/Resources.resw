@@ -4514,4 +4514,7 @@ Open the log folder now?</value>
   <data name="AnnualReportPage_Heatmap_ZeroMinutes" xml:space="preserve">
     <value>0 min</value>
   </data>
+  <data name="SettingsPage_Language_ChangeError" xml:space="preserve">
+    <value>Failed to change language</value>
+  </data>
 </root>

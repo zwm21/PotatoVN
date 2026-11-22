@@ -1,5 +1,5 @@
-﻿using Windows.Globalization;
 using Microsoft.Windows.ApplicationModel.Resources;
+using Microsoft.Windows.Globalization;
 
 namespace GalgameManager.Helpers;
 

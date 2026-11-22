@@ -296,7 +296,11 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         try
         {
             string languageTag = GetLanguageTag(value);
-            ApplicationLanguages.PrimaryLanguageOverride = languageTag;
+            // 必须用 Windows App SDK 的 ApplicationLanguages：WinRT 版
+            // Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride 的 setter
+            // 依赖包身份，免安装/便携版下直接抛 InvalidOperationException。
+            // WinAppSDK 版把覆盖值写到本地应用数据，免安装版同样生效。
+            Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = languageTag;
 
             // 提醒用户完全应用新语言还需要重启应用
             _infoService.Info(InfoBarSeverity.Informational,
@@ -314,7 +318,12 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     }
 
     // 根据语言枚举获取对应的语言标记
-    private string GetLanguageTag(LanguageEnum language)
+    /// <summary>
+    /// 把语言枚举映射为 BCP-47 语言标签；<see cref="LanguageEnum.Auto"/> 映射为空字符串，
+    /// 表示清除覆盖、跟随系统默认语言。<br/>
+    /// 启动期 <see cref="App.OnLaunched"/> 也用它恢复用户保存的语言，故为 public static。
+    /// </summary>
+    public static string GetLanguageTag(LanguageEnum language)
     {
         return language switch
         {

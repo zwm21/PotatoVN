@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Windows.ApplicationModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GalgameManager.Activation;
@@ -275,6 +275,31 @@ public partial class App : Application
         catch (Exception e)
         {
             fullBackupResult = FullBackupResult.Fail("FullBackup_Fail", e.Message);
+        }
+
+        // 恢复用户保存的语言。WinRT 版 Windows.Globalization.ApplicationLanguages 的覆盖值
+        // 在免安装/便携版下既写不进去也带不到下次启动，所以每次启动都从设置数据库读回，
+        // 写入 WinAppSDK 版 Microsoft.Windows.Globalization.ApplicationLanguages（它面向
+        // 免安装场景，写入本地应用数据）。必须放在完整备份之后、解析其它服务之前，
+        // 保证后续所有 GetLocalized() 与 XAML 绑定都拿到正确语言。
+        try
+        {
+            ILocalSettingsService settings = GetService<ILocalSettingsService>();
+            LanguageEnum language = await settings.ReadSettingAsync<LanguageEnum>(KeyValues.Language);
+            Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride =
+                SettingsViewModel.GetLanguageTag(language);
+        }
+        catch (Exception e)
+        {
+            // 语言恢复失败不能阻断启动：保持默认语言继续跑
+            try
+            {
+                GetService<IInfoService>().DeveloperEvent(e: e);
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
         }
 
         // 设置LiveCharts字体

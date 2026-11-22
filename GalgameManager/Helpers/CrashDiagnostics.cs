@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -237,9 +237,12 @@ public static class CrashDiagnostics
     {
         AppendLine(sb, "CurrentUICulture", () => CultureInfo.CurrentUICulture.Name);
         AppendLine(sb, "CurrentCulture", () => CultureInfo.CurrentCulture.Name);
-        AppendLine(sb, "PrimaryLanguageOverride", () => ApplicationLanguages.PrimaryLanguageOverride);
-        AppendLine(sb, "ApplicationLanguages", () => ApplicationLanguages.Languages.ToList());
-        AppendLine(sb, "ManifestLanguages", () => ApplicationLanguages.ManifestLanguages.ToList());
+        AppendLine(sb, "PrimaryLanguageOverride",
+            () => Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride);
+        AppendLine(sb, "ApplicationLanguages",
+            () => Microsoft.Windows.Globalization.ApplicationLanguages.Languages.ToList());
+        AppendLine(sb, "ManifestLanguages",
+            () => Microsoft.Windows.Globalization.ApplicationLanguages.ManifestLanguages.ToList());
         AppendLine(sb, "GlobalizationPreferences", () => GlobalizationPreferences.Languages.ToList());
         AppendLine(sb, "UserDefaultUILanguage", () =>
         {

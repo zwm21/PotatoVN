@@ -5146,4 +5146,7 @@
   <data name="AnnualReportPage_Heatmap_ZeroMinutes" xml:space="preserve">
     <value>0 分钟</value>
   </data>
+  <data name="SettingsPage_Language_ChangeError" xml:space="preserve">
+    <value>切换语言失败</value>
+  </data>
 </root>
