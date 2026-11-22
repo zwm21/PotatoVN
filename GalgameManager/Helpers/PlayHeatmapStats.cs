@@ -142,7 +142,7 @@ public static class PlayHeatmapStats
             GridEnd = gridEnd,
             ColumnCount = columnCount,
             Cells = cells,
-            MonthLabels = BuildMonthLabels(gridStart, columnCount),
+            MonthLabels = BuildMonthLabels(gridStart, rangeStart, rangeEnd, columnCount),
             TotalMinutes = daily.Values.Sum(g => g.Values.Sum()),
             ActiveDays = daily.Count,
             LongestStreak = ComputeLongestStreak(daily),
@@ -152,21 +152,30 @@ public static class PlayHeatmapStats
     }
 
     /// <summary>
-    /// 计算顶部月份标签：某一列的首日所在月份与前一列不同时（以及第 0 列）产生一个候选，
-    /// 再按 <see cref="MinMonthLabelColumnGap"/> 丢弃过近的候选。
+    /// 计算顶部月份标签：取每一列**第一个落在范围内的日期**，其所在月份与上一标签不同时产生候选，
+    /// 再按 <see cref="MinMonthLabelColumnGap"/> 丢弃过近的候选。<br/>
+    /// 必须只认范围内的日期：自然年网格第 0 列的首日往往是去年的补位格（如 2026 年第 0 列的
+    /// 2025-12-28），用它产出标签会让自然年网格冒出 13 个月份。滚动窗口横跨两年时首尾同月
+    /// 是允许的，因此 <see cref="PlayHeatmapMonthLabel"/> 不携带年份。
     /// </summary>
-    private static List<PlayHeatmapMonthLabel> BuildMonthLabels(DateTime gridStart, int columnCount)
+    private static List<PlayHeatmapMonthLabel> BuildMonthLabels(DateTime gridStart, DateTime rangeStart,
+        DateTime rangeEnd, int columnCount)
     {
         List<PlayHeatmapMonthLabel> labels = [];
-        // 初始化为 -MinMonthLabelColumnGap，保证第 0 列一定可以通过间距检查
+        // 初始化为 -MinMonthLabelColumnGap，保证第一个标签一定可以通过间距检查
         int lastAcceptedColumn = -MinMonthLabelColumnGap;
+        int lastMonth = 0;
         for (int col = 0; col < columnCount; col++)
         {
-            DateTime firstDayOfColumn = gridStart.AddDays(col * RowCount);
-            if (col > 0 && firstDayOfColumn.Month == gridStart.AddDays((col - 1) * RowCount).Month) continue;
+            DateTime columnStart = gridStart.AddDays(col * RowCount);
+            // 该列第一个范围内的日期：列首在范围之前则取范围起始日
+            DateTime firstInRange = columnStart < rangeStart ? rangeStart : columnStart;
+            if (firstInRange > rangeEnd) break; // 该列起已完全在范围外，后续列同理
+            if (labels.Count > 0 && firstInRange.Month == lastMonth) continue;
             if (col - lastAcceptedColumn < MinMonthLabelColumnGap) continue;
-            labels.Add(new PlayHeatmapMonthLabel { MonthIndex = firstDayOfColumn.Month, ColumnIndex = col });
+            labels.Add(new PlayHeatmapMonthLabel { MonthIndex = firstInRange.Month, ColumnIndex = col });
             lastAcceptedColumn = col;
+            lastMonth = firstInRange.Month;
         }
         return labels;
     }
@@ -250,6 +259,16 @@ public class DailyGamePlayItem
 
     /// <summary>当日该游戏的分钟数</summary>
     public int Minutes { get; init; }
+
+    /// <summary>
+    /// 是否有真实封面路径。<see cref="Galgame.DefaultImagePath"/> 是占位图标，
+    /// 不算封面，UI 据此决定是否显示缩略图。
+    /// </summary>
+    public bool HasCover => Galgame.ImagePath.Value is { } path &&
+                            !string.IsNullOrEmpty(path) && path != Galgame.DefaultImagePath;
+
+    /// <summary>封面路径，仅在 <see cref="HasCover"/> 为 true 时有意义</summary>
+    public string? CoverPath => HasCover ? Galgame.ImagePath.Value : null;
 }
 
 /// <summary>

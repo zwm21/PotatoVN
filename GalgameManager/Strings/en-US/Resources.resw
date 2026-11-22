@@ -2244,7 +2244,7 @@ If play time can record correctly, just cancel this popup.
     <value>Annual Report</value>
   </data>
   <data name="Shell_AnnualReportText.Text" xml:space="preserve">
-    <value>Annual Report</value>
+    <value>Play Stats</value>
   </data>
   <data name="SettingsPage_Library_RemoveAllBackup.Title" xml:space="preserve">
     <value>Clean Up Backup Files</value>
@@ -4398,5 +4398,98 @@ Open the log folder now?</value>
   </data>
   <data name="GalgameSettingPage_SavePositionNotSet" xml:space="preserve">
     <value>No save location set. Please select a save folder manually.</value>
+  </data>
+  <data name="AnnualReportText" xml:space="preserve">
+    <value>Play Stats</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Overview.Text" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="AnnualReportPage_Tab_WordCloud.Text" xml:space="preserve">
+    <value>Word Cloud</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Favorite.Text" xml:space="preserve">
+    <value>Favorites</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Collector.Text" xml:space="preserve">
+    <value>Collection</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Habit.Text" xml:space="preserve">
+    <value>Habits</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Heatmap.Text" xml:space="preserve">
+    <value>Footprint</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Monthly.Text" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_CardTitle" xml:space="preserve">
+    <value>Play heatmap</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_RangeSummary" xml:space="preserve">
+    <value>{0}: {1} h {2} min played</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_RangeLastYear" xml:space="preserve">
+    <value>Last year</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_RangeYear" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_TotalPlayTime" xml:space="preserve">
+    <value>Total play time</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_ActiveDays" xml:space="preserve">
+    <value>Active days</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_LongestStreak" xml:space="preserve">
+    <value>Longest streak</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_CurrentStreak" xml:space="preserve">
+    <value>Current streak</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_HoursMinutes" xml:space="preserve">
+    <value>{0} h {1} min</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_UnitDay" xml:space="preserve">
+    <value>days</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_MonthLabel" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_WeekdayMon" xml:space="preserve">
+    <value>Mon</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_WeekdayWed" xml:space="preserve">
+    <value>Wed</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_WeekdayFri" xml:space="preserve">
+    <value>Fri</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_LegendLess" xml:space="preserve">
+    <value>Less</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_LegendMore" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_ToolTipWithGames" xml:space="preserve">
+    <value>{0} · {1} h {2} min · {3} games</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_ToolTipNoRecord" xml:space="preserve">
+    <value>{0} · No play record</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayDetail" xml:space="preserve">
+    <value>Daily detail</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_SelectedDate" xml:space="preserve">
+    <value>Selected date</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayTotal" xml:space="preserve">
+    <value>Total that day</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayEmpty" xml:space="preserve">
+    <value>No play record on this day</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_GameMinutes" xml:space="preserve">
+    <value>min</value>
   </data>
 </root>

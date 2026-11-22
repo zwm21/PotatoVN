@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GalgameManager.Contracts.Services;
 using GalgameManager.Contracts.ViewModels;
@@ -229,59 +229,32 @@ public partial class AnnualReportViewModel(IGalgameCollectionService gameService
         NavigateToPage(sender.Items.IndexOf(sender.SelectedItem));
     }
 
-    [RelayCommand]
-    private void NextPage()
-    {
-        if (ContentFrame == null) return;
-        NavigateToPage(Math.Min(_currentPageIndex + 1, 5));
-        UpdateSelectorBarSelection();
-    }
-
-    [RelayCommand]
-    private void PreviousPage()
-    {
-        if (ContentFrame == null) return;
-        NavigateToPage(Math.Max(_currentPageIndex - 1, 0));
-        UpdateSelectorBarSelection();
-    }
-
-    private void UpdateSelectorBarSelection()
-    {
-        var selectorBar = ContentFrame?.Parent is Grid grid 
-            ? grid.Children.OfType<SelectorBar>().FirstOrDefault() 
-            : null;
-
-        if (selectorBar != null && _currentPageIndex >= 0 && _currentPageIndex < selectorBar.Items.Count)
-        {
-            selectorBar.SelectedItem = selectorBar.Items[_currentPageIndex];
-        }
-    }
-
     private void NavigateToPage(int pageIndex)
     {
         if (ContentFrame == null || _currentPageIndex == pageIndex) return;
 
         Type pageType = pageIndex switch
         {
-            0 => typeof(Views.AnnualReportSubPage1), // 总览
-            1 => typeof(Views.AnnualReportSubPage4), // 习惯
-            2 => typeof(Views.AnnualReportSubPage6), // 月度
-            3 => typeof(Views.AnnualReportSubPage5), // 鉴赏
-            4 => typeof(Views.AnnualReportSubPage2), // 词云
-            5 => typeof(Views.AnnualReportSubPage3), // 最爱
-            _ => typeof(Views.AnnualReportSubPage1)
+            0 => typeof(Views.AnnualReportSubPageHeatmap), // 足迹（热力图）
+            1 => typeof(Views.AnnualReportSubPage1), // 总览
+            2 => typeof(Views.AnnualReportSubPage4), // 习惯
+            3 => typeof(Views.AnnualReportSubPage6), // 月度
+            4 => typeof(Views.AnnualReportSubPage5), // 鉴赏
+            5 => typeof(Views.AnnualReportSubPage2), // 词云
+            6 => typeof(Views.AnnualReportSubPage3), // 最爱
+            _ => typeof(Views.AnnualReportSubPageHeatmap)
         };
 
         _previousPageIndex = _currentPageIndex;
 
-        SlideNavigationTransitionEffect slideNavigationTransitionEffect = pageIndex - _previousPageIndex > 0 
-            ? SlideNavigationTransitionEffect.FromRight 
+        SlideNavigationTransitionEffect slideNavigationTransitionEffect = pageIndex - _previousPageIndex > 0
+            ? SlideNavigationTransitionEffect.FromRight
             : SlideNavigationTransitionEffect.FromLeft;
 
         _currentPageIndex = pageIndex;
-        ContentFrame.Navigate(pageType, _annualReportData, new SlideNavigationTransitionInfo() 
-        { 
-            Effect = slideNavigationTransitionEffect 
+        ContentFrame.Navigate(pageType, _annualReportData, new SlideNavigationTransitionInfo()
+        {
+            Effect = slideNavigationTransitionEffect
         });
     }
 }

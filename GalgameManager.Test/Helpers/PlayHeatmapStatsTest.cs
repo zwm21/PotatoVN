@@ -179,13 +179,35 @@ public class PlayHeatmapStatsTest
 
         Assert.That(result.MonthLabels, Is.Not.Empty);
         Assert.That(result.MonthLabels[0].ColumnIndex, Is.EqualTo(0));
-        // 网格从 2025-12-28 起，首个标签属于 12 月
-        Assert.That(result.MonthLabels[0].MonthIndex, Is.EqualTo(12));
+        // 第 0 列首日 2025-12-28 是范围外补位格，不能拿它产出标签；
+        // 该列第一个范围内日期是 2026-01-01，所以首标签是 1 月
+        Assert.That(result.MonthLabels[0].MonthIndex, Is.EqualTo(1));
         // 列索引严格递增且不重复
         for (int i = 1; i < result.MonthLabels.Count; i++)
             Assert.That(result.MonthLabels[i].ColumnIndex, Is.GreaterThan(result.MonthLabels[i - 1].ColumnIndex));
         Assert.That(result.MonthLabels.Select(m => m.ColumnIndex).Distinct().Count(),
             Is.EqualTo(result.MonthLabels.Count));
+    }
+
+    [Test]
+    public void Build_MonthLabels_ForNaturalYear_ShouldOnlyCoverOneToTwelve()
+    {
+        PlayHeatmapResult result = PlayHeatmapStats.Build([], Today, 2026);
+
+        // 自然年网格只应出现 1~12 月，且恰好各一次，不能被范围外的 2025-12 / 2027-01 污染
+        Assert.That(result.MonthLabels.Select(m => m.MonthIndex).OrderBy(m => m),
+            Is.EqualTo(Enumerable.Range(1, 12)));
+    }
+
+    [Test]
+    public void Build_MonthLabels_ForRollingYear_ShouldAllowSameMonthAtBothEnds()
+    {
+        // 滚动窗口 [2025-11-23, 2026-11-22] 横跨两年，首尾同月（11 月）是允许的，且不加 Year 字段
+        PlayHeatmapResult result = PlayHeatmapStats.Build([], Today, null);
+
+        Assert.That(result.MonthLabels[0].MonthIndex, Is.EqualTo(11));
+        Assert.That(result.MonthLabels[^1].MonthIndex, Is.EqualTo(11));
+        Assert.That(result.MonthLabels.Count(m => m.MonthIndex == 11), Is.EqualTo(2));
     }
 
     [Test]
@@ -202,14 +224,17 @@ public class PlayHeatmapStatsTest
     }
 
     [Test]
-    public void Build_MonthLabels_ShouldMatchMonthOfColumnFirstDay()
+    public void Build_MonthLabels_ShouldMatchMonthOfColumnFirstInRangeDay()
     {
         PlayHeatmapResult result = PlayHeatmapStats.Build([], Today, 2026);
 
         foreach (PlayHeatmapMonthLabel label in result.MonthLabels)
         {
-            DateTime firstDayOfColumn = result.GridStart.AddDays(label.ColumnIndex * PlayHeatmapStats.RowCount);
-            Assert.That(firstDayOfColumn.Month, Is.EqualTo(label.MonthIndex));
+            DateTime columnStart = result.GridStart.AddDays(label.ColumnIndex * PlayHeatmapStats.RowCount);
+            // 与实现同口径：取该列第一个落在范围内的日期
+            DateTime firstInRange = columnStart < result.RangeStart ? result.RangeStart : columnStart;
+            Assert.That(firstInRange, Is.LessThanOrEqualTo(result.RangeEnd));
+            Assert.That(firstInRange.Month, Is.EqualTo(label.MonthIndex));
         }
     }
 

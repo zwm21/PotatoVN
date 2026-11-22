@@ -2393,7 +2393,7 @@
     <value>年度报告</value>
   </data>
   <data name="Shell_AnnualReportText.Text" xml:space="preserve">
-    <value>年度报告</value>
+    <value>游玩统计</value>
   </data>
   <data name="SettingsPage_Library_RemoveAllBackup.Title" xml:space="preserve">
     <value>清理备份文件</value>
@@ -4438,7 +4438,7 @@
     <value>分类</value>
   </data>
   <data name="AnnualReportText" xml:space="preserve">
-    <value>年度报告</value>
+    <value>游玩统计</value>
   </data>
   <data name="InfoText" xml:space="preserve">
     <value>状态</value>
@@ -5033,5 +5033,95 @@
   </data>
   <data name="GalgameSettingPage_SavePositionNotSet" xml:space="preserve">
     <value>尚未设置存档位置，请手动选择存档文件夹</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Overview.Text" xml:space="preserve">
+    <value>总览</value>
+  </data>
+  <data name="AnnualReportPage_Tab_WordCloud.Text" xml:space="preserve">
+    <value>词云</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Favorite.Text" xml:space="preserve">
+    <value>最爱</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Collector.Text" xml:space="preserve">
+    <value>鉴赏</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Habit.Text" xml:space="preserve">
+    <value>习惯</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Heatmap.Text" xml:space="preserve">
+    <value>足迹</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Monthly.Text" xml:space="preserve">
+    <value>月度</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_CardTitle" xml:space="preserve">
+    <value>游玩热力图</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_RangeSummary" xml:space="preserve">
+    <value>{0}共游玩 {1} 小时 {2} 分钟</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_RangeLastYear" xml:space="preserve">
+    <value>最近一年</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_RangeYear" xml:space="preserve">
+    <value>{0} 年</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_TotalPlayTime" xml:space="preserve">
+    <value>总游玩时长</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_ActiveDays" xml:space="preserve">
+    <value>活跃天数</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_LongestStreak" xml:space="preserve">
+    <value>最长连续天数</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_CurrentStreak" xml:space="preserve">
+    <value>当前连续天数</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_HoursMinutes" xml:space="preserve">
+    <value>{0} 小时 {1} 分钟</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_UnitDay" xml:space="preserve">
+    <value>天</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_MonthLabel" xml:space="preserve">
+    <value>{0}月</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_WeekdayMon" xml:space="preserve">
+    <value>周一</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_WeekdayWed" xml:space="preserve">
+    <value>周三</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_WeekdayFri" xml:space="preserve">
+    <value>周五</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_LegendLess" xml:space="preserve">
+    <value>少</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_LegendMore" xml:space="preserve">
+    <value>多</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_ToolTipWithGames" xml:space="preserve">
+    <value>{0} · {1} 小时 {2} 分钟 · {3} 款游戏</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_ToolTipNoRecord" xml:space="preserve">
+    <value>{0} · 无游玩记录</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayDetail" xml:space="preserve">
+    <value>当日游玩明细</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_SelectedDate" xml:space="preserve">
+    <value>选中日期</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayTotal" xml:space="preserve">
+    <value>当日总时长</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayEmpty" xml:space="preserve">
+    <value>当天没有游玩记录</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_GameMinutes" xml:space="preserve">
+    <value>分钟</value>
   </data>
 </root>

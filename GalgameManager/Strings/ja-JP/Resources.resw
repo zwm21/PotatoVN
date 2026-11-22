@@ -2249,7 +2249,7 @@
     <value>年次レポート</value>
   </data>
   <data name="Shell_AnnualReportText.Text" xml:space="preserve">
-    <value>年次報告</value>
+    <value>プレイ統計</value>
   </data>
   <data name="SettingsPage_Library_RemoveAllBackup.Title" xml:space="preserve">
     <value>バックアップファイルをクリーンアップ</value>
@@ -4331,5 +4331,98 @@
   </data>
   <data name="GalgameSettingPage_SavePositionNotSet" xml:space="preserve">
     <value>セーブ場所が未設定です。セーブフォルダーを手動で選択してください。</value>
+  </data>
+  <data name="AnnualReportText" xml:space="preserve">
+    <value>プレイ統計</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Overview.Text" xml:space="preserve">
+    <value>概要</value>
+  </data>
+  <data name="AnnualReportPage_Tab_WordCloud.Text" xml:space="preserve">
+    <value>ワードクラウド</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Favorite.Text" xml:space="preserve">
+    <value>お気に入り</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Collector.Text" xml:space="preserve">
+    <value>鑑賞</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Habit.Text" xml:space="preserve">
+    <value>習慣</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Heatmap.Text" xml:space="preserve">
+    <value>足跡</value>
+  </data>
+  <data name="AnnualReportPage_Tab_Monthly.Text" xml:space="preserve">
+    <value>月別</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_CardTitle" xml:space="preserve">
+    <value>プレイヒートマップ</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_RangeSummary" xml:space="preserve">
+    <value>{0}：{1}時間 {2}分プレイ</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_RangeLastYear" xml:space="preserve">
+    <value>ここ1年</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_RangeYear" xml:space="preserve">
+    <value>{0}年</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_TotalPlayTime" xml:space="preserve">
+    <value>総プレイ時間</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_ActiveDays" xml:space="preserve">
+    <value>アクティブ日数</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_LongestStreak" xml:space="preserve">
+    <value>最長連続日数</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_CurrentStreak" xml:space="preserve">
+    <value>現在の連続日数</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_HoursMinutes" xml:space="preserve">
+    <value>{0}時間 {1}分</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_UnitDay" xml:space="preserve">
+    <value>日</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_MonthLabel" xml:space="preserve">
+    <value>{0}月</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_WeekdayMon" xml:space="preserve">
+    <value>月</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_WeekdayWed" xml:space="preserve">
+    <value>水</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_WeekdayFri" xml:space="preserve">
+    <value>金</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_LegendLess" xml:space="preserve">
+    <value>少</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_LegendMore" xml:space="preserve">
+    <value>多</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_ToolTipWithGames" xml:space="preserve">
+    <value>{0} · {1}時間 {2}分 · {3}本</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_ToolTipNoRecord" xml:space="preserve">
+    <value>{0} · プレイ記録なし</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayDetail" xml:space="preserve">
+    <value>当日の明細</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_SelectedDate" xml:space="preserve">
+    <value>選択日</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayTotal" xml:space="preserve">
+    <value>当日の合計</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayEmpty" xml:space="preserve">
+    <value>この日のプレイ記録はありません</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_GameMinutes" xml:space="preserve">
+    <value>分</value>
   </data>
 </root>
