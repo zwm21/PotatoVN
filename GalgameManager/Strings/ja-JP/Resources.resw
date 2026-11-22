@@ -4356,11 +4356,9 @@
   <data name="AnnualReportPage_Tab_Monthly.Text" xml:space="preserve">
     <value>月別</value>
   </data>
-  <data name="AnnualReportPage_Heatmap_CardTitle" xml:space="preserve">
-    <value>プレイヒートマップ</value>
-  </data>
+
   <data name="AnnualReportPage_Heatmap_RangeSummary" xml:space="preserve">
-    <value>{0}：{1}時間 {2}分プレイ</value>
+    <value>{0}：{1}プレイ</value>
   </data>
   <data name="AnnualReportPage_Heatmap_RangeLastYear" xml:space="preserve">
     <value>ここ1年</value>
@@ -4368,24 +4366,14 @@
   <data name="AnnualReportPage_Heatmap_RangeYear" xml:space="preserve">
     <value>{0}年</value>
   </data>
-  <data name="AnnualReportPage_Heatmap_TotalPlayTime" xml:space="preserve">
-    <value>総プレイ時間</value>
-  </data>
-  <data name="AnnualReportPage_Heatmap_ActiveDays" xml:space="preserve">
-    <value>アクティブ日数</value>
-  </data>
-  <data name="AnnualReportPage_Heatmap_LongestStreak" xml:space="preserve">
-    <value>最長連続日数</value>
-  </data>
-  <data name="AnnualReportPage_Heatmap_CurrentStreak" xml:space="preserve">
-    <value>現在の連続日数</value>
-  </data>
+
+
+
+
   <data name="AnnualReportPage_Heatmap_HoursMinutes" xml:space="preserve">
     <value>{0}時間 {1}分</value>
   </data>
-  <data name="AnnualReportPage_Heatmap_UnitDay" xml:space="preserve">
-    <value>日</value>
-  </data>
+
   <data name="AnnualReportPage_Heatmap_MonthLabel" xml:space="preserve">
     <value>{0}月</value>
   </data>
@@ -4398,31 +4386,65 @@
   <data name="AnnualReportPage_Heatmap_WeekdayFri" xml:space="preserve">
     <value>金</value>
   </data>
-  <data name="AnnualReportPage_Heatmap_LegendLess" xml:space="preserve">
-    <value>少</value>
-  </data>
-  <data name="AnnualReportPage_Heatmap_LegendMore" xml:space="preserve">
-    <value>多</value>
-  </data>
+
+
   <data name="AnnualReportPage_Heatmap_ToolTipWithGames" xml:space="preserve">
     <value>{0} · {1}時間 {2}分 · {3}本</value>
   </data>
   <data name="AnnualReportPage_Heatmap_ToolTipNoRecord" xml:space="preserve">
     <value>{0} · プレイ記録なし</value>
   </data>
-  <data name="AnnualReportPage_Heatmap_DayDetail" xml:space="preserve">
-    <value>当日の明細</value>
+
+
+
+
+
+  <data name="AnnualReportPage_Heatmap_CardTitle.Text" xml:space="preserve">
+    <value>�ץ쥤�ҩ`�ȥޥå�</value>
   </data>
-  <data name="AnnualReportPage_Heatmap_SelectedDate" xml:space="preserve">
-    <value>選択日</value>
+  <data name="AnnualReportPage_Heatmap_TotalPlayTime.Text" xml:space="preserve">
+    <value>�t�ץ쥤�r�g</value>
   </data>
-  <data name="AnnualReportPage_Heatmap_DayTotal" xml:space="preserve">
-    <value>当日の合計</value>
+  <data name="AnnualReportPage_Heatmap_ActiveDays.Text" xml:space="preserve">
+    <value>�����ƥ�������</value>
   </data>
-  <data name="AnnualReportPage_Heatmap_DayEmpty" xml:space="preserve">
-    <value>この日のプレイ記録はありません</value>
+  <data name="AnnualReportPage_Heatmap_LongestStreak.Text" xml:space="preserve">
+    <value>���L�B�A����</value>
   </data>
-  <data name="AnnualReportPage_Heatmap_GameMinutes" xml:space="preserve">
-    <value>分</value>
+  <data name="AnnualReportPage_Heatmap_CurrentStreak.Text" xml:space="preserve">
+    <value>�F�ڤ��B�A����</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_UnitDay.Text" xml:space="preserve">
+    <value>��</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_LegendLess.Text" xml:space="preserve">
+    <value>��</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_LegendMore.Text" xml:space="preserve">
+    <value>��</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayDetail.Text" xml:space="preserve">
+    <value>���դ�����</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_SelectedDate.Text" xml:space="preserve">
+    <value>�x�k��</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayTotal.Text" xml:space="preserve">
+    <value>���դκ�Ӌ</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_DayEmpty.Text" xml:space="preserve">
+    <value>�����դΥץ쥤ӛ�h�Ϥ���ޤ���</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_GameMinutes.Text" xml:space="preserve">
+    <value>��</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_MinutesOnly" xml:space="preserve">
+    <value>{0}分</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_HoursOnly" xml:space="preserve">
+    <value>{0}時間</value>
+  </data>
+  <data name="AnnualReportPage_Heatmap_ZeroMinutes" xml:space="preserve">
+    <value>0分</value>
   </data>
 </root>

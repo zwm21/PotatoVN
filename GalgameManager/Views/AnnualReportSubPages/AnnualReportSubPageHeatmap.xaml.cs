@@ -22,6 +22,9 @@ public sealed partial class AnnualReportSubPageHeatmap : Page
         InitializeComponent();
         ViewModel.HeatmapHost = HeatmapHost;
         ViewModel.WeekdayHost = WeekdayHost;
+        ViewModel.TipCanvas = TipCanvas;
+        // 浮动提示层取代原生 ToolTip，这里把容器与文本交给 ViewModel 定位
+        ViewModel.AttachTip(TipBorder, TipText);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

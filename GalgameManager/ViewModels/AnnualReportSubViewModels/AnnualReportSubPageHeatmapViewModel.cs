@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
+using Windows.Foundation;
 using Windows.UI;
 
 namespace GalgameManager.ViewModels;
@@ -30,6 +31,9 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
     /// <summary>月份标签行高度，星期标签据此下移以与格子行顶部对齐</summary>
     private const double MonthRowHeight = 20;
 
+    /// <summary>浮动提示与格子的垂直间距</summary>
+    private const double TipGap = 4;
+
     /// <summary>热力色板，下标 0 = 无记录，1~4 对应 <see cref="PlayHeatmapStats.GetIntensityLevel"/></summary>
     private static readonly string[] LightPalette = ["#EBEDF0", "#9BE9A8", "#40C463", "#30A14E", "#216E39"];
 
@@ -38,6 +42,8 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
     private readonly IGalgameCollectionService _gameService;
     private PlayHeatmapResult _result = null!;
     private Border? _selectedBorder;
+    private Border? _tipBorder;
+    private TextBlock? _tipText;
     private DateTime _selectedDate;
 
     public AnnualReportSubPageHeatmapViewModel(IGalgameCollectionService gameService)
@@ -52,6 +58,9 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
 
     /// <summary>星期标签宿主 Grid，只标周一 / 周三 / 周五</summary>
     [ObservableProperty] private Grid? _weekdayHost;
+
+    /// <summary>浮动提示的定位画布，覆盖整张热力图卡片且不拦截命中</summary>
+    [ObservableProperty] private Canvas? _tipCanvas;
 
     [ObservableProperty] private ObservableCollection<HeatmapRangeOption> _rangeOptions = [];
 
@@ -73,7 +82,7 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
 
     [ObservableProperty] private bool _hasDayRecord;
 
-    [ObservableProperty] private ObservableCollection<DailyGamePlayItem> _dayGames = [];
+    [ObservableProperty] private ObservableCollection<HeatmapDayGameItem> _dayGames = [];
 
     public void OnNavigatedTo(object parameter)
     {
@@ -92,6 +101,7 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
 
     public void OnNavigatedFrom()
     {
+        HideTip();
     }
 
     private static string RangeLastYearName => "AnnualReportPage_Heatmap_RangeLastYear".GetLocalized();
@@ -107,6 +117,31 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
         if (value is null) return;
         // 主题切换时重新上色，保证浅色 / 深色各自使用 GitHub 绿色板
         value.ActualThemeChanged += (_, _) => RenderCells();
+        // 指针离开热力图区域时收起浮动提示
+        value.PointerExited += (_, _) => HideTip();
+    }
+
+    /// <summary>
+    /// 注入浮动提示的容器与文本，由视图在 InitializeComponent 后调用。
+    /// </summary>
+    internal void AttachTip(Border border, TextBlock text)
+    {
+        _tipBorder = border;
+        _tipText = text;
+    }
+
+    /// <summary>
+    /// 统一时长格式化：不足 1 小时只显示分钟；整小时只显示小时；其余显示「X 小时 Y 分钟」。
+    /// </summary>
+    public static string FormatDuration(int totalMinutes)
+    {
+        if (totalMinutes <= 0) return "AnnualReportPage_Heatmap_ZeroMinutes".GetLocalized();
+        int hours = totalMinutes / 60;
+        int minutes = totalMinutes % 60;
+        if (hours == 0) return "AnnualReportPage_Heatmap_MinutesOnly".GetLocalized(minutes);
+        return minutes == 0
+            ? "AnnualReportPage_Heatmap_HoursOnly".GetLocalized(hours)
+            : "AnnualReportPage_Heatmap_HoursMinutes".GetLocalized(hours, minutes);
     }
 
     private void Rebuild()
@@ -114,8 +149,8 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
         _result = PlayHeatmapStats.Build(_gameService.Galgames, DateTime.Now, SelectedRange?.Year);
 
         RangeSummary = "AnnualReportPage_Heatmap_RangeSummary".GetLocalized(
-            SelectedRange?.DisplayName ?? RangeLastYearName, _result.TotalMinutes / 60, _result.TotalMinutes % 60);
-        TotalPlayTimeText = FormatHoursMinutes(_result.TotalMinutes);
+            SelectedRange?.DisplayName ?? RangeLastYearName, FormatDuration(_result.TotalMinutes));
+        TotalPlayTimeText = FormatDuration(_result.TotalMinutes);
         ActiveDays = _result.ActiveDays;
         LongestStreak = _result.LongestStreak;
         CurrentStreak = _result.CurrentStreak;
@@ -124,15 +159,12 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
         SelectDate(_result.DefaultSelectedDate);
     }
 
-    private static string FormatHoursMinutes(int totalMinutes) =>
-        "AnnualReportPage_Heatmap_HoursMinutes".GetLocalized(totalMinutes / 60, totalMinutes % 60);
-
     private static string FormatToolTip(PlayHeatmapCell cell)
     {
         string date = cell.Date.ToString("yyyy-MM-dd");
         return cell.TotalMinutes > 0
-            ? "AnnualReportPage_Heatmap_ToolTipWithGames".GetLocalized(date, cell.TotalMinutes / 60,
-                cell.TotalMinutes % 60, cell.Games.Count)
+            ? "AnnualReportPage_Heatmap_ToolTipWithGames".GetLocalized(date,
+                FormatDuration(cell.TotalMinutes), cell.Games.Count)
             : "AnnualReportPage_Heatmap_ToolTipNoRecord".GetLocalized(date);
     }
 
@@ -179,7 +211,7 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
             for (int col = 0; col < columns; col++)
             {
                 PlayHeatmapCell cell = _result.Cells[row * columns + col];
-                // 范围外补位格：不可见且不可命中
+                // 范围外补位格：不生成 Border，天然不可见且不可命中
                 if (cell.IsOutOfRange) continue;
 
                 Border border = new()
@@ -191,7 +223,8 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
                     Background = new SolidColorBrush(ParseColor(palette[cell.Level])),
                     BorderThickness = new Thickness(0)
                 };
-                ToolTipService.SetToolTip(border, FormatToolTip(cell));
+                // 不用原生 ToolTip：它的弹出延迟无法关闭；改用卡片内的浮动提示层，0ms 跟随
+                border.PointerEntered += (_, _) => ShowTip(border, cell);
                 border.PointerPressed += (_, _) => SelectDate(cell.Date);
                 Grid.SetRow(border, row + 1);
                 Grid.SetColumn(border, col);
@@ -234,6 +267,38 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
         RenderWeekdayLabels();
     }
 
+    /// <summary>
+    /// 把浮动提示定位到指定格子正上方，并做左右边界防裁切。<br/>
+    /// 提示画布是卡片的直接子元素，用 <see cref="UIElement.TransformToVisual"/> 换算格子
+    /// 相对画布的偏移，横向滚动时偏移会随之更新。
+    /// </summary>
+    private void ShowTip(Border cell, PlayHeatmapCell data)
+    {
+        if (TipCanvas is null || _tipBorder is null || _tipText is null) return;
+
+        _tipText.Text = FormatToolTip(data);
+        _tipBorder.Visibility = Visibility.Visible;
+        // 文本刚赋值，强制一次同步测量拿到真实尺寸，否则定位会按上一帧的宽高计算
+        _tipBorder.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        Size tipSize = _tipBorder.DesiredSize;
+
+        GeneralTransform transform = cell.TransformToVisual(TipCanvas);
+        Point cellOrigin = transform.TransformPoint(default);
+
+        double maxLeft = Math.Max(0, TipCanvas.ActualWidth - tipSize.Width);
+        double left = Math.Clamp(cellOrigin.X + cell.Width / 2 - tipSize.Width / 2, 0, maxLeft);
+        // 优先放格子上方；顶部空间不足时贴住画布顶边，避免被裁掉
+        double top = Math.Max(0, cellOrigin.Y - tipSize.Height - TipGap);
+
+        Canvas.SetLeft(_tipBorder, left);
+        Canvas.SetTop(_tipBorder, top);
+    }
+
+    private void HideTip()
+    {
+        if (_tipBorder is not null) _tipBorder.Visibility = Visibility.Collapsed;
+    }
+
     private void SelectDate(DateTime date)
     {
         _selectedDate = date.Date;
@@ -249,8 +314,15 @@ public partial class AnnualReportSubPageHeatmapViewModel : ObservableObject, INa
         }
 
         HasDayRecord = cell.TotalMinutes > 0;
-        DayTotalText = HasDayRecord ? FormatHoursMinutes(cell.TotalMinutes) : string.Empty;
-        DayGames = new ObservableCollection<DailyGamePlayItem>(cell.Games);
+        DayTotalText = HasDayRecord ? FormatDuration(cell.TotalMinutes) : string.Empty;
+        DayGames = new ObservableCollection<HeatmapDayGameItem>(cell.Games.Select(g => new HeatmapDayGameItem
+        {
+            GameName = g.GameName,
+            Minutes = g.Minutes,
+            HasCover = g.HasCover,
+            CoverPath = g.CoverPath,
+            DurationText = FormatDuration(g.Minutes)
+        }));
         ApplySelection();
     }
 
@@ -300,4 +372,21 @@ public partial class HeatmapRangeOption
     public int? Year { get; init; }
 
     public required string DisplayName { get; init; }
+}
+
+/// <summary>
+/// 当日游玩明细中的一款游戏（视图层包装，附带本地化后的时长文本）
+/// </summary>
+public class HeatmapDayGameItem
+{
+    public required string GameName { get; init; }
+
+    public int Minutes { get; init; }
+
+    public bool HasCover { get; init; }
+
+    public string? CoverPath { get; init; }
+
+    /// <summary>本地化后的时长文本，如「17 分钟」「1 小时 20 分钟」</summary>
+    public required string DurationText { get; init; }
 }

@@ -8,13 +8,12 @@
     xmlns:control="using:GalgameManager.Views.Control"
     xmlns:converter="using:GalgameManager.Helpers.Converter"
     xmlns:heatmap="using:GalgameManager.Helpers"
-    xmlns:cmtkConverter="using:CommunityToolkit.WinUI.Converters"
+    xmlns:viewModels="using:GalgameManager.ViewModels"
     mc:Ignorable="d">
 
     <Page.Resources>
         <converter:ImagePathConverter x:Key="ImagePathConverter" />
         <converter:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-        <cmtkConverter:StringFormatConverter x:Key="StrFmt"/>
     </Page.Resources>
 
     <Grid Margin="{StaticResource SmallRightMargin}">
@@ -45,7 +44,7 @@
                       DisplayMemberPath="DisplayName"/>
         </Grid>
 
-        <!-- 四张指标卡 -->
+        <!-- 四张指标卡：左对齐、紧凑内边距、上标题下数值 -->
         <Grid Grid.Row="1" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -54,69 +53,83 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <control:Panel Grid.Column="0" Margin="4" HorizontalAlignment="Stretch">
-                <StackPanel HorizontalAlignment="Center">
+            <Border Grid.Column="0" Margin="4,0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="5" Padding="12,8">
+                <StackPanel HorizontalAlignment="Left">
                     <TextBlock x:Uid="AnnualReportPage_Heatmap_TotalPlayTime"
-                               Style="{ThemeResource BodyStrongTextBlockStyle}"
-                               HorizontalAlignment="Center"/>
+                               Style="{ThemeResource BodyTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     <TextBlock Text="{x:Bind ViewModel.TotalPlayTimeText, Mode=OneWay}"
                                Style="{ThemeResource SubtitleTextBlockStyle}"
-                               FontSize="20"
-                               HorizontalAlignment="Center"
-                               Margin="0,4,0,0"/>
+                               FontWeight="Bold"
+                               Margin="0,2,0,0"/>
                 </StackPanel>
-            </control:Panel>
+            </Border>
 
-            <control:Panel Grid.Column="1" Margin="4" HorizontalAlignment="Stretch">
-                <StackPanel HorizontalAlignment="Center">
+            <Border Grid.Column="1" Margin="4,0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="5" Padding="12,8">
+                <StackPanel HorizontalAlignment="Left">
                     <TextBlock x:Uid="AnnualReportPage_Heatmap_ActiveDays"
-                               Style="{ThemeResource BodyStrongTextBlockStyle}"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="{x:Bind ViewModel.ActiveDays, Mode=OneWay}"
-                               Style="{ThemeResource SubtitleTextBlockStyle}"
-                               FontSize="20"
-                               HorizontalAlignment="Center"
-                               Margin="0,4,0,0"/>
-                    <TextBlock x:Uid="AnnualReportPage_Heatmap_UnitDay"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               HorizontalAlignment="Center"
-                               Opacity="0.7"/>
+                               Style="{ThemeResource BodyTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="{x:Bind ViewModel.ActiveDays, Mode=OneWay}"
+                                   Style="{ThemeResource SubtitleTextBlockStyle}"
+                                   FontWeight="Bold"/>
+                        <TextBlock x:Uid="AnnualReportPage_Heatmap_UnitDay"
+                                   Style="{ThemeResource BodyTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   VerticalAlignment="Bottom"
+                                   Margin="4,0,0,0"/>
+                    </StackPanel>
                 </StackPanel>
-            </control:Panel>
+            </Border>
 
-            <control:Panel Grid.Column="2" Margin="4" HorizontalAlignment="Stretch">
-                <StackPanel HorizontalAlignment="Center">
+            <Border Grid.Column="2" Margin="4,0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="5" Padding="12,8">
+                <StackPanel HorizontalAlignment="Left">
                     <TextBlock x:Uid="AnnualReportPage_Heatmap_LongestStreak"
-                               Style="{ThemeResource BodyStrongTextBlockStyle}"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="{x:Bind ViewModel.LongestStreak, Mode=OneWay}"
-                               Style="{ThemeResource SubtitleTextBlockStyle}"
-                               FontSize="20"
-                               HorizontalAlignment="Center"
-                               Margin="0,4,0,0"/>
-                    <TextBlock x:Uid="AnnualReportPage_Heatmap_UnitDay"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               HorizontalAlignment="Center"
-                               Opacity="0.7"/>
+                               Style="{ThemeResource BodyTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="{x:Bind ViewModel.LongestStreak, Mode=OneWay}"
+                                   Style="{ThemeResource SubtitleTextBlockStyle}"
+                                   FontWeight="Bold"/>
+                        <TextBlock x:Uid="AnnualReportPage_Heatmap_UnitDay"
+                                   Style="{ThemeResource BodyTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   VerticalAlignment="Bottom"
+                                   Margin="4,0,0,0"/>
+                    </StackPanel>
                 </StackPanel>
-            </control:Panel>
+            </Border>
 
-            <control:Panel Grid.Column="3" Margin="4" HorizontalAlignment="Stretch">
-                <StackPanel HorizontalAlignment="Center">
+            <Border Grid.Column="3" Margin="4,0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="5" Padding="12,8">
+                <StackPanel HorizontalAlignment="Left">
                     <TextBlock x:Uid="AnnualReportPage_Heatmap_CurrentStreak"
-                               Style="{ThemeResource BodyStrongTextBlockStyle}"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Text="{x:Bind ViewModel.CurrentStreak, Mode=OneWay}"
-                               Style="{ThemeResource SubtitleTextBlockStyle}"
-                               FontSize="20"
-                               HorizontalAlignment="Center"
-                               Margin="0,4,0,0"/>
-                    <TextBlock x:Uid="AnnualReportPage_Heatmap_UnitDay"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               HorizontalAlignment="Center"
-                               Opacity="0.7"/>
+                               Style="{ThemeResource BodyTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="{x:Bind ViewModel.CurrentStreak, Mode=OneWay}"
+                                   Style="{ThemeResource SubtitleTextBlockStyle}"
+                                   FontWeight="Bold"/>
+                        <TextBlock x:Uid="AnnualReportPage_Heatmap_UnitDay"
+                                   Style="{ThemeResource BodyTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   VerticalAlignment="Bottom"
+                                   Margin="4,0,0,0"/>
+                    </StackPanel>
                 </StackPanel>
-            </control:Panel>
+            </Border>
         </Grid>
 
         <!-- GitHub 风格热力图 -->
@@ -196,6 +209,33 @@
                                Opacity="0.7"
                                Margin="6,0,0,0"/>
                 </StackPanel>
+
+                <!--
+                  浮动悬停提示层：覆盖整卡、不拦截命中、默认隐藏。
+                  取代原生 ToolTip（其弹出延迟无法关闭），由 PointerEntered 直接定位，
+                  实现 0ms 零延迟跟随。
+                -->
+                <Canvas Grid.Row="0" Grid.RowSpan="3"
+                        x:Name="TipCanvas"
+                        IsHitTestVisible="False"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
+                    <Border x:Name="TipBorder"
+                            Visibility="Collapsed"
+                            Padding="8,5"
+                            CornerRadius="4"
+                            Translation="0,0,4"
+                            Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1">
+                        <Border.Shadow>
+                            <ThemeShadow/>
+                        </Border.Shadow>
+                        <TextBlock x:Name="TipText"
+                                   Style="{ThemeResource BodyTextBlockStyle}"
+                                   TextWrapping="NoWrap"/>
+                    </Border>
+                </Canvas>
             </Grid>
         </Border>
 
@@ -254,8 +294,8 @@
                                           Converter={StaticResource BoolToVisibilityConverter}}">
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.DayGames, Mode=OneWay}">
                         <ItemsRepeater.ItemTemplate>
-                            <DataTemplate x:DataType="heatmap:DailyGamePlayItem">
-                                <Grid Margin="0,2" ColumnDefinitions="Auto,Auto,*">
+                            <DataTemplate x:DataType="viewModels:HeatmapDayGameItem">
+                                <Grid Margin="0,2" ColumnDefinitions="Auto,Auto,*,Auto">
                                     <Border Grid.Column="0"
                                             Width="32" Height="32"
                                             CornerRadius="4"
@@ -272,19 +312,14 @@
                                                Text="{x:Bind GameName, Mode=OneWay}"
                                                Style="{ThemeResource BodyTextBlockStyle}"
                                                VerticalAlignment="Center"
+                                               MaxWidth="420"
                                                TextTrimming="CharacterEllipsis"/>
-                                    <StackPanel Grid.Column="2"
-                                                Orientation="Horizontal"
-                                                HorizontalAlignment="Right"
-                                                VerticalAlignment="Center">
-                                        <TextBlock Text="{x:Bind Minutes, Mode=OneWay}"
-                                                   Style="{ThemeResource BodyTextBlockStyle}"
-                                                   VerticalAlignment="Center"/>
-                                        <TextBlock x:Uid="AnnualReportPage_Heatmap_GameMinutes"
-                                                   Style="{ThemeResource BodyTextBlockStyle}"
-                                                   VerticalAlignment="Center"
-                                                   Opacity="0.7"/>
-                                    </StackPanel>
+                                    <TextBlock Grid.Column="3"
+                                               Text="{x:Bind DurationText, Mode=OneWay}"
+                                               Style="{ThemeResource BodyTextBlockStyle}"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Right"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsRepeater.ItemTemplate>
