@@ -92,6 +92,38 @@
   <PropertyGroup Condition="'$(PotatoVnPortable)' == 'true' And '$(Configuration)' == 'Release'">
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>
+    <!--
+      必须显式打开：PublishTrimmed=true 时 microsoft.net.illink.tasks 的
+      Microsoft.NET.ILLink.targets 会把 BuiltInComInteropSupport 默认成 false
+      （"Features are disabled by default since they may require assemblies,
+      types or members that could be removed by the ILLink"），该值经
+      Microsoft.NET.Sdk.targets 映射成运行期开关
+      System.Runtime.InteropServices.BuiltInComInterop.IsSupported=false，
+      于是 Type.GetTypeFromCLSID / GetTypeFromProgID 直接抛
+      "Built-in COM has been disabled via a feature switch"。
+
+      受影响的三处实机路径：
+        * Helpers/PvnFsPicker.cs:88 —— Type.GetTypeFromCLSID(CLSID_FileOpenDialog)
+          + Activator.CreateInstance，便携包的文件夹/文件选择器全部走这里，
+          点「选择备份保存位置」即崩（用户实机复现）。
+        * ViewModels/SettingsViewModel.cs:1051 —— Type.GetTypeFromProgID("WScript.Shell")
+          + Activator.CreateInstance，创建桌面快捷方式。
+        * Models/BgTasks/GameMuteTask.cs:108/263 —— [ComImport] class MMDeviceEnumerator 的
+          new 实例化（Windows Core Audio 静音任务，随游戏启动自动挂上）。
+          它不经过 GetTypeFromCLSID，但同一个开关同样管它。
+
+      已用独立探针工程（PublishTrimmed=true + TrimMode=partial，逐条复刻上述写法）
+      实测：只开本属性、EnableGeneratedComInterfaceComImportInterop 仍为 false 时，
+      GetTypeFromCLSID / GetTypeFromProgID / [ComImport] class new / [ComImport] 接口
+      完整调用链（GetDefaultAudioEndpoint -> Activate，hr 均为 0）全部通过；
+      再补开 EnableGeneratedComInterfaceComImportInterop 行为无变化，故不额外加它
+      ——那是 [GeneratedComInterface] 源生成封送路径的开关，本仓库用不到。
+
+      只裁 BCL 的范围不改变这个结论：COM 激活不在 ILLink 的静态引用图里，
+      TrimMode=copy 的业务程序集原样拷贝，运行时照样要调这些 API。
+      体积代价实测为 0（两次全量便携构建仅 runtimeconfig.json 差 1 字节）。
+    -->
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
   </PropertyGroup>
   <!--
     BCL 清单动态生成：从 NuGet 缓存的 .NET 8 运行时包 glob，不写死。
