@@ -16,6 +16,9 @@
         <converter:ImagePathConverter x:Key="ImagePathConverter" />
         <converter:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <cmtkConverter:StringFormatConverter x:Key="StrFmt"/>
+        <!-- WinUI 3 的 TeachingTip 默认 MaxWidth 只有 ~336px，装不下 340/360px 的图表，
+             会把饼图图例和柱状图最右侧标签削掉。这里把上限抬到 460px。 -->
+        <x:Double x:Key="TeachingTipMaxWidth">460</x:Double>
     </Page.Resources>
 
     <Grid>
@@ -80,6 +83,7 @@
                             Target="{x:Bind TotalPlayHoursCard}"
                             Title="游玩时长分析"
                             PreferredPlacement="Left"
+                            MaxWidth="420"
                             IsOpen="{x:Bind ViewModel.IsPlayHoursDetailVisible, Mode=TwoWay}"
                             ShouldConstrainToRootBounds="True">
                     <lvc:CartesianChart
@@ -125,14 +129,15 @@
                             Target="{x:Bind TotalGamesPlayedCard}"
                             Title="游戏完成度分析"
                             PreferredPlacement="Left"
+                            MaxWidth="420"
                             IsOpen="{x:Bind ViewModel.IsGamesPlayedDetailVisible, Mode=TwoWay}"
                             ShouldConstrainToRootBounds="True">
                     <lvc:PieChart
                         Series="{x:Bind ViewModel.GamesPlayedSeries, Mode=OneWay}"
-                        LegendPosition="Right"
+                        LegendPosition="Bottom"
                         LegendTextPaint="{x:Bind ViewModel.LegendTextPaint, Mode=OneWay}"
                         TooltipPosition="Top"
-                        Width="360" Height="300"/>
+                        Width="360" Height="340"/>
                 </TeachingTip>
 
                 <!-- 最活跃的月份 && 月度活跃度分析 -->
@@ -170,6 +175,7 @@
                             Target="{x:Bind MostActiveMonthCard}"
                             Title="月度活跃度分析"
                             PreferredPlacement="Left"
+                            MaxWidth="420"
                             IsOpen="{x:Bind ViewModel.IsActiveMonthDetailVisible, Mode=TwoWay}"
                             ShouldConstrainToRootBounds="True">
                     <lvc:CartesianChart
@@ -216,6 +222,7 @@
                             Target="{x:Bind AveragePlayHoursCard}"
                             Title="游戏时长分布"
                             PreferredPlacement="Left"
+                            MaxWidth="440"
                             IsOpen="{x:Bind ViewModel.IsAverageHoursDetailVisible, Mode=TwoWay}"
                             ShouldConstrainToRootBounds="True">
                     <lvc:CartesianChart
