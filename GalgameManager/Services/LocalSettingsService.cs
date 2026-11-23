@@ -240,7 +240,17 @@ public class LocalSettingsService : ILocalSettingsService
         });
     }
 
-    private T? TryGetDefaultValue<T>(string key)
+    /// <summary>
+    /// 取某个设置项的默认值。<br/>
+    /// 设为 <c>internal</c> 而非 <c>private</c> 是为了让单元测试能直接覆盖：
+    /// 真实的 <see cref="LocalSettingsService"/> 构造函数会触碰 <c>App.OnAppClosing</c>，
+    /// 而 <c>App</c> 的静态构造在无 WinAppSDK bootstrap 的测试进程中会失败
+    /// （见 <c>UiThreadInvokeHelper</c> 的注释），无法在测试里实例化。<br/>
+    /// 注意每个 case 都是 <c>(T?)(object?)value</c> 硬转型：<b>T 与 value 的实际类型
+    /// 不一致时会抛 InvalidCastException</b>，新增设置项时务必保持两边对齐，
+    /// <c>LocalSettingsServiceTest.TryGetDefaultValue_*</c> 会对齐做回归保护。
+    /// </summary>
+    internal static T? TryGetDefaultValue<T>(string key)
     {
         switch (key)
         {

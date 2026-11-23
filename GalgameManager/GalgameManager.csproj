@@ -290,6 +290,18 @@
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
+  <!--
+    让测试工程可见 internal 成员。当前唯一的消费者是 LocalSettingsServiceTest：
+    真实的 LocalSettingsService 构造函数会触碰 App.OnAppClosing，而 App 的静态构造
+    在无 WinAppSDK bootstrap 的测试进程中会失败，无法在测试里实例化，
+    因此 TryGetDefaultValue 这类纯函数只能以 internal 暴露给测试直接覆盖。
+  -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>GalgameManager.Test</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.1.240916" />

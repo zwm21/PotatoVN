@@ -151,6 +151,21 @@ dotnet test GalgameManager.Test/GalgameManager.Test.csproj --filter "FullyQualif
 - Do not rewrite large areas just to normalize style.
 - When touching localization-backed UI, update strings through `resw_tool.py` and keep `x:Uid` naming consistent.
 - When adding settings, follow the existing pattern: setting key, default value, ViewModel property, UI control, localization.
+- Adding a new setting also means adding a `case` to `LocalSettingsService.TryGetDefaultValue`. Each case is a
+  `(T?)(object?)value` cast, so the caller's `T` must match `value`'s runtime type or it throws
+  `InvalidCastException` at read time. Keep `LocalSettingsServiceTest.TryGetDefaultValue_*` in sync.
+
+## Hard Constraints (learned from production incidents)
+- **Never use LINQ or `foreach` on WinRT collections.** The portable build sets `Microsoft.Windows.SDK.NET`
+  to `TrimMode=link` (see `ScopeTrimToBcl` in `GalgameManager.csproj`), which strips the `IEnumerable`
+  interface from its projections. `DisplayArea.FindAll()` is the known offender: `.Select()/.ToList()` threw
+  `InvalidCastException: 不支持此接口` from `Make_IEnumerableObjRef()` and silently killed the whole feature.
+  Use an indexed `for` loop with `.Count` and the indexer instead, which goes through `IVectorView`.
+  `AppInstance.GetInstances()` is safe only because it is indexed today; keep it that way.
+- **Never introduce an `await` before the synchronous `return` in `LocalSettingsService.ReadSettingAsync`'s
+  non-MSIX small-value branch.** Roughly 180 call sites rely on that path completing synchronously so they
+  can use `.Result` on the UI thread without deadlocking. The first `await` added there turns every one of
+  them into a potential deadlock. `SaveSettingAsync` has the same property for its DB write.
 
 ## Quick Pre-PR Checklist
 - Build the relevant project(s).
