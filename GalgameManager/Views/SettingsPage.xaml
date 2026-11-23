@@ -723,6 +723,11 @@
                                 <local:SettingToggleSwitch x:Uid="SettingsPage_Notification_Unpack"
                                                            IsOn="{x:Bind ViewModel.NotifyWhenUnpackGame, Mode=TwoWay}"/>
                             </control:Panel>
+                            <!-- 游戏结束后「本次游玩小结」气泡通知 -->
+                            <control:Panel>
+                                <local:SettingToggleSwitch x:Uid="SettingsPage_Notification_PlayTimeSummary"
+                                                           IsOn="{x:Bind ViewModel.NotifyPlayTimeSummary, Mode=TwoWay}"/>
+                            </control:Panel>
                             <!-- Pvn同步事件通知 -->
                             <control:Panel>
                                 <StackPanel Style="{StaticResource SettingStackPanelStyle}">

@@ -4461,4 +4461,16 @@
   <data name="Shell_SystemTray_RecentGamesLaunchFailed" xml:space="preserve">
     <value>起動に失敗しました。メインウィンドウから再試行してください。</value>
   </data>
+  <data name="SettingsPage_Notification_PlayTimeSummary.Title" xml:space="preserve">
+    <value>プレイ時間サマリーの通知</value>
+  </data>
+  <data name="SettingsPage_Notification_PlayTimeSummary.Description" xml:space="preserve">
+    <value>ゲーム終了後に、今回と累計のプレイ時間をトレイバルーンで通知するかどうか</value>
+  </data>
+  <data name="RecordPlayTimeTask_PlayTimeSummary_Title" xml:space="preserve">
+    <value>プレイ時間サマリー</value>
+  </data>
+  <data name="RecordPlayTimeTask_PlayTimeSummary_Msg" xml:space="preserve">
+    <value>{0} 今回 {1}、累計 {2}</value>
+  </data>
 </root>

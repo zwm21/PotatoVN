@@ -170,6 +170,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         NotifyWhenGetGalgameInFolder = _localSettingsService.ReadSettingAsync<bool>(KeyValues.NotifyWhenGetGalgameInFolder).Result;
         EventWhenGetGalgameInFolderEmpty = _localSettingsService.ReadSettingAsync<bool>(KeyValues.EventGetGalgameInFolderEmpty).Result;
         NotifyWhenUnpackGame = _localSettingsService.ReadSettingAsync<bool>(KeyValues.NotifyWhenUnpackGame).Result;
+        NotifyPlayTimeSummary = _localSettingsService.ReadSettingAsync<bool>(KeyValues.NotifyPlayTimeSummary).Result;
         _eventPvnSync = _localSettingsService.ReadSettingAsync<bool>(KeyValues.EventPvnSyncNotify).Result;
         _eventPvnSyncEmpty = _localSettingsService.ReadSettingAsync<bool>(KeyValues.EventPvnSyncEmptyNotify).Result;
         //Other
@@ -1132,12 +1133,15 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     [ObservableProperty] private bool _notifyWhenGetGalgameInFolder;
     [ObservableProperty] private bool _eventWhenGetGalgameInFolderEmpty;
     [ObservableProperty] private bool _notifyWhenUnpackGame;
+    [ObservableProperty] private bool _notifyPlayTimeSummary;
     [ObservableProperty] private bool _eventPvnSync;
     [ObservableProperty] private bool _eventPvnSyncEmpty;
 
     partial void OnNotifyWhenGetGalgameInFolderChanged(bool value) => _localSettingsService.SaveSettingAsync(KeyValues.NotifyWhenGetGalgameInFolder, value);
 
     partial void OnNotifyWhenUnpackGameChanged(bool value) => _localSettingsService.SaveSettingAsync(KeyValues.NotifyWhenUnpackGame, value);
+
+    partial void OnNotifyPlayTimeSummaryChanged(bool value) => _localSettingsService.SaveSettingAsync(KeyValues.NotifyPlayTimeSummary, value);
 
     partial void OnEventPvnSyncChanged(bool value)
     {

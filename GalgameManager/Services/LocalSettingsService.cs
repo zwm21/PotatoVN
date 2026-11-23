@@ -339,6 +339,7 @@ public class LocalSettingsService : ILocalSettingsService
             case KeyValues.NotifyWhenGetGalgameInFolder:
             case KeyValues.NotifyWhenUnpackGame:
             case KeyValues.EventPvnSyncNotify:
+            case KeyValues.NotifyPlayTimeSummary:
                 return (T?)(object)true;
             case KeyValues.DisplayVirtualGame:
             case KeyValues.SpecialDisplayVirtualGame:

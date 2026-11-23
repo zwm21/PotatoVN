@@ -4528,4 +4528,16 @@ Open the log folder now?</value>
   <data name="Shell_SystemTray_RecentGamesLaunchFailed" xml:space="preserve">
     <value>Launch failed. Please retry from the main window.</value>
   </data>
+  <data name="SettingsPage_Notification_PlayTimeSummary.Title" xml:space="preserve">
+    <value>Playtime summary notification</value>
+  </data>
+  <data name="SettingsPage_Notification_PlayTimeSummary.Description" xml:space="preserve">
+    <value>Whether to show a tray balloon with this session's and total playtime after a game closes</value>
+  </data>
+  <data name="RecordPlayTimeTask_PlayTimeSummary_Title" xml:space="preserve">
+    <value>Playtime summary</value>
+  </data>
+  <data name="RecordPlayTimeTask_PlayTimeSummary_Msg" xml:space="preserve">
+    <value>{0} — this session: {1}, total: {2}</value>
+  </data>
 </root>

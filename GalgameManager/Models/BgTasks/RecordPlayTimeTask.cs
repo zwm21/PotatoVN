@@ -9,6 +9,8 @@ using GalgameManager.Models.Sources;
 using GalgameManager.Services;
 using GalgameManager.ViewModels;
 using GalgameManager.WinApp.Base.Models.Msgs;
+using H.NotifyIcon.Core;
+using Serilog;
 
 namespace GalgameManager.Models.BgTasks;
 
@@ -122,6 +124,13 @@ public class RecordPlayTimeTask : BgTaskBase
             }
             _stopped = true;
             var windowMode = await _localSettingsService.ReadSettingAsync<WindowMode>(KeyValues.PlayingWindowMode);
+            // 「本次游玩小结」气泡的两个前置设置在这里一次性读掉：结算块内部是同步 lambda，
+            // 不方便 await；且模板/单位词必须先本地化好才能交给 ShowNotification。
+            // 这里不做 notifyPlayTimeSummary 的短路——阈值判定（ShouldNotify）与窗口状态无关，
+            // 统一留给 ShowPlayTimeSummaryNotification 决定，避免同一处出现两套判据。
+            var notifyPlayTimeSummary =
+                await _localSettingsService.ReadSettingAsync<bool>(KeyValues.NotifyPlayTimeSummary);
+            var timeAsHour = await _localSettingsService.ReadSettingAsync<bool>(KeyValues.TimeAsHour);
             await UiThreadInvokeHelper.InvokeAsync(() =>
             {
                 _gameService.SaveGalgameAsync(Galgame);
@@ -142,6 +151,7 @@ public class RecordPlayTimeTask : BgTaskBase
                 Galgame.RaisePropertyChanged(nameof(Galgame.LastPlayTime));
                 if (CurrentPlayTime >= _minPlayTimeRecordThreshold) Galgame!.PlayCount++;
                 App.GetService<IMessenger>().Send(new GalgameStoppedMessage(Galgame));
+                ShowPlayTimeSummaryNotification(notifyPlayTimeSummary, timeAsHour);
             });
             await App.GetService<IGalgameCollectionService>().SaveGalgameAsync(Galgame);
             if(await App.GetService<ILocalSettingsService>().ReadSettingAsync<bool>(KeyValues.SyncGames))
@@ -151,6 +161,38 @@ public class RecordPlayTimeTask : BgTaskBase
         _ = RecordPlayTimeAsync();
 
         await t;
+    }
+
+    /// <summary>
+    /// 弹出「本次游玩小结」托盘气泡：本次游玩时长 + 累计时长。<br/>
+    /// <b>只受设置开关控制，不区分当前窗口状态</b>——结算时 <c>SetWindowMode(Normal)</c> 会把主窗口
+    /// 拉回前台，但用户此时可能已经切到别的应用，气泡比抢占焦点更轻；一直躲在托盘里时它也是
+    /// 唯一的反馈渠道（InfoBar 在窗口隐藏态下用户根本看不见）。<br/>
+    /// 时长阈值固定在 1 分钟（见 <see cref="PlayTimeSummaryHelper.MinNotifyMinutes"/>），刻意不复用
+    /// <c>MinPlayTimeRecordThreshold</c>：那个字段由 <see cref="RecordPlayTimeAsync"/> 异步赋值，
+    /// 秒退场景下可能还是默认值 0，拿它当阈值会把「0 &gt;= 0」判成真。<br/>
+    /// 必须是纯尽力而为：任何异常都只进 Serilog，绝不能把正常结算流程带崩。
+    /// </summary>
+    private void ShowPlayTimeSummaryNotification(bool enabled, bool timeAsHour)
+    {
+        try
+        {
+            if (!enabled || !PlayTimeSummaryHelper.ShouldNotify(CurrentPlayTime)) return;
+            if (App.SystemTray is null) return;
+            string? gameName = Galgame?.Name.Value;
+            // 游戏名为空时用 UUID 兜底，避免气泡标题/正文出现裸占位符
+            string fallback = Galgame?.Uuid.ToString("D") ?? string.Empty;
+            string title = PlayTimeSummaryHelper.FormatTitle(gameName,
+                "RecordPlayTimeTask_PlayTimeSummary_Title".GetLocalized(), fallback);
+            string message = PlayTimeSummaryHelper.FormatMessage(gameName, CurrentPlayTime,
+                Galgame?.TotalPlayTime ?? 0, timeAsHour,
+                "RecordPlayTimeTask_PlayTimeSummary_Msg".GetLocalized(), "Minute".GetLocalized(), fallback);
+            App.SystemTray.ShowNotification(title, message, NotificationIcon.Info);
+        }
+        catch (Exception e)
+        {
+            Serilog.Log.Error(e, "RecordPlayTimeTask: show playtime summary notification failed");
+        }
     }
 
     /// <summary>

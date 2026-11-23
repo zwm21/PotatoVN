@@ -143,6 +143,7 @@ public static class KeyValues
     public const string NotifyWhenGetGalgameInFolder = "notifyWhenGetGalgameInFolder"; //bool, 完成获取文件夹内游戏
     public const string EventGetGalgameInFolderEmpty = "eventGetGalgameInFolderEmpty"; //bool, 是否通知扫描游戏空事件（即没有新游戏）
     public const string NotifyWhenUnpackGame = "notifyWhenUnpackGame"; //bool, 完成解压游戏
+    public const string NotifyPlayTimeSummary = "notifyPlayTimeSummary"; //bool, 游戏结束后是否弹出「本次游玩小结」托盘气泡
     public const string EventPvnSyncNotify = "eventPvnSyncNotify"; //bool, 是否通知PotatoVN同步事件
     public const string EventPvnSyncEmptyNotify = "eventPvnSyncEmptyNotify"; //bool, 是否通知PotatoVN同步空事件（即已是最新）
 

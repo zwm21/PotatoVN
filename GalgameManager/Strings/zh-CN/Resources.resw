@@ -5160,4 +5160,16 @@
   <data name="Shell_SystemTray_RecentGamesLaunchFailed" xml:space="preserve">
     <value>启动失败，请从主窗口重试</value>
   </data>
+  <data name="SettingsPage_Notification_PlayTimeSummary.Title" xml:space="preserve">
+    <value>游玩小结通知</value>
+  </data>
+  <data name="SettingsPage_Notification_PlayTimeSummary.Description" xml:space="preserve">
+    <value>游戏结束后是否弹出托盘气泡，提示本次游玩时长与累计时长</value>
+  </data>
+  <data name="RecordPlayTimeTask_PlayTimeSummary_Title" xml:space="preserve">
+    <value>游玩小结</value>
+  </data>
+  <data name="RecordPlayTimeTask_PlayTimeSummary_Msg" xml:space="preserve">
+    <value>{0} 本次游玩 {1}，累计游玩 {2}</value>
+  </data>
 </root>

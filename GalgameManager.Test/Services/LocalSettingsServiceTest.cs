@@ -87,6 +87,7 @@ public class LocalSettingsServiceTest
                      KeyValues.MemoryImprove,
                      KeyValues.NotifyWhenGetGalgameInFolder,
                      KeyValues.NotifyWhenUnpackGame,
+                     KeyValues.NotifyPlayTimeSummary,
                      KeyValues.EventPvnSyncNotify,
                      KeyValues.DisplayVirtualGame,
                      KeyValues.SpecialDisplayVirtualGame,
