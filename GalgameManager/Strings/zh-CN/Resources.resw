@@ -5152,7 +5152,8 @@
   <data name="AnnualReportPage_WordCloudHint.Text" xml:space="preserve">
     <value>点击词语可复制</value>
   </data>
-  <data name="AnnualReportPage_WordCopied.Text" xml:space="preserve">
+
+  <data name="AnnualReportPage_WordCopied" xml:space="preserve">
     <value>已复制：{0}</value>
   </data>
 </root>

@@ -4520,7 +4520,8 @@ Open the log folder now?</value>
   <data name="AnnualReportPage_WordCloudHint.Text" xml:space="preserve">
     <value>Click a word to copy</value>
   </data>
-  <data name="AnnualReportPage_WordCopied.Text" xml:space="preserve">
+
+  <data name="AnnualReportPage_WordCopied" xml:space="preserve">
     <value>Copied: {0}</value>
   </data>
 </root>
