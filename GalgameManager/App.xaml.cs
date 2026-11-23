@@ -351,9 +351,11 @@ public partial class App : Application
     /// <summary>
     /// 设置窗口模式<br/>
     /// <para>
-    /// 其中最小化到系统托盘的模式以重启代替关闭主窗口，窗口关闭后内存无法释放<br/>
-    /// 见：https://github.com/microsoft/microsoft-ui-xaml/issues/9063<br/>
-    /// https://github.com/microsoft/microsoft-ui-xaml/issues/7282
+    /// 系统托盘模式只隐藏窗口、不重启进程：托盘图标随进程生灭，重启会让图标先消失、
+    /// 等新进程走完启动流程才重建。历史上曾改为重启以规避关闭窗口后内存无法释放的问题
+    /// （https://github.com/microsoft/microsoft-ui-xaml/issues/9063 、
+    /// https://github.com/microsoft/microsoft-ui-xaml/issues/7282），
+    /// 现已回退为隐藏，并显式补齐 <see cref="Status"/> 置位以切断 Closing 的重入链。
     /// </para>
     /// </summary>
     /// <param name="mode"></param>
@@ -364,6 +366,9 @@ public partial class App : Application
         {
             case WindowMode.Normal:
                 GetService<IPageService>().InitAsync();
+                // 从托盘恢复时窗口是被 WindowExtensions.Hide 藏起来的，必须先 Show
+                // （同时解除 Efficiency Mode），只靠 Activate 不足以让它重新出现。
+                WindowExtensions.Show(MainWindow!);
                 MainWindow!.Activate();
                 MainWindow!.BringToFront();
                 MainWindow.Content.Visibility = Visibility.Visible;
@@ -380,10 +385,16 @@ public partial class App : Application
                 MainWindow!.Minimize();
                 break;
             case WindowMode.SystemTray:
-                OnAppClosing?.Invoke();
+                // 只隐藏窗口，不再重启进程。托盘图标是随进程生灭的：旧实现走
+                // MainWindow.Close() + AppInstance.Restart("/r")，旧进程退出时图标随之消失，
+                // 新进程要等整个启动流程跑完才 ForceCreate 出新图标，用户看到的就是一次闪烁。
+                // 此处也不能调用 OnAppClosing——它的订阅者（LocalSettingsService 释放设置/数据
+                // 数据库、LocalFolderSourceService 销毁所有 FileSystemWatcher）都是进程退出级的
+                // 不可逆清理；隐藏后若从托盘恢复，设置写入与文件夹监听都会失效。
                 GetService<IBgTaskService>().SaveBgTasksString();
-                MainWindow?.Close();
-                AppInstance.Restart("/r");
+                // 必须置位 Status：ShellPage 的 Closing 处理器只靠 Status == Close 做重入守卫，
+                // 少了这一行，Close() -> Closing -> SetWindowMode -> Close() 会无限递归。
+                Status = WindowMode.SystemTray;
                 WindowExtensions.Hide(MainWindow!);
                 break;
             case WindowMode.Close:
