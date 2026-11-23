@@ -205,8 +205,17 @@ public sealed class GameLaunchService(
                 game.MuteInBackground)
                 _ = bgTaskService.AddBgTask(new GameMuteTask(game, process));
             if (!process.HasExited)
-                App.SetWindowMode(
-                    await localSettingsService.ReadSettingAsync<WindowMode>(KeyValues.PlayingWindowMode));
+            {
+                WindowMode playingWindowMode =
+                    await localSettingsService.ReadSettingAsync<WindowMode>(KeyValues.PlayingWindowMode);
+                // 从托盘启动时不能应用 PlayingWindowMode。托盘态的窗口是被 SW_HIDE 藏起来的，
+                // 此时套用 Minimize/Normal 会先把隐藏窗口拉出来或最小化、闪一下再被塞回托盘，
+                // 还会破坏 App._wasMaximizedBeforeTray 记录的最大化状态。
+                // 用户明确要求退出（Close）时除外——那是他选的行为，照旧执行。
+                bool launchedFromTray = App.Status == WindowMode.SystemTray;
+                if (!launchedFromTray || playingWindowMode == WindowMode.Close)
+                    App.SetWindowMode(playingWindowMode);
+            }
 
             await process.WaitForExitAsync();
         }

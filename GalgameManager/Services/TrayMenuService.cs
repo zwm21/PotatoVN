@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using GalgameManager.Contracts.Services;
 using GalgameManager.Enums;
 using GalgameManager.Helpers;
@@ -8,6 +9,7 @@ using GalgameManager.Models;
 using GalgameManager.Models.Sources;
 using GalgameManager.Services;
 using GalgameManager.ViewModels;
+using GalgameManager.WinApp.Base.Models.Msgs;
 using H.NotifyIcon;
 using Microsoft.UI.Xaml.Controls;
 
@@ -26,9 +28,9 @@ public class TrayMenuService : IDisposable
 {
     private readonly GalgameCollectionService _gameService;
     private readonly IGameLaunchService _launchService;
-    private readonly ILocalSettingsService _settingsService;
     private readonly IInfoService _infoService;
     private readonly INavigationService _navigationService;
+    private readonly IMessenger _messenger;
 
     private readonly MenuFlyoutSubItem _recentGamesItem = new();
     private readonly MenuFlyoutSeparator _separator = new();
@@ -36,18 +38,22 @@ public class TrayMenuService : IDisposable
     private bool _disposed;
 
     public TrayMenuService(IGalgameCollectionService gameService, IGameLaunchService launchService,
-        ILocalSettingsService settingsService, IInfoService infoService, INavigationService navigationService)
+        IInfoService infoService, INavigationService navigationService, IMessenger messenger)
     {
         // GalgameLoadedEvent 只在具体类上（接口未声明），与 GameLaunchService /
         // JumpListActivationHandler 内部转换为具体类的做法保持一致。
         _gameService = (GalgameCollectionService)gameService;
         _launchService = launchService;
-        _settingsService = settingsService;
         _infoService = infoService;
         _navigationService = navigationService;
+        _messenger = messenger;
 
         _gameService.GalgameLoadedEvent += OnGalgameLoaded;
         _gameService.GalgameDeletedEvent += OnGalgameDeleted;
+        // 任何入口（主页、详情页、JumpList、本托盘菜单）成功启动游戏后都会发这条消息，
+        // 靠它把「最近游玩」刷新做成实时，不必等重启。注册写法与 ShellPage 对
+        // GalgamePlayedMessage 的订阅保持一致；本类是 Singleton，无需担心弱引用回收。
+        _messenger.Register<GalgamePlayedMessage>(this, (_, _) => Rebuild());
     }
 
     /// <summary>
@@ -123,7 +129,6 @@ public class TrayMenuService : IDisposable
             return;
         }
 
-        bool wasInTray = App.Status == WindowMode.SystemTray;
         try
         {
             await _launchService.LaunchAsync(game, installation);
@@ -136,17 +141,10 @@ public class TrayMenuService : IDisposable
             return;
         }
 
-        // PlayingWindowMode 防冲突：GameLaunchService 在启动结束时会按该设置调整窗口。
-        // 若启动前应用本来就躲在托盘里，除了用户明确要求退出，都不该把窗口强行弹出来
-        // 或改成最小化——那会让「从托盘启动游戏」这个动作变得自相矛盾。
-        if (wasInTray)
-        {
-            WindowMode playingMode = await _settingsService
-                .ReadSettingAsync<WindowMode>(KeyValues.PlayingWindowMode);
-            if (playingMode != WindowMode.Close)
-                App.SetWindowMode(WindowMode.SystemTray);
-        }
-
+        // PlayingWindowMode 已在 GameLaunchService.LaunchCoreAsync 源头拦截：
+        // 启动前若 App.Status 就是 SystemTray，且用户设置不是 Close，那里会直接跳过
+        // SetWindowMode，隐藏窗口不会被拉出来闪一下，_wasMaximizedBeforeTray 也不被破坏。
+        // 这里不再做任何补调——补调只会造成「先弹再藏」的可见闪烁。
         Rebuild();
     }
 
@@ -173,6 +171,7 @@ public class TrayMenuService : IDisposable
         _disposed = true;
         _gameService.GalgameLoadedEvent -= OnGalgameLoaded;
         _gameService.GalgameDeletedEvent -= OnGalgameDeleted;
+        _messenger.Unregister<GalgamePlayedMessage>(this);
 
         if (App.SystemTray?.ContextFlyout is MenuFlyout flyout)
         {
