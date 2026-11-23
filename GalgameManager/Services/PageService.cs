@@ -114,7 +114,18 @@ public class PageService : IPageService
         {
             WindowPlacement? saved = App.GetService<ILocalSettingsService>()
                 .ReadSettingAsync<WindowPlacement?>(KeyValues.WindowPlacement).Result;
-            List<RectInt32> workAreas = DisplayArea.FindAll().Select(area => area.WorkArea).ToList();
+
+            // 严禁对 DisplayArea.FindAll() 用 LINQ 或 foreach：它返回的是 WinRT 投影的
+            // IReadOnlyList<DisplayArea>，而 DisplayArea 所在的 Microsoft.Windows.SDK.NET
+            // 在便携版裁剪配置里是 link（见 GalgameManager.csproj 的 ScopeTrimToBcl）。
+            // LINQ/foreach 需要额外查询 IEnumerable 接口，该接口已被裁掉，
+            // Make_IEnumerableObjRef() 会抛 InvalidCastException「不支持此接口」，
+            // 整个恢复流程被 try/catch 吞掉，表现为窗口位置从不恢复。
+            // 改用 Count + 索引器：这两者走的是 IVectorView 主接口，不受影响。
+            IReadOnlyList<DisplayArea> displayAreas = DisplayArea.FindAll();
+            List<RectInt32> workAreas = [];
+            for (var i = 0; i < displayAreas.Count; i++)
+                workAreas.Add(displayAreas[i].WorkArea);
             if (workAreas.Count == 0) workAreas.Add(new RectInt32(0, 0, 1600, 900));
             RectInt32 primary = DisplayArea.Primary?.WorkArea ?? workAreas[0];
             WindowPlacement fallback = DefaultPlacement(primary);
@@ -125,35 +136,13 @@ public class PageService : IPageService
             bool fromSave = saved is not null;
 
             AppWindow appWindow = App.MainWindow!.AppWindow;
-            PointInt32 posBefore = appWindow.Position;
-            SizeInt32 sizeBefore = appWindow.Size;
-            string stateBefore = appWindow.Presenter?.GetType().Name ?? "<null>";
-            if (appWindow.Presenter is OverlappedPresenter beforePresenter)
-                stateBefore += $"/{beforePresenter.State}";
-
             appWindow.MoveAndResize(new RectInt32(target.X, target.Y, target.Width, target.Height));
             if (target.IsMaximized && appWindow.Presenter is OverlappedPresenter presenter)
                 presenter.Maximize();
 
-            PointInt32 posAfter = appWindow.Position;
-            SizeInt32 sizeAfter = appWindow.Size;
-
             // 用恢复结果初始化跟踪基线：否则 LastRestored 一直是 null，
             // 用户若全程没动过窗口，保存侧就永远写不出东西。
             WindowPlacementHelper.Track(target with { IsMaximized = false });
-
-            // 追踪日志：直接走 Serilog 打到 log.txt，不受开发者模式开关影响
-            // （DeveloperEvent 在非开发者模式下会静默 return，之前正是因此抓不到问题）。
-            // 同时打 MoveAndResize 前后的 Position/Size，用来区分「静默 no-op」
-            // 和「生效后被别的东西覆盖」这两种完全不同的失败模式。
-            Serilog.Log.Information(
-                "WindowPlacement restore: source={Source} saved={Saved} target=({TX},{TY},{TW}x{TH}) max={Max} " +
-                "before=({BX},{BY},{BW}x{BH}/{BState}) after=({AX},{AY},{AW}x{AH})",
-                fromSave ? "saved" : "fallback",
-                saved?.ToString() ?? "null",
-                target.X, target.Y, target.Width, target.Height, target.IsMaximized,
-                posBefore.X, posBefore.Y, sizeBefore.Width, sizeBefore.Height, stateBefore,
-                posAfter.X, posAfter.Y, sizeAfter.Width, sizeAfter.Height);
 
             CrashDiagnostics.AddBreadcrumb(
                 $"RestoreWindowPlacement: applied {(fromSave ? "saved" : "fallback")} " +
