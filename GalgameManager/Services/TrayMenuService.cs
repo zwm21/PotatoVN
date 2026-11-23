@@ -22,11 +22,17 @@ namespace GalgameManager.Services;
 /// <c>x:Name</c> 会让同一实例被多处引用时产生歧义。<br/>
 /// 首版只收录「本地 exe 可一键启动」的游戏（见 <see cref="RecentGamesHelper.IsOneClickLaunchable"/>），
 /// 这样点击后可以直接走到 <c>Process.Start()</c>，不触发任何 ContentDialog——
-/// 主窗口在托盘隐藏态时那些对话框用户根本看不见。
+/// 主窗口在托盘隐藏态时那些对话框用户根本看不见。<br/>
+/// <b>线程亲和性：必须在 UI 线程上首次解析。</b>字段初始化会 new
+/// <see cref="MenuFlyoutSubItem"/> / <see cref="MenuFlyoutSeparator"/>，这两个 XAML 控件
+/// 在线程池线程（MTA）上构造会抛 COMException 0x8001010E(RPC_E_CHANGED_MODE)。
+/// 现有两处解析点（ActivationService.InitializeAsync 的 Attach、LaunchedAsync 中
+/// Task.Run 之后的 Rebuild）都在 UI 线程上；新增解析点时务必保持。
 /// </summary>
 public class TrayMenuService : IDisposable
 {
     private readonly GalgameCollectionService _gameService;
+    private readonly IGalgameSourceCollectionService _sourceService;
     private readonly IGameLaunchService _launchService;
     private readonly IInfoService _infoService;
     private readonly INavigationService _navigationService;
@@ -37,12 +43,14 @@ public class TrayMenuService : IDisposable
     private readonly List<Galgame> _recentGames = [];
     private bool _disposed;
 
-    public TrayMenuService(IGalgameCollectionService gameService, IGameLaunchService launchService,
+    public TrayMenuService(IGalgameCollectionService gameService,
+        IGalgameSourceCollectionService sourceCollectionService, IGameLaunchService launchService,
         IInfoService infoService, INavigationService navigationService, IMessenger messenger)
     {
         // GalgameLoadedEvent 只在具体类上（接口未声明），与 GameLaunchService /
         // JumpListActivationHandler 内部转换为具体类的做法保持一致。
         _gameService = (GalgameCollectionService)gameService;
+        _sourceService = sourceCollectionService;
         _launchService = launchService;
         _infoService = infoService;
         _navigationService = navigationService;
@@ -50,6 +58,9 @@ public class TrayMenuService : IDisposable
 
         _gameService.GalgameLoadedEvent += OnGalgameLoaded;
         _gameService.GalgameDeletedEvent += OnGalgameDeleted;
+        // 增删游戏库会改变哪些游戏具备本地安装实例，进而改变「最近游玩」的筛选结果。
+        // 注意初始加载不发这个事件（见 ActivationService 里的显式 Rebuild）。
+        _sourceService.OnSourceChanged += OnSourceChanged;
         // 任何入口（主页、详情页、JumpList、本托盘菜单）成功启动游戏后都会发这条消息，
         // 靠它把「最近游玩」刷新做成实时，不必等重启。注册写法与 ShellPage 对
         // GalgamePlayedMessage 的订阅保持一致；本类是 Singleton，无需担心弱引用回收。
@@ -76,7 +87,21 @@ public class TrayMenuService : IDisposable
     /// </summary>
     public void Rebuild()
     {
-        _ = UiThreadInvokeHelper.InvokeAsync(RebuildOnUiThread);
+        // 用同步 lambda 而不是 async lambda：UiThreadInvokeHelper.InvokeAsync 有 Action 与
+        // Func<Task> 两个重载，同步 lambda 会绑到 Action 那个，不会为了没有 await 的 async
+        // 白背一个 CS1998 警告。异常必须自己接住——EnqueueAsync 返回的 Task 被 `_ =` 丢弃后，
+        // 里面的异常会变成未观察异常静默消失，连 Serilog 都不会留下痕迹。
+        _ = UiThreadInvokeHelper.InvokeAsync(() =>
+        {
+            try
+            {
+                RebuildOnUiThread();
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Error(e, "TrayMenuService: rebuild failed");
+            }
+        });
     }
 
     private void RebuildOnUiThread()
@@ -165,12 +190,15 @@ public class TrayMenuService : IDisposable
 
     private void OnGalgameDeleted(Galgame galgame) => Rebuild();
 
+    private void OnSourceChanged() => Rebuild();
+
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
         _gameService.GalgameLoadedEvent -= OnGalgameLoaded;
         _gameService.GalgameDeletedEvent -= OnGalgameDeleted;
+        _sourceService.OnSourceChanged -= OnSourceChanged;
         _messenger.Unregister<GalgamePlayedMessage>(this);
 
         if (App.SystemTray?.ContextFlyout is MenuFlyout flyout)

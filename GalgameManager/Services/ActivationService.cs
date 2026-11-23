@@ -93,6 +93,19 @@ public class ActivationService : IActivationService
                 await _filterService.InitAsync();
                 await _localSettingsService.ImportPageSettingsAsync();
             });
+
+            // GalgameLoadedEvent 在 Task.Run 内部就触发了，但那时 Galgame.SourceEntries 还是空的
+            // （SourceEntries 标了 [JsonIgnore][BsonIgnore]，只由
+            // GalgameSourceCollectionService.InitAsync 的 LoadData 填充），托盘菜单首轮必然
+            // 全被过滤成空。而初始加载不会发 OnSourceChanged，之后也没有任何事件会补触发，
+            // 所以必须在 SourceEntries 与 LocalConfig.ExePath 均就绪后显式重建一次。
+            //
+            // 必须放在 Task.Run 之后、try 之内：TrayMenuService 的字段初始化会 new
+            // MenuFlyoutSubItem / MenuFlyoutSeparator，这两个 XAML 控件有线程亲和性，
+            // 在 Task.Run 的线程池线程（MTA）上构造会抛
+            // COMException 0x8001010E(RPC_E_CHANGED_MODE)，进而触发无限重启循环。
+            // await Task.Run 之后已回到 UI 线程（OnLaunched 捕获的同步上下文）。
+            App.GetService<TrayMenuService>().Rebuild();
         }
         catch (IOException) //数据库正在被占用
         {
