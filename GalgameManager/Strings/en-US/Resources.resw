@@ -4524,4 +4524,10 @@ Open the log folder now?</value>
   <data name="AnnualReportPage_WordCopied" xml:space="preserve">
     <value>Copied: {0}</value>
   </data>
+  <data name="Shell_SystemTray_RecentGames" xml:space="preserve">
+    <value>Recently Played</value>
+  </data>
+  <data name="Shell_SystemTray_RecentGamesLaunchFailed" xml:space="preserve">
+    <value>Launch failed. Please retry from the main window.</value>
+  </data>
 </root>

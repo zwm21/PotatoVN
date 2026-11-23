@@ -4457,4 +4457,10 @@
   <data name="AnnualReportPage_WordCopied" xml:space="preserve">
     <value>コピーしました：{0}</value>
   </data>
+  <data name="Shell_SystemTray_RecentGames" xml:space="preserve">
+    <value>最近プレイ</value>
+  </data>
+  <data name="Shell_SystemTray_RecentGamesLaunchFailed" xml:space="preserve">
+    <value>起動に失敗しました。メインウィンドウから再試行してください。</value>
+  </data>
 </root>
