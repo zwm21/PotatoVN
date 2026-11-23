@@ -125,16 +125,36 @@ public class PageService : IPageService
             bool fromSave = saved is not null;
 
             AppWindow appWindow = App.MainWindow!.AppWindow;
+            PointInt32 posBefore = appWindow.Position;
+            SizeInt32 sizeBefore = appWindow.Size;
+            string stateBefore = appWindow.Presenter?.GetType().Name ?? "<null>";
+            if (appWindow.Presenter is OverlappedPresenter beforePresenter)
+                stateBefore += $"/{beforePresenter.State}";
+
             appWindow.MoveAndResize(new RectInt32(target.X, target.Y, target.Width, target.Height));
             if (target.IsMaximized && appWindow.Presenter is OverlappedPresenter presenter)
                 presenter.Maximize();
+
+            PointInt32 posAfter = appWindow.Position;
+            SizeInt32 sizeAfter = appWindow.Size;
 
             // 用恢复结果初始化跟踪基线：否则 LastRestored 一直是 null，
             // 用户若全程没动过窗口，保存侧就永远写不出东西。
             WindowPlacementHelper.Track(target with { IsMaximized = false });
 
-            // 恢复路径此前完全静默，出问题只能靠猜。面包屑记下用的是存档还是兜底、
-            // 以及最终应用出去的矩形，下次一跑就能从 Logs 里直接读出有没有执行成功。
+            // 追踪日志：直接走 Serilog 打到 log.txt，不受开发者模式开关影响
+            // （DeveloperEvent 在非开发者模式下会静默 return，之前正是因此抓不到问题）。
+            // 同时打 MoveAndResize 前后的 Position/Size，用来区分「静默 no-op」
+            // 和「生效后被别的东西覆盖」这两种完全不同的失败模式。
+            Serilog.Log.Information(
+                "WindowPlacement restore: source={Source} saved={Saved} target=({TX},{TY},{TW}x{TH}) max={Max} " +
+                "before=({BX},{BY},{BW}x{BH}/{BState}) after=({AX},{AY},{AW}x{AH})",
+                fromSave ? "saved" : "fallback",
+                saved?.ToString() ?? "null",
+                target.X, target.Y, target.Width, target.Height, target.IsMaximized,
+                posBefore.X, posBefore.Y, sizeBefore.Width, sizeBefore.Height, stateBefore,
+                posAfter.X, posAfter.Y, sizeAfter.Width, sizeAfter.Height);
+
             CrashDiagnostics.AddBreadcrumb(
                 $"RestoreWindowPlacement: applied {(fromSave ? "saved" : "fallback")} " +
                 $"pos=({target.X},{target.Y}) size=({target.Width}x{target.Height}) " +
@@ -145,14 +165,9 @@ public class PageService : IPageService
             // 窗口位置是锦上添花：读设置失败、显示器信息异常、对尚未激活的窗口调用
             // MoveAndResize/Maximize 失败，都只应该回退到默认摆放，绝不允许把启动
             // 流程带崩——那会升级成崩溃重启循环，软件直接打不开。
-            try
-            {
-                App.GetService<IInfoService>().DeveloperEvent(e: e);
-            }
-            catch (Exception)
-            {
-                // 启动期 InfoService 自身可能还不可用，记日志不能再引发二次异常
-            }
+            // 用 Serilog.Log.Error 直接落盘：DeveloperEvent 受 DevelopmentMode 开关限制，
+            // 非开发者模式下会被静默丢弃，异常就彻底看不见了。
+            Serilog.Log.Error(e, "WindowPlacement restore failed");
         }
     }
 

@@ -480,7 +480,9 @@ public partial class App : Application
     public static async Task SaveWindowPlacementAsync()
     {
         WindowPlacement placement;
-        if (WindowPlacementHelper.LastRestored is { } tracked)
+        WindowPlacement? lastRestored = WindowPlacementHelper.LastRestored;
+        bool fromTracked = lastRestored is not null;
+        if (lastRestored is { } tracked)
         {
             placement = tracked;
         }
@@ -490,7 +492,11 @@ public partial class App : Application
             // （例如用户全程没动过窗口）。此时直接读当前窗口几何兜底，
             // 不能静默 return——那会让窗口位置永远存不下来。
             if (App.MainWindow?.AppWindow.Presenter is not OverlappedPresenter presenter
-                || presenter.State != OverlappedPresenterState.Restored) return;
+                || presenter.State != OverlappedPresenterState.Restored)
+            {
+                Serilog.Log.Information("WindowPlacement save: skipped, LastRestored=null and window not Restored");
+                return;
+            }
             AppWindow appWindow = App.MainWindow.AppWindow;
             placement = new WindowPlacement(appWindow.Position.X, appWindow.Position.Y,
                 appWindow.Size.Width, appWindow.Size.Height, false);
@@ -500,8 +506,16 @@ public partial class App : Application
         OverlappedPresenterState state = App.MainWindow?.AppWindow.Presenter is OverlappedPresenter current
             ? current.State
             : OverlappedPresenterState.Restored;
-        await GetService<ILocalSettingsService>().SaveSettingAsync(KeyValues.WindowPlacement,
-            placement with { IsMaximized = state == OverlappedPresenterState.Maximized });
+        WindowPlacement toSave = placement with { IsMaximized = state == OverlappedPresenterState.Maximized };
+
+        // 追踪日志：保存侧此前完全静默，若保存根本没成功，恢复侧查得再细也没用。
+        // 直接走 Serilog 打到 log.txt，不受开发者模式开关影响。
+        Serilog.Log.Information(
+            "WindowPlacement save: source={Source} value=({X},{Y},{W}x{H}) maximized={Max}",
+            fromTracked ? "tracked" : "live-read",
+            toSave.X, toSave.Y, toSave.Width, toSave.Height, toSave.IsMaximized);
+
+        await GetService<ILocalSettingsService>().SaveSettingAsync(KeyValues.WindowPlacement, toSave);
     }
 
     /// <summary>
