@@ -61,9 +61,13 @@ public class PageService : IPageService
         App.MainWindow ??= new MainWindow();
         if (App.MainWindow.Content == null)
         {
-            RestoreWindowPlacement();
             UIElement shell = App.GetService<ShellPage>();
             App.MainWindow.Content = shell;
+            // 窗口位置必须等窗口首次显示之后再恢复：MoveAndResize/Maximize 作用在
+            // 一个从未激活过的窗口上不生效，随后框架在首次显示时确立窗口几何，
+            // 会把恢复值整个丢掉（表现为「记忆窗口位置不生效」）。一次性订阅，
+            // 首次触发即解绑。
+            App.MainWindow.Activated += RestoreWindowPlacementOnFirstActivated;
             await App.GetService<IThemeSelectorService>().SetRequestedThemeAsync();
             await App.GetService<IThemeSelectorService>().SetBackgroundMaterialAsync();
             await App.GetService<IThemeSelectorService>().SetNavigationViewTransparencyAsync();
@@ -71,17 +75,29 @@ public class PageService : IPageService
         }
     }
 
+    private static bool _placementRestored;
+
+    private static void RestoreWindowPlacementOnFirstActivated(object sender, WindowActivatedEventArgs e)
+    {
+        if (_placementRestored) return;
+        _placementRestored = true;
+        if (sender is WindowEx window) window.Activated -= RestoreWindowPlacementOnFirstActivated;
+        RestoreWindowPlacement();
+    }
+
     /// <summary>
     /// 主窗口默认尺寸。<br/>
-    /// <see cref="MainWindow"/> 的 XAML 里不再声明 Width/Height：WinUIEx 的 WindowManager
-    /// 会在窗口内容加载时用 XAML 值重新应用窗口矩形，那会冲掉下面恢复出来的存档，
-    /// 表现为「记忆窗口位置不生效」。窗口初始尺寸改由此处独占。
+    /// <see cref="MainWindow"/> 的 XAML 里也声明了同样的 Width/Height：那只是初始值，
+    /// 在 InitializeComponent 时就落定，早于这里的恢复，二者不冲突；XAML 值同时保证
+    /// 无存档时窗口也有个合理尺寸，不必完全依赖代码路径。
     /// </summary>
     private const int DefaultWindowWidth = 1280;
     private const int DefaultWindowHeight = 800;
 
     /// <summary>
     /// 恢复上次退出时记住的窗口位置/尺寸/最大化状态。<br/>
+    /// 由窗口首次 <see cref="WindowEx.Activated"/> 触发——必须晚于窗口首次显示，
+    /// 否则 MoveAndResize/Maximize 会被框架确立窗口几何的过程整个丢掉。<br/>
     /// 顺序不能反：<b>先 MoveAndResize 到普通窗口矩形，最后再 Maximize</b>——
     /// 先 Maximize 会被系统把尺寸覆盖回最大化前的值，普通矩形就丢了。<br/>
     /// 越界（副屏被拔掉）或存档损坏时回退到默认尺寸并放在主屏工作区中央。
@@ -97,8 +113,6 @@ public class PageService : IPageService
             RectInt32 primary = DisplayArea.Primary?.WorkArea ?? workAreas[0];
             WindowPlacement fallback = DefaultPlacement(primary);
 
-            // 无存档时也要用默认尺寸显式摆一次：XAML 已不声明 Width/Height，
-            // 不设置的话窗口会落到系统的 CW_USEDEFAULT 尺寸上。
             WindowPlacement target = saved is null
                 ? fallback
                 : WindowPlacementHelper.Sanitize(saved, fallback, workAreas);
@@ -107,6 +121,10 @@ public class PageService : IPageService
             appWindow.MoveAndResize(new RectInt32(target.X, target.Y, target.Width, target.Height));
             if (target.IsMaximized && appWindow.Presenter is OverlappedPresenter presenter)
                 presenter.Maximize();
+
+            // 用恢复结果初始化跟踪基线：否则 LastRestored 一直是 null，
+            // 用户若全程没动过窗口，保存侧就永远写不出东西。
+            WindowPlacementHelper.Track(target with { IsMaximized = false });
         }
         catch (Exception e)
         {

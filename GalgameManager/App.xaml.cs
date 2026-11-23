@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Windows.ApplicationModel;
 using CommunityToolkit.Mvvm.Messaging;
 using GalgameManager.Activation;
@@ -12,6 +13,7 @@ using GalgameManager.Services;
 using GalgameManager.ViewModels;
 using GalgameManager.Views;
 using H.NotifyIcon;
+using H.NotifyIcon.EfficiencyMode;
 using LaunchActivatedEventArgs = Microsoft.UI.Xaml.LaunchActivatedEventArgs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -59,6 +61,13 @@ public partial class App : Application
     private static Application _instance = null!;
     public static WindowEx? MainWindow { get; set; }
     public static TaskbarIcon? SystemTray { get; set; }
+
+    /// <summary>
+    /// 进入系统托盘前窗口是否处于最大化。<br/>
+    /// WindowExtensions.Show 底层用的是 SW_NORMAL(1)，会把最大化打回普通尺寸，
+    /// 所以改走 SW_SHOW(5) 并在这里记录/补回最大化状态。
+    /// </summary>
+    private static bool _wasMaximizedBeforeTray;
 
     public static UIElement? AppTitlebar { get; set; }
     public static WindowMode Status = WindowMode.Booting;
@@ -370,9 +379,21 @@ public partial class App : Application
         {
             case WindowMode.Normal:
                 GetService<IPageService>().InitAsync();
-                // 从托盘恢复时窗口是被 WindowExtensions.Hide 藏起来的，必须先 Show
-                // （同时解除 Efficiency Mode），只靠 Activate 不足以让它重新出现。
-                WindowExtensions.Show(MainWindow!);
+                // 不用 WindowExtensions.Show：它的底层是 ShowWindow(hwnd, SW_NORMAL=1)，
+                // 而 SW_NORMAL 会把「最小化/最大化/排列中」的窗口还原成原始尺寸——
+                // 从托盘恢复时最大化会在一瞬间被打回普通窗口。改用 SW_SHOW(5)，
+                // 实测它能完整保留最大化状态。
+                ShowWindowSwShow(MainWindow!);
+                // WindowExtensions.Show 原本负责的解除 EcoQoS，这里手动补上
+                EfficiencyModeUtilities.SetEfficiencyMode(false);
+                // Hide 之前记下的最大化状态在这里补回来：SW_SHOW 不改变窗口状态，
+                // 但隐藏/显示一轮后 presenter 状态可能已被重置，按记录值兜底最稳。
+                if (_wasMaximizedBeforeTray)
+                {
+                    _wasMaximizedBeforeTray = false;
+                    if (MainWindow?.AppWindow.Presenter is OverlappedPresenter restorePresenter)
+                        restorePresenter.Maximize();
+                }
                 MainWindow!.Activate();
                 MainWindow!.BringToFront();
                 MainWindow.Content.Visibility = Visibility.Visible;
@@ -407,6 +428,10 @@ public partial class App : Application
                 // 必须在 Hide 之前把窗口位置写盘：Hide 之后窗口进入隐藏态，
                 // 之后再也没有合适的事件能拿到可靠的普通窗口矩形。
                 _ = SaveWindowPlacementAsync();
+                // 记下当前是否最大化。Normal 分支的 SW_SHOW 不改窗口状态，但隐藏/显示
+                // 一轮后 presenter 状态可能被重置，按这里的记录值补 Maximize 最稳。
+                _wasMaximizedBeforeTray = MainWindow?.AppWindow.Presenter is OverlappedPresenter trayPresenter
+                                          && trayPresenter.State == OverlappedPresenterState.Maximized;
                 // 必须置位 Status：ShellPage 的 Closing 处理器只靠 Status == Close 做重入守卫，
                 // 少了这一行，Close() -> Closing -> SetWindowMode -> Close() 会无限递归。
                 Status = WindowMode.SystemTray;
@@ -449,13 +474,46 @@ public partial class App : Application
     /// </summary>
     public static async Task SaveWindowPlacementAsync()
     {
-        if (WindowPlacementHelper.LastRestored is not { } placement) return;
-        OverlappedPresenterState state = App.MainWindow?.AppWindow.Presenter is OverlappedPresenter presenter
-            ? presenter.State
+        WindowPlacement placement;
+        if (WindowPlacementHelper.LastRestored is { } tracked)
+        {
+            placement = tracked;
+        }
+        else
+        {
+            // LastRestored 为 null 说明 AppWindow.Changed 从未上报过普通窗口矩形
+            // （例如用户全程没动过窗口）。此时直接读当前窗口几何兜底，
+            // 不能静默 return——那会让窗口位置永远存不下来。
+            if (App.MainWindow?.AppWindow.Presenter is not OverlappedPresenter presenter
+                || presenter.State != OverlappedPresenterState.Restored) return;
+            AppWindow appWindow = App.MainWindow.AppWindow;
+            placement = new WindowPlacement(appWindow.Position.X, appWindow.Position.Y,
+                appWindow.Size.Width, appWindow.Size.Height, false);
+            WindowPlacementHelper.Track(placement);
+        }
+
+        OverlappedPresenterState state = App.MainWindow?.AppWindow.Presenter is OverlappedPresenter current
+            ? current.State
             : OverlappedPresenterState.Restored;
         await GetService<ILocalSettingsService>().SaveSettingAsync(KeyValues.WindowPlacement,
             placement with { IsMaximized = state == OverlappedPresenterState.Maximized });
     }
+
+    /// <summary>
+    /// 以 SW_SHOW(5) 显示窗口。<br/>
+    /// 不用 <see cref="WindowExtensions.Show(Microsoft.UI.Xaml.Window,bool)"/>：它底层是
+    /// ShowWindow(hwnd, SW_NORMAL=1)，会把最大化窗口还原成普通尺寸（已反编译 + Win32 实测确认）。
+    /// </summary>
+    private static void ShowWindowSwShow(WindowEx window)
+    {
+        nint hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+        _ = ShowWindow(hwnd, SwShow);
+    }
+
+    private const int SwShow = 5; // SW_SHOW：激活并按当前尺寸位置显示，不改窗口状态
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    private static extern bool ShowWindow(nint hWnd, int nCmdShow);
 
     /// <summary>
     /// 当前版本是否为微软应用商店版
