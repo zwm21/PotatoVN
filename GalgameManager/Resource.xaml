@@ -16,8 +16,18 @@
         ToolTipText="PotatoVN">
         <tb:TaskbarIcon.ContextFlyout>
             <MenuFlyout>
-                <MenuFlyoutItem x:Uid="Shell_SystemTray_Item1" Command="{StaticResource SetWindowNormalCommand}" />
-                <MenuFlyoutItem x:Uid="Shell_SystemTray_Item2" Command="{StaticResource CloseAppCommand}" />
+                <!-- 图标用 Segoe MDL2 Assets 通用码点，Win10 17763+ 可用；
+                     补齐是为了和动态插入的「最近游玩」项（E768）左侧视觉对齐 -->
+                <MenuFlyoutItem x:Uid="Shell_SystemTray_Item1" Command="{StaticResource SetWindowNormalCommand}">
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE923;"/>
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Uid="Shell_SystemTray_Item2" Command="{StaticResource CloseAppCommand}">
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE7E8;"/>
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
             </MenuFlyout>
         </tb:TaskbarIcon.ContextFlyout>
     </tb:TaskbarIcon>

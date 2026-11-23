@@ -187,10 +187,10 @@ public class ActivationService : IActivationService
         };
         App.SystemTray = App.GetResource<TaskbarIcon>("TrayIcon");
         App.SystemTray.ForceCreate(false);
-        // 「最近游玩」二级子菜单：挂在已创建好的托盘菜单头部，并订阅游戏列表加载/删除事件。
-        // 此时游戏数据尚未就绪，首轮 Rebuild 会得到空结果、不挂载任何菜单项，
-        // 等 GalgameLoadedEvent 触发时再建。
-        App.GetService<TrayMenuService>().Attach();
+        // 「最近游玩」区：菜单项由 TrayMenuService 自己动态维护（每次 Rebuild 先摘旧项再插新项），
+        // 这里只需触发首次重建。此时游戏数据尚未就绪，首轮必然为空、不插入任何项，
+        // 等 LaunchedAsync 中 SourceEntries 填充完后再重建一次。
+        App.GetService<TrayMenuService>().Rebuild();
     }
 
     private async Task StartupAsync(object activationArgs)

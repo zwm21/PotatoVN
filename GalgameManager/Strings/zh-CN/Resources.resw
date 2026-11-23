@@ -5156,9 +5156,7 @@
   <data name="AnnualReportPage_WordCopied" xml:space="preserve">
     <value>已复制：{0}</value>
   </data>
-  <data name="Shell_SystemTray_RecentGames" xml:space="preserve">
-    <value>最近游玩</value>
-  </data>
+
   <data name="Shell_SystemTray_RecentGamesLaunchFailed" xml:space="preserve">
     <value>启动失败，请从主窗口重试</value>
   </data>

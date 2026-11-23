@@ -45,6 +45,10 @@ public class ThemeSelectorService : IThemeSelectorService
             TitleBarHelper.UpdateTitleBar(Theme);
         }
 
+        // 托盘右键菜单在 SecondWindow 模式下由独立 Window 承载，不继承主窗口的 RequestedTheme，
+        // 需要显式把主题应用过去（TrayMenuService 内部会把 Theme 写进 MenuFlyoutPresenterStyle）。
+        App.GetService<TrayMenuService>().ApplyTheme(Theme);
+
         await Task.CompletedTask;
     }
 
