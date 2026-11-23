@@ -342,6 +342,9 @@ public partial class App : Application
     private async void OnActivated(object?_, AppActivationArguments arguments)
     {
         if (Status == WindowMode.Booting) return; // 应用启动时不响应激活，避免启动软件时启动多次
+        // 正在退出的实例不再响应激活：此时设置库已被 OnAppClosing 释放，再走一遍
+        // SetWindowMode(Normal) 只会抛 ObjectDisposedException，升级成崩溃重启循环。
+        if (Status == WindowMode.Close) return;
         await GetService<IActivationService>().HandleActivationAsync(arguments);
         await UiThreadInvokeHelper.InvokeAsync(() =>
         {
@@ -373,11 +376,19 @@ public partial class App : Application
                 MainWindow!.Activate();
                 MainWindow!.BringToFront();
                 MainWindow.Content.Visibility = Visibility.Visible;
-                if (GetService<ILocalSettingsService>().ReadSettingAsync<string>(KeyValues.LastError)
-                        .Result is { } error)
+                try
                 {
-                    GetService<IInfoService>().Event(EventType.AppError, InfoBarSeverity.Error,
-                        "App_Error".GetLocalized(), msg: error);
+                    if (GetService<ILocalSettingsService>().ReadSettingAsync<string>(KeyValues.LastError)
+                            .Result is { } error)
+                    {
+                        GetService<IInfoService>().Event(EventType.AppError, InfoBarSeverity.Error,
+                            "App_Error".GetLocalized(), msg: error);
+                    }
+                }
+                catch (Exception)
+                {
+                    // 设置库可能已被 OnAppClosing 释放（异常路径下残留的实例）。
+                    // 崩溃通知是尽力而为，不能让它把恢复流程带崩。
                 }
                 Status = WindowMode.Normal;
                 break;
@@ -405,7 +416,21 @@ public partial class App : Application
                 Status = WindowMode.Close;
                 OnAppClosing?.Invoke();
                 SystemTray?.Dispose();
+                // 先关窗再 Exit：托盘模式下窗口是被 SW_HIDE 藏起来的，仅靠 Exit()
+                // 拆不掉这种窗口，进程会残留成僵尸，之后每次启动都会被单实例重定向
+                // 到这个已释放设置库的僵尸上，表现为「退出后打不开」。
+                // ShellPage.MainWindowOnClosed 有 Status == Close 的重入守卫，不会再次 Cancel。
+                MainWindow?.Close();
                 _instance.Exit();
+                // 兜底计时：正常退出与文件落盘优先，所以这里只做延时观察而非同步
+                // Environment.Exit——那会打断 LocalSettingsService.OnAppClosing 里的
+                // WaitForWriteFinishAsync()。1.5 秒后进程仍在，说明 Exit() 没兜住，
+                // 此时强制结束，保证绝不会变成永久僵尸。
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(1500);
+                    Environment.Exit(0);
+                });
                 break;
             case WindowMode.None:
                 break;

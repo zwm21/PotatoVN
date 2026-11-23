@@ -79,25 +79,34 @@ public class PageService : IPageService
     /// </summary>
     private static void RestoreWindowPlacement()
     {
-        WindowPlacement? saved = App.GetService<ILocalSettingsService>()
-            .ReadSettingAsync<WindowPlacement?>(KeyValues.WindowPlacement).Result;
-        // 从未保存过：保持 WinUI 的默认摆放，不要动窗口
-        if (saved is null) return;
+        try
+        {
+            WindowPlacement? saved = App.GetService<ILocalSettingsService>()
+                .ReadSettingAsync<WindowPlacement?>(KeyValues.WindowPlacement).Result;
+            // 从未保存过：保持 WinUI 的默认摆放，不要动窗口
+            if (saved is null) return;
 
-        List<RectInt32> workAreas = DisplayArea.FindAll().Select(area => area.WorkArea).ToList();
-        if (workAreas.Count == 0) workAreas.Add(new RectInt32(0, 0, 1600, 900));
-        RectInt32 primary = DisplayArea.Primary?.WorkArea ?? workAreas[0];
-        int marginX = primary.Width / 10;
-        int marginY = primary.Height / 10;
-        WindowPlacement fallback = WindowPlacementHelper.Clamp(new WindowPlacement(
-            primary.X + marginX, primary.Y + marginY,
-            primary.Width - marginX * 2, primary.Height - marginY * 2, false));
+            List<RectInt32> workAreas = DisplayArea.FindAll().Select(area => area.WorkArea).ToList();
+            if (workAreas.Count == 0) workAreas.Add(new RectInt32(0, 0, 1600, 900));
+            RectInt32 primary = DisplayArea.Primary?.WorkArea ?? workAreas[0];
+            int marginX = primary.Width / 10;
+            int marginY = primary.Height / 10;
+            WindowPlacement fallback = WindowPlacementHelper.Clamp(new WindowPlacement(
+                primary.X + marginX, primary.Y + marginY,
+                primary.Width - marginX * 2, primary.Height - marginY * 2, false));
 
-        WindowPlacement target = WindowPlacementHelper.Sanitize(saved, fallback, workAreas);
-        AppWindow appWindow = App.MainWindow!.AppWindow;
-        appWindow.MoveAndResize(new RectInt32(target.X, target.Y, target.Width, target.Height));
-        if (target.IsMaximized)
-            ((OverlappedPresenter)appWindow.Presenter).Maximize();
+            WindowPlacement target = WindowPlacementHelper.Sanitize(saved, fallback, workAreas);
+            AppWindow appWindow = App.MainWindow!.AppWindow;
+            appWindow.MoveAndResize(new RectInt32(target.X, target.Y, target.Width, target.Height));
+            if (target.IsMaximized && appWindow.Presenter is OverlappedPresenter presenter)
+                presenter.Maximize();
+        }
+        catch (Exception)
+        {
+            // 窗口位置是锦上添花：读设置失败、显示器信息异常、对尚未激活的窗口调用
+            // MoveAndResize/Maximize 失败，都只应该回退到默认摆放，绝不允许把启动
+            // 流程带崩——那会升级成崩溃重启循环，软件直接打不开。
+        }
     }
 
     private void Configure<VM, V>()
