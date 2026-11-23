@@ -50,6 +50,7 @@ public static class KeyValues
     public const string StartPage = "startPage"; // PageEnum,启动时显示的页面
     public const string AutoStartWhenLogin = "autoStartWhenLogin"; //bool, 是否开机自启
     public const string MinToTrayWhenAutoStart = "minToTrayWhenAutoStart"; //bool, 开机自启时是否最小化到托盘
+    public const string WindowPlacement = "windowPlacement"; //WindowPlacement, 主窗口的位置/尺寸/最大化状态，下次启动时恢复
 
     //数据相关
     public const string GalgameSources = "galgameSources";

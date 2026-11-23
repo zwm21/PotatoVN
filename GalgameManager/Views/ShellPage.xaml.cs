@@ -61,6 +61,7 @@ public sealed partial class ShellPage : Page
         App.MainWindow.SetTitleBar(AppTitleBar);
         App.MainWindow.Activated += MainWindow_Activated;
         App.MainWindow.AppWindow.Closing += MainWindowOnClosed;
+        App.MainWindow.AppWindow.Changed += MainWindowOnChanged;
         AppTitleBarText.Text = "AppDisplayName".GetLocalized();
         return;
 
@@ -87,6 +88,9 @@ public sealed partial class ShellPage : Page
             return;
         }
         WindowMode closeMode = _localSettingsService.ReadSettingAsync<WindowMode>(KeyValues.CloseMode).Result;
+        // 必须在 SetWindowMode 之前写盘：WindowMode.Close 分支会触发 OnAppClosing
+        // 释放设置数据库，之后再写就落不进盘了。
+        _ = App.SaveWindowPlacementAsync();
         if (closeMode == WindowMode.Normal)
         {
             appWindowClosingEventArgs.Cancel = true;
@@ -99,12 +103,27 @@ public sealed partial class ShellPage : Page
         }
     }
 
+    /// <summary>
+    /// 跟踪普通（非最大化）窗口矩形。<br/>
+    /// 只在 Restored 状态下更新：最大化会把普通尺寸冲掉，导致取消最大化后
+    /// 回不到原来的大小。这里只存内存，真正写盘由关闭/进托盘两条路径负责。
+    /// </summary>
+    private void MainWindowOnChanged(AppWindow sender, AppWindowChangedEventArgs args)
+    {
+        if (!args.DidPositionChange && !args.DidSizeChange) return;
+        if (sender.Presenter is not OverlappedPresenter { State: OverlappedPresenterState.Restored }) return;
+        WindowPlacementHelper.Track(new WindowPlacement(sender.Position.X, sender.Position.Y,
+            sender.Size.Width, sender.Size.Height, false));
+    }
+
     private async Task CloseConfirm()
     {
         CloseConfirmDialog dialog = new();
         await dialog.ShowAsync();
         if (dialog.RememberMe)
             await _localSettingsService.SaveSettingAsync(KeyValues.CloseMode, dialog.Result);
+        // 同 MainWindowOnClosed：必须在 SetWindowMode 之前写盘
+        await App.SaveWindowPlacementAsync();
         App.SetWindowMode(dialog.Result);
     }
 

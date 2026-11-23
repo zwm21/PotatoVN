@@ -16,6 +16,7 @@ using LaunchActivatedEventArgs = Microsoft.UI.Xaml.LaunchActivatedEventArgs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.AppLifecycle;
@@ -392,6 +393,9 @@ public partial class App : Application
                 // 数据库、LocalFolderSourceService 销毁所有 FileSystemWatcher）都是进程退出级的
                 // 不可逆清理；隐藏后若从托盘恢复，设置写入与文件夹监听都会失效。
                 GetService<IBgTaskService>().SaveBgTasksString();
+                // 必须在 Hide 之前把窗口位置写盘：Hide 之后窗口进入隐藏态，
+                // 之后再也没有合适的事件能拿到可靠的普通窗口矩形。
+                _ = SaveWindowPlacementAsync();
                 // 必须置位 Status：ShellPage 的 Closing 处理器只靠 Status == Close 做重入守卫，
                 // 少了这一行，Close() -> Closing -> SetWindowMode -> Close() 会无限递归。
                 Status = WindowMode.SystemTray;
@@ -406,6 +410,21 @@ public partial class App : Application
             case WindowMode.None:
                 break;
         }
+    }
+
+    /// <summary>
+    /// 把当前窗口的位置/尺寸/最大化状态写进设置。<br/>
+    /// 必须在 <see cref="SetWindowMode"/> 之前调用：WindowMode.Close 分支会触发
+    /// OnAppClosing 释放设置数据库，之后再写就落不进盘了。
+    /// </summary>
+    public static async Task SaveWindowPlacementAsync()
+    {
+        if (WindowPlacementHelper.LastRestored is not { } placement) return;
+        OverlappedPresenterState state = App.MainWindow?.AppWindow.Presenter is OverlappedPresenter presenter
+            ? presenter.State
+            : OverlappedPresenterState.Restored;
+        await GetService<ILocalSettingsService>().SaveSettingAsync(KeyValues.WindowPlacement,
+            placement with { IsMaximized = state == OverlappedPresenterState.Maximized });
     }
 
     /// <summary>
