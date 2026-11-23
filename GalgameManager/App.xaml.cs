@@ -414,6 +414,11 @@ public partial class App : Application
                 break;
             case WindowMode.Close:
                 Status = WindowMode.Close;
+                // 必须在 OnAppClosing 之前写盘。托盘右键退出走的是 CloseAppCommand ->
+                // SetWindowMode(Close)，完全绕过 ShellPage.MainWindowOnClosed 里的保存，
+                // 少了这一行，那条路径永远存不下窗口位置。OnAppClosing 会释放设置数据库，
+                // 之后再写就落不进盘了。
+                _ = SaveWindowPlacementAsync();
                 OnAppClosing?.Invoke();
                 SystemTray?.Dispose();
                 // 先关窗再 Exit：托盘模式下窗口是被 SW_HIDE 藏起来的，仅靠 Exit()

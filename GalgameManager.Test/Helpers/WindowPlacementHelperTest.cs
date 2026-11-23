@@ -176,6 +176,17 @@ public class WindowPlacementHelperTest
     }
 
     [Test]
+    public void Clamp_ShouldUseTheSameLowerBoundAsMainWindowXaml()
+    {
+        // 下限必须与 MainWindow.xaml 的 MinWidth/MinHeight 一致：否则恢复出 800 宽的窗口
+        // 会被系统按 XAML 的 MinWidth 抬到 960，存档值和实际窗口尺寸就对不上了。
+        WindowPlacement result = WindowPlacementHelper.Clamp(new WindowPlacement(0, 0, 100, 100, false));
+
+        Assert.That(result.Width, Is.EqualTo(960));
+        Assert.That(result.Height, Is.EqualTo(600));
+    }
+
+    [Test]
     public void IsOnAnyWorkArea_ShouldBeTrue_WhenCenterIsOnSecondaryScreen()
     {
         WindowPlacement placement = new(2000, 100, 1400, 900, false);

@@ -7,8 +7,6 @@
     xmlns:windowex="using:WinUIEx"
     MinWidth="960"
     MinHeight="600"
-    Width="1280"
-    Height="800"
     mc:Ignorable="d">
     <Window.SystemBackdrop>
         <MicaBackdrop/>

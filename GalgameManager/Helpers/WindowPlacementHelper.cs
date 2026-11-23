@@ -23,10 +23,14 @@ public readonly record struct WindowPlacement(int X, int Y, int Width, int Heigh
 /// </summary>
 public static class WindowPlacementHelper
 {
-    /// <summary>窗口最小宽度；存档比这更小的一律视为损坏数据</summary>
-    public const int MinWidth = 800;
+    /// <summary>
+    /// 窗口最小宽度。必须与 <c>MainWindow.xaml</c> 的 <c>MinWidth</c> 保持一致：
+    /// 下限设得比 XAML 小的话，恢复出来的窗口会被系统按 XAML 下限抬回去，
+    /// 存档值和实际窗口尺寸就对不上了。
+    /// </summary>
+    public const int MinWidth = 960;
 
-    /// <summary>窗口最小高度</summary>
+    /// <summary>窗口最小高度，须与 <c>MainWindow.xaml</c> 的 <c>MinHeight</c> 一致</summary>
     public const int MinHeight = 600;
 
     /// <summary>
