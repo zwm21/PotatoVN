@@ -397,6 +397,11 @@ public partial class App : Application
                 MainWindow!.Activate();
                 MainWindow!.BringToFront();
                 MainWindow.Content.Visibility = Visibility.Visible;
+                // 窗口位置恢复：必须放在这里——Activate/BringToFront/Visibility 之后，
+                // 窗口已确定激活并显示，MoveAndResize 才有 HWND 可作用。
+                // RestoreWindowPlacementOnce 内部有 _placementRestored 一次性守卫，
+                // 所以从托盘反复恢复不会把用户拖好的窗口重置回存档值。
+                PageService.RestoreWindowPlacementOnce();
                 try
                 {
                     if (GetService<ILocalSettingsService>().ReadSettingAsync<string>(KeyValues.LastError)
