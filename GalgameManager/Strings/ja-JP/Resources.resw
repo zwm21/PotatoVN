@@ -4450,4 +4450,10 @@
   <data name="SettingsPage_Language_ChangeError" xml:space="preserve">
     <value>言語の変更に失敗しました</value>
   </data>
+  <data name="AnnualReportPage_WordCloudHint.Text" xml:space="preserve">
+    <value>言葉をクリックでコピー</value>
+  </data>
+  <data name="AnnualReportPage_WordCopied.Text" xml:space="preserve">
+    <value>コピーしました：{0}</value>
+  </data>
 </root>

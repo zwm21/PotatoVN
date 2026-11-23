@@ -4517,4 +4517,10 @@ Open the log folder now?</value>
   <data name="SettingsPage_Language_ChangeError" xml:space="preserve">
     <value>Failed to change language</value>
   </data>
+  <data name="AnnualReportPage_WordCloudHint.Text" xml:space="preserve">
+    <value>Click a word to copy</value>
+  </data>
+  <data name="AnnualReportPage_WordCopied.Text" xml:space="preserve">
+    <value>Copied: {0}</value>
+  </data>
 </root>

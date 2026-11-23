@@ -35,6 +35,10 @@
                                       MinWidth="150"
                                       ItemsSource="{x:Bind ViewModel.TagScopes}"
                                       SelectedItem="{x:Bind ViewModel.TagScope, Mode=TwoWay}"/>
+            <!-- 词云里的每个词都是可点的，点一下即复制到剪贴板 -->
+            <TextBlock x:Uid="AnnualReportPage_WordCloudHint"
+                       VerticalAlignment="Center"
+                       Opacity="0.7"/>
         </StackPanel>
         
         <Canvas Grid.Row="1"

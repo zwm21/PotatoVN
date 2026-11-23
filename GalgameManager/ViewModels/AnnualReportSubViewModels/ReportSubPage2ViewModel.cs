@@ -15,6 +15,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using SkiaSharp;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace GalgameManager.ViewModels;
 
@@ -26,6 +27,7 @@ public partial class ReportSubPage2ViewModel(
 
     private Dictionary<string, int> wordFrequencies = new();
     private DispatcherTimer tipCloseTimer = null!;
+    private DispatcherTimer copiedTipCloseTimer = null!;
     private AnnualReportData _annualReportData = null!;
     private bool _dataReady; // 是否已拿到年度报告数据（首帧由 OnNavigatedTo 统一生成，避免重复计算）
 
@@ -74,12 +76,22 @@ public partial class ReportSubPage2ViewModel(
 
     private void InitializeTimer()
     {
+        // 悬停移出后延迟关闭：鼠标在词与词之间移动时提示不该闪
         tipCloseTimer = new DispatcherTimer();
         tipCloseTimer.Interval = TimeSpan.FromMilliseconds(200);
         tipCloseTimer.Tick += (s, e) =>
         {
             IsWordTipOpen = false;
             tipCloseTimer.Stop();
+        };
+
+        // 点击复制后的「已复制」提示，1 秒后自动收起
+        copiedTipCloseTimer = new DispatcherTimer();
+        copiedTipCloseTimer.Interval = TimeSpan.FromSeconds(1);
+        copiedTipCloseTimer.Tick += (s, e) =>
+        {
+            IsWordTipOpen = false;
+            copiedTipCloseTimer.Stop();
         };
     }
 
@@ -121,6 +133,7 @@ public partial class ReportSubPage2ViewModel(
             textBlock.PointerEntered += (s, args) =>
             {
                 tipCloseTimer.Stop();
+                copiedTipCloseTimer.Stop();
                 WordTipContent.Text = $"关键词：{item.Entry.Word}\n相关游戏数量：{item.Entry.Count}";
                 WordTipTarget = textBlock;
                 IsWordTipOpen = true;
@@ -129,6 +142,21 @@ public partial class ReportSubPage2ViewModel(
             textBlock.PointerExited += (s, args) =>
             {
                 tipCloseTimer.Start();
+            };
+
+            // 点击复制词语。复用悬停提示原地显示「已复制」，不另弹 InfoBar；
+            // 每个词本来就是独立的 TextBlock，无需另建命中检测。
+            textBlock.PointerPressed += (s, args) =>
+            {
+                DataPackage dataPackage = new();
+                dataPackage.SetText(item.Entry.Word);
+                Clipboard.SetContent(dataPackage);
+                tipCloseTimer.Stop();
+                copiedTipCloseTimer.Stop();
+                WordTipContent.Text = "AnnualReportPage_WordCopied".GetLocalized(item.Entry.Word);
+                WordTipTarget = textBlock;
+                IsWordTipOpen = true;
+                copiedTipCloseTimer.Start();
             };
 
             WordCloudCanvas.Children.Add(textBlock);
