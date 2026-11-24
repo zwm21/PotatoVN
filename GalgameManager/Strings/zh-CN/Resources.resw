@@ -5172,4 +5172,16 @@
   <data name="RecordPlayTimeTask_PlayTimeSummary_Msg" xml:space="preserve">
     <value>本次游玩 {0} · 累计 {1}</value>
   </data>
+  <data name="RecordPlayTimeTask_BreakReminder_Title" xml:space="preserve">
+    <value>休息提醒</value>
+  </data>
+  <data name="RecordPlayTimeTask_BreakReminder_Msg" xml:space="preserve">
+    <value>已连续游玩 {0}，记得起身休息</value>
+  </data>
+  <data name="SettingsPage_Notification_BreakReminder.Title" xml:space="preserve">
+    <value>定时休息提醒（分钟）</value>
+  </data>
+  <data name="SettingsPage_Notification_BreakReminder.Description" xml:space="preserve">
+    <value>单次连续游玩每满设定分钟数时弹出静音托盘气泡提醒，设为 0 关闭</value>
+  </data>
 </root>

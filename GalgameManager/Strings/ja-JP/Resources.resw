@@ -4473,4 +4473,16 @@
   <data name="RecordPlayTimeTask_PlayTimeSummary_Msg" xml:space="preserve">
     <value>今回 {0} · 累計 {1}</value>
   </data>
+  <data name="RecordPlayTimeTask_BreakReminder_Title" xml:space="preserve">
+    <value>休憩リマインダー</value>
+  </data>
+  <data name="RecordPlayTimeTask_BreakReminder_Msg" xml:space="preserve">
+    <value>{0} 連続プレイ中 · そろそろ休憩しましょう</value>
+  </data>
+  <data name="SettingsPage_Notification_BreakReminder.Title" xml:space="preserve">
+    <value>休憩リマインダー（分）</value>
+  </data>
+  <data name="SettingsPage_Notification_BreakReminder.Description" xml:space="preserve">
+    <value>連続プレイが設定した分数に達するごとにサイレント通知を表示します（0 で無効）</value>
+  </data>
 </root>

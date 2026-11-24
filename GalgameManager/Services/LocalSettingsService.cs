@@ -380,6 +380,8 @@ public class LocalSettingsService : ILocalSettingsService
                 return (T?)(object)DisplayName.OriginalName;
             case KeyValues.MinPlayTimeRecordThreshold:
                 return (T?)(object)5; // 默认5分钟
+            case KeyValues.BreakReminderInterval:
+                return (T?)(object)0; // 默认关闭
             case KeyValues.MixedPhraserTimeout:
                 return (T?)(object)12; // 默认12秒
             case KeyValues.CustomTextFileExtensions:

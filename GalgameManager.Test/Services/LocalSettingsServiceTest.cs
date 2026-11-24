@@ -60,6 +60,8 @@ public class LocalSettingsServiceTest
             LocalSettingsService.TryGetDefaultValue<int>);
         yield return Case(KeyValues.MinPlayTimeRecordThreshold, 5,
             LocalSettingsService.TryGetDefaultValue<int>);
+        yield return Case(KeyValues.BreakReminderInterval, 0,
+            LocalSettingsService.TryGetDefaultValue<int>);
         yield return Case(KeyValues.MixedPhraserTimeout, 12,
             LocalSettingsService.TryGetDefaultValue<int>);
 

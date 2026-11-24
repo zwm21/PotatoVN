@@ -728,6 +728,15 @@
                                 <local:SettingToggleSwitch x:Uid="SettingsPage_Notification_PlayTimeSummary"
                                                            IsOn="{x:Bind ViewModel.NotifyPlayTimeSummary, Mode=TwoWay}"/>
                             </control:Panel>
+                            <!-- 定时休息提醒间隔，0 表示关闭 -->
+                            <control:Panel>
+                                <control:Setting x:Uid="SettingsPage_Notification_BreakReminder">
+                                    <NumberBox Value="{x:Bind ViewModel.BreakReminderInterval, Mode=TwoWay}"
+                                               SpinButtonPlacementMode="Compact"
+                                               SmallChange="15" LargeChange="30" Minimum="0" Maximum="1440"
+                                               Width="100"/>
+                                </control:Setting>
+                            </control:Panel>
                             <!-- Pvn同步事件通知 -->
                             <control:Panel>
                                 <StackPanel Style="{StaticResource SettingStackPanelStyle}">

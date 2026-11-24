@@ -33,6 +33,12 @@ public class RecordPlayTimeTask : BgTaskBase
     private readonly ILocalSettingsService _localSettingsService;
     private readonly IGalgameCollectionService _gameService;
     private int _minPlayTimeRecordThreshold;
+    /// <summary>
+    /// 上次弹出休息提醒时的本次游玩时长（分钟）。<br/>
+    /// 只在计时循环的 UI 线程 Invoke 块内读写（与 <see cref="CurrentPlayTime"/> 同步），
+    /// 因此不需要 volatile——不存在跨线程竞争。
+    /// </summary>
+    private int _lastBreakReminderMinute;
 
     public RecordPlayTimeTask()
         : this(App.GetService<ILocalSettingsService>(), App.GetService<IGalgameCollectionService>())
@@ -218,6 +224,35 @@ public class RecordPlayTimeTask : BgTaskBase
         return null;
     }
 
+    /// <summary>
+    /// 弹出「定时休息提醒」托盘气泡：单次连续游玩每满设定分钟数一次。<br/>
+    /// 视觉风格与 <see cref="ShowPlayTimeSummaryNotification"/> 完全一致（上一轮实机终验通过）：
+    /// <see cref="NotificationIcon.None"/> 去掉左侧大蓝圆图标让文字铺满卡片、标题放游戏名、
+    /// 正文单行只放时长。<br/>
+    /// 声音与勿扰参数显式传 <c>sound: false</c> / <c>respectQuietTime: true</c>——休息提醒不该有
+    /// 提示音（那会比 InfoBar 更打扰），且应尊重系统勿扰。之所以显式传而不依赖默认值：
+    /// H.NotifyIcon 2.0.118 的 ShowNotification 有 7 个可选参数，本机反编译只能确认它们都带
+    /// <c>pdHasDefault</c> 标志，取不到 Constant 表里的具体值，不猜。<br/>
+    /// 必须是纯尽力而为：任何异常都只进 Serilog，绝不能把计时循环或游玩时长累计带崩。
+    /// </summary>
+    private void ShowBreakReminderNotification(bool timeAsHour)
+    {
+        try
+        {
+            if (App.SystemTray is null) return;
+            string title = PlayTimeSummaryHelper.FormatTitle(Galgame?.Name.Value,
+                "RecordPlayTimeTask_BreakReminder_Title".GetLocalized());
+            string message = BreakReminderHelper.FormatMessage(CurrentPlayTime, timeAsHour,
+                "RecordPlayTimeTask_BreakReminder_Msg".GetLocalized(), "Minute".GetLocalized());
+            App.SystemTray.ShowNotification(title, message, NotificationIcon.None,
+                sound: false, respectQuietTime: true);
+        }
+        catch (Exception e)
+        {
+            Serilog.Log.Error(e, "RecordPlayTimeTask: show break reminder notification failed");
+        }
+    }
+
     private Task RecordPlayTimeAsync()
     {
         return Task.Run(async () =>
@@ -225,6 +260,12 @@ public class RecordPlayTimeTask : BgTaskBase
             var recordOnlyWhenForeground =
                 await _localSettingsService.ReadSettingAsync<bool>(KeyValues.RecordOnlyWhenForeground);
             _minPlayTimeRecordThreshold = await _localSettingsService.ReadSettingAsync<int>(KeyValues.MinPlayTimeRecordThreshold);
+            // 休息提醒的间隔与时长展示习惯也在这里一次性读掉，之后完全靠 OnSettingChanged
+            // 同步，不再每分钟读一次设置——非 MSIX 小值路径的 ReadSettingAsync 虽然没有 await
+            // （不会死锁），但每分次要付一次 LiteDB FindById + JsonConvert 反序列化，没必要。
+            var breakReminderInterval =
+                await _localSettingsService.ReadSettingAsync<int>(KeyValues.BreakReminderInterval);
+            var timeAsHour = await _localSettingsService.ReadSettingAsync<bool>(KeyValues.TimeAsHour);
             try
             {
                 _localSettingsService.OnSettingChanged += OnSettingChanged;
@@ -241,6 +282,15 @@ public class RecordPlayTimeTask : BgTaskBase
                         Galgame!.TotalPlayTime++;
                         CurrentPlayTime++;
                         _gameService.SaveGalgameAsync(Galgame);
+                        // 休息提醒刻意放在这个块内、CurrentPlayTime++ 之后：CurrentPlayTime、
+                        // _lastBreakReminderMinute 与 ShowNotification 三者收敛在同一 UI 线程
+                        // 上下文，不存在跨线程竞争；提醒失败也不影响上面的时长累计。
+                        if (BreakReminderHelper.ShouldRemind(CurrentPlayTime, breakReminderInterval,
+                                _lastBreakReminderMinute))
+                        {
+                            _lastBreakReminderMinute = CurrentPlayTime;
+                            ShowBreakReminderNotification(timeAsHour);
+                        }
                     });
                     var now = DateTime.Now.ToStringDefault();
                     if (!Galgame!.PlayedTime.TryAdd(now, 1))
@@ -260,6 +310,10 @@ public class RecordPlayTimeTask : BgTaskBase
                     recordOnlyWhenForeground = b;
                 if(key == KeyValues.MinPlayTimeRecordThreshold && value is int i)
                     _minPlayTimeRecordThreshold = i;
+                if(key == KeyValues.BreakReminderInterval && value is int iv)
+                    breakReminderInterval = iv;
+                if(key == KeyValues.TimeAsHour && value is bool th)
+                    timeAsHour = th;
             }
         });
     }
