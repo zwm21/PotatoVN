@@ -168,6 +168,10 @@ public class RecordPlayTimeTask : BgTaskBase
     /// <b>只受设置开关控制，不区分当前窗口状态</b>——结算时 <c>SetWindowMode(Normal)</c> 会把主窗口
     /// 拉回前台，但用户此时可能已经切到别的应用，气泡比抢占焦点更轻；一直躲在托盘里时它也是
     /// 唯一的反馈渠道（InfoBar 在窗口隐藏态下用户根本看不见）。<br/>
+    /// 层级刻意做成「标题=游戏名、正文=时长」两行：游戏名放标题能让用户一眼认出刚退出的是
+    /// 哪一款，正文不放游戏名则保证时长不会被换行挤到气泡可见区域之外。<br/>
+    /// 图标用 <see cref="NotificationIcon.None"/>：Info 会在卡片左侧画一个巨大的蓝色圆 i，
+    /// 既挤压文字宽度又和 PotatoVN 的视觉风格不符；None 下文字铺满整张卡片。<br/>
     /// 时长阈值固定在 1 分钟（见 <see cref="PlayTimeSummaryHelper.MinNotifyMinutes"/>），刻意不复用
     /// <c>MinPlayTimeRecordThreshold</c>：那个字段由 <see cref="RecordPlayTimeAsync"/> 异步赋值，
     /// 秒退场景下可能还是默认值 0，拿它当阈值会把「0 &gt;= 0」判成真。<br/>
@@ -179,15 +183,13 @@ public class RecordPlayTimeTask : BgTaskBase
         {
             if (!enabled || !PlayTimeSummaryHelper.ShouldNotify(CurrentPlayTime)) return;
             if (App.SystemTray is null) return;
-            string? gameName = Galgame?.Name.Value;
-            // 游戏名为空时用 UUID 兜底，避免气泡标题/正文出现裸占位符
-            string fallback = Galgame?.Uuid.ToString("D") ?? string.Empty;
-            string title = PlayTimeSummaryHelper.FormatTitle(gameName,
-                "RecordPlayTimeTask_PlayTimeSummary_Title".GetLocalized(), fallback);
-            string message = PlayTimeSummaryHelper.FormatMessage(gameName, CurrentPlayTime,
+            // 游戏名为空时才用到这个本地化兜底标题；有名字时标题位直接放游戏名
+            string title = PlayTimeSummaryHelper.FormatTitle(Galgame?.Name.Value,
+                "RecordPlayTimeTask_PlayTimeSummary_Title".GetLocalized());
+            string message = PlayTimeSummaryHelper.FormatMessage(CurrentPlayTime,
                 Galgame?.TotalPlayTime ?? 0, timeAsHour,
-                "RecordPlayTimeTask_PlayTimeSummary_Msg".GetLocalized(), "Minute".GetLocalized(), fallback);
-            App.SystemTray.ShowNotification(title, message, NotificationIcon.Info);
+                "RecordPlayTimeTask_PlayTimeSummary_Msg".GetLocalized(), "Minute".GetLocalized());
+            App.SystemTray.ShowNotification(title, message, NotificationIcon.None);
         }
         catch (Exception e)
         {

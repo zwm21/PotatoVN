@@ -16,9 +16,6 @@ public static class PlayTimeSummaryHelper
     /// </summary>
     public const int MinNotifyMinutes = 1;
 
-    /// <summary>游戏名在气泡标题/正文里的最大长度，超出则截断并补省略号。</summary>
-    public const int GameNameMaxLength = 40;
-
     /// <summary>
     /// Win32 <c>NOTIFYICONDATAA.szInfoTitle</c> 的安全上限。Shell 实际按 TCHAR 计，
     /// 上限约 64；这里主动收敛到 60，给多字节语言留余量。
@@ -57,40 +54,29 @@ public static class PlayTimeSummaryHelper
     }
 
     /// <summary>
-    /// 游戏名兜底 + 截断：空名回落到 <paramref name="fallbackName"/>（调用方一般传游戏 UUID），
-    /// 两者都空则返回空串；超长按 <see cref="GameNameMaxLength"/> 截断并补省略号。
+    /// 拼装气泡标题：标题位直接放游戏名，让用户一眼认出刚退出的是哪一款。<br/>
+    /// 游戏名为空/空白时才回落到 <paramref name="fallbackTitle"/>（调用方传本地化的
+    /// 「游玩小结」），并按 <see cref="TitleMaxLength"/> 截断。
     /// </summary>
-    public static string TruncateGameName(string? gameName, string? fallbackName = null,
-        int maxLength = GameNameMaxLength)
+    public static string FormatTitle(string? gameName, string fallbackTitle)
     {
-        string name = string.IsNullOrWhiteSpace(gameName)
-            ? (string.IsNullOrWhiteSpace(fallbackName) ? string.Empty : fallbackName!)
-            : gameName;
-        return Truncate(name, maxLength);
+        string title = string.IsNullOrWhiteSpace(gameName) ? fallbackTitle : gameName;
+        return Truncate(title, TitleMaxLength);
     }
 
     /// <summary>
-    /// 拼装气泡标题（一般是「{游戏名}」或固定的「游玩小结」），并保证不超过
-    /// <see cref="TitleMaxLength"/>。
-    /// </summary>
-    public static string FormatTitle(string? gameName, string titleTemplate, string? fallbackName = null)
-    {
-        string name = TruncateGameName(gameName, fallbackName);
-        return Truncate(Substitute(titleTemplate, name), TitleMaxLength);
-    }
-
-    /// <summary>
-    /// 拼装气泡正文，占位符为 <c>{0}</c>=游戏名、<c>{1}</c>=本次时长、<c>{2}</c>=累计时长，
-    /// 并保证不超过 <see cref="MessageMaxLength"/>。<br/>
+    /// 拼装气泡正文，占位符为 <c>{0}</c>=本次时长、<c>{1}</c>=累计时长，
+    /// 并按 <see cref="MessageMaxLength"/> 截断。<br/>
+    /// 正文刻意不放游戏名——标题已经是游戏名，重复一遍只会把气泡撑成两行，
+    /// 而气泡高度是 Shell 固定的，换行就会把时长挤出可见区域。<br/>
     /// 用 <see cref="string.Replace(string, string)"/> 而不是 <c>string.Format</c>：
     /// 后者的占位符个数与实参不匹配时会抛 <c>FormatException</c>，而本地化文案的占位符
     /// 是三方可改的，不能让它把结算流程带崩。
     /// </summary>
-    public static string FormatMessage(string? gameName, int currentMinutes, int totalMinutes,
-        bool timeAsHour, string messageTemplate, string? minuteWord = null, string? fallbackName = null)
+    public static string FormatMessage(int currentMinutes, int totalMinutes, bool timeAsHour,
+        string messageTemplate, string minuteWord)
     {
-        string name = TruncateGameName(gameName, fallbackName);
-        string body = Substitute(messageTemplate, name,
+        string body = Substitute(messageTemplate,
             FormatDuration(currentMinutes, timeAsHour, minuteWord),
             FormatDuration(totalMinutes, timeAsHour, minuteWord));
         return Truncate(body, MessageMaxLength);
@@ -100,7 +86,7 @@ public static class PlayTimeSummaryHelper
     /// 截断到 <paramref name="maxLength"/> 以内，超长时补省略号且总长度仍不超过上限。
     /// 策略与 <see cref="RecentGamesHelper.FormatMenuTitle"/> 保持一致。
     /// </summary>
-    public static string Truncate(string value, int maxLength)
+    public static string Truncate(string? value, int maxLength)
     {
         if (string.IsNullOrEmpty(value)) return string.Empty;
         int limit = Math.Max(maxLength, 1);
@@ -110,13 +96,10 @@ public static class PlayTimeSummaryHelper
             : value.Substring(0, limit - Ellipsis.Length) + Ellipsis;
     }
 
-    /// <summary>按位置替换 <c>{0}</c>/<c>{1}</c>/<c>{2}</c>，缺失的占位符原样留下。</summary>
-    private static string Substitute(string template, string arg0, string? arg1 = null, string? arg2 = null)
+    /// <summary>按位置替换 <c>{0}</c>/<c>{1}</c>，缺失的占位符原样留下。</summary>
+    private static string Substitute(string template, string arg0, string arg1)
     {
         if (string.IsNullOrEmpty(template)) return string.Empty;
-        string result = template.Replace("{0}", arg0);
-        if (arg1 is not null) result = result.Replace("{1}", arg1);
-        if (arg2 is not null) result = result.Replace("{2}", arg2);
-        return result;
+        return template.Replace("{0}", arg0).Replace("{1}", arg1);
     }
 }

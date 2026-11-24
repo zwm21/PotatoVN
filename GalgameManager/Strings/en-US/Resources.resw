@@ -4538,6 +4538,6 @@ Open the log folder now?</value>
     <value>Playtime summary</value>
   </data>
   <data name="RecordPlayTimeTask_PlayTimeSummary_Msg" xml:space="preserve">
-    <value>{0} — this session: {1}, total: {2}</value>
+    <value>This session: {0} · Total: {1}</value>
   </data>
 </root>

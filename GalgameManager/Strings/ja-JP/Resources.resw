@@ -4471,6 +4471,6 @@
     <value>プレイ時間サマリー</value>
   </data>
   <data name="RecordPlayTimeTask_PlayTimeSummary_Msg" xml:space="preserve">
-    <value>{0} 今回 {1}、累計 {2}</value>
+    <value>今回 {0} · 累計 {1}</value>
   </data>
 </root>

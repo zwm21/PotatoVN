@@ -14,7 +14,8 @@ public class PlayTimeSummaryHelperTest
 {
     private const string MinuteZh = "分钟";
     private const string MinuteEn = "mins";
-    private const string MsgTemplate = "{0} 本次 {1}，累计 {2}";
+    private const string FallbackTitle = "游玩小结";
+    private const string MsgTemplate = "本次游玩 {0} · 累计 {1}";
 
     private static string LongName(int length) => new('长', length);
 
@@ -107,31 +108,42 @@ public class PlayTimeSummaryHelperTest
 
     #endregion
 
-    #region TruncateGameName
+    #region FormatTitle
 
     [Test]
-    public void TruncateGameName_NullOrWhitespace_FallsBackThenEmpties()
+    public void FormatTitle_NormalGameName_TitleIsGameName()
     {
-        Assert.That(PlayTimeSummaryHelper.TruncateGameName(null, "uuid-fallback"), Is.EqualTo("uuid-fallback"));
-        Assert.That(PlayTimeSummaryHelper.TruncateGameName("   ", "uuid-fallback"), Is.EqualTo("uuid-fallback"));
-        Assert.That(PlayTimeSummaryHelper.TruncateGameName(null, null), Is.EqualTo(string.Empty));
-        Assert.That(PlayTimeSummaryHelper.TruncateGameName(string.Empty, string.Empty), Is.EqualTo(string.Empty));
+        Assert.That(PlayTimeSummaryHelper.FormatTitle("千恋万花", FallbackTitle), Is.EqualTo("千恋万花"));
     }
 
     [Test]
-    public void TruncateGameName_OverMaxLength_TruncatesWithEllipsis()
+    public void FormatTitle_NullOrWhitespaceGameName_FallsBackToLocalizedTitle()
     {
-        string result = PlayTimeSummaryHelper.TruncateGameName(LongName(100));
-
-        Assert.That(result.Length, Is.EqualTo(PlayTimeSummaryHelper.GameNameMaxLength));
-        Assert.That(result, Does.EndWith("..."));
-        Assert.That(result, Is.EqualTo(new string('长', 37) + "..."));
+        Assert.That(PlayTimeSummaryHelper.FormatTitle(null, FallbackTitle), Is.EqualTo(FallbackTitle));
+        Assert.That(PlayTimeSummaryHelper.FormatTitle(string.Empty, FallbackTitle), Is.EqualTo(FallbackTitle));
+        Assert.That(PlayTimeSummaryHelper.FormatTitle("   ", FallbackTitle), Is.EqualTo(FallbackTitle));
     }
 
     [Test]
-    public void TruncateGameName_ExactlyMaxLength_KeepsAsIs()
+    public void FormatTitle_LongGameName_TruncatedToTitleMaxLength()
     {
-        Assert.That(PlayTimeSummaryHelper.TruncateGameName(LongName(40)), Is.EqualTo(LongName(40)));
+        string result = PlayTimeSummaryHelper.FormatTitle(LongName(200), FallbackTitle);
+
+        Assert.That(result.Length, Is.EqualTo(PlayTimeSummaryHelper.TitleMaxLength));
+        Assert.That(result, Is.EqualTo(new string('长', 57) + "..."));
+    }
+
+    [Test]
+    public void FormatTitle_ExactlyTitleMaxLength_KeepsAsIs()
+    {
+        Assert.That(PlayTimeSummaryHelper.FormatTitle(LongName(60), FallbackTitle), Is.EqualTo(LongName(60)));
+    }
+
+    [Test]
+    public void FormatTitle_Limits_AreWithinWin32Budget()
+    {
+        Assert.That(PlayTimeSummaryHelper.TitleMaxLength, Is.LessThanOrEqualTo(60));
+        Assert.That(PlayTimeSummaryHelper.MessageMaxLength, Is.LessThanOrEqualTo(240));
     }
 
     #endregion
@@ -139,58 +151,40 @@ public class PlayTimeSummaryHelperTest
     #region FormatMessage
 
     [Test]
-    public void FormatMessage_SubstitutesAllPlaceholders()
+    public void FormatMessage_SubstitutesBothPlaceholders()
     {
-        string result = PlayTimeSummaryHelper.FormatMessage("千恋万花", 30, 90, false, MsgTemplate, MinuteZh);
+        string result = PlayTimeSummaryHelper.FormatMessage(30, 90, false, MsgTemplate, MinuteZh);
 
-        Assert.That(result, Is.EqualTo("千恋万花 本次 30 分钟，累计 90 分钟"));
+        Assert.That(result, Is.EqualTo("本次游玩 30 分钟 · 累计 90 分钟"));
     }
 
     [Test]
     public void FormatMessage_SubstitutesUsingTimeAsHourStyle()
     {
-        string result = PlayTimeSummaryHelper.FormatMessage("千恋万花", 30, 90, true, MsgTemplate, MinuteZh);
+        string result = PlayTimeSummaryHelper.FormatMessage(30, 90, true, MsgTemplate, MinuteZh);
 
-        Assert.That(result, Is.EqualTo("千恋万花 本次 30m，累计 1h30m"));
+        Assert.That(result, Is.EqualTo("本次游玩 30m · 累计 1h30m"));
     }
 
     [Test]
-    public void FormatMessage_EmptyGameName_UsesFallback()
+    public void FormatMessage_ZeroTotalMinutes_StillRendersBothSlots()
     {
-        string result = PlayTimeSummaryHelper.FormatMessage(null, 5, 5, false, MsgTemplate, MinuteZh,
-            "11111111-2222-3333-4444-555555555555");
+        string result = PlayTimeSummaryHelper.FormatMessage(1, 0, false, MsgTemplate, MinuteZh);
 
-        Assert.That(result, Is.EqualTo("11111111-2222-3333-4444-555555555555 本次 5 分钟，累计 5 分钟"));
-    }
-
-    [Test]
-    public void FormatMessage_EmptyGameNameWithoutFallback_LeavesEmptyPlaceholder()
-    {
-        string result = PlayTimeSummaryHelper.FormatMessage(string.Empty, 5, 5, false, MsgTemplate, MinuteZh);
-
-        Assert.That(result, Is.EqualTo(" 本次 5 分钟，累计 5 分钟"));
-    }
-
-    [Test]
-    public void FormatMessage_LongGameName_TruncatedBeforeSubstitution()
-    {
-        string result = PlayTimeSummaryHelper.FormatMessage(LongName(200), 1, 1, false, MsgTemplate, MinuteZh);
-
-        Assert.That(result, Does.StartWith(new string('长', 37) + "..."));
-        Assert.That(result, Is.EqualTo(new string('长', 37) + "... 本次 1 分钟，累计 1 分钟"));
+        Assert.That(result, Is.EqualTo("本次游玩 1 分钟 · 累计 0 分钟"));
     }
 
     [Test]
     public void FormatMessage_TemplateWithoutPlaceholders_ReturnedAsIs()
     {
-        Assert.That(PlayTimeSummaryHelper.FormatMessage("任意", 30, 90, true, "本次游玩小结", MinuteZh),
+        Assert.That(PlayTimeSummaryHelper.FormatMessage(30, 90, true, "本次游玩小结", MinuteZh),
             Is.EqualTo("本次游玩小结"));
     }
 
     [Test]
     public void FormatMessage_EmptyTemplate_ReturnsEmpty()
     {
-        Assert.That(PlayTimeSummaryHelper.FormatMessage("任意", 30, 90, true, string.Empty, MinuteZh),
+        Assert.That(PlayTimeSummaryHelper.FormatMessage(30, 90, true, string.Empty, MinuteZh),
             Is.EqualTo(string.Empty));
     }
 
@@ -199,10 +193,10 @@ public class PlayTimeSummaryHelperTest
     {
         // 模板本身就超长：截断必须兜住，绝不能让正文越过 Win32 szInfo 的安全上限
         // 注意写成 new string(...) 而不是 new(...)：后者是 target-typed new，
-        // 在 "+ {1}" 这种没有目标类型的表达式里推不出类型，会报 CS8310。
-        string template = new string('X', 400) + "{1}";
+        // 在 "+ {0}" 这种没有目标类型的表达式里推不出类型，会报 CS8310。
+        string template = new string('X', 400) + "{0}";
 
-        string result = PlayTimeSummaryHelper.FormatMessage("任意", 30, 90, true, template, MinuteZh);
+        string result = PlayTimeSummaryHelper.FormatMessage(30, 90, true, template, MinuteZh);
 
         Assert.That(result.Length, Is.EqualTo(PlayTimeSummaryHelper.MessageMaxLength));
         Assert.That(result, Does.EndWith("..."));
@@ -212,45 +206,9 @@ public class PlayTimeSummaryHelperTest
     public void FormatMessage_PlaceholderCountMismatch_DoesNotThrow()
     {
         // string.Format 在占位符与实参不匹配时会抛 FormatException；本地化文案是三方可改的，
-        // 这里钉住「不抛异常、原样保留」的行为。
-        Assert.That(PlayTimeSummaryHelper.FormatMessage("任意", 30, 90, true, "{0} {1} {2} {9}", MinuteZh),
-            Is.EqualTo("任意 30m 1h30m {9}"));
-    }
-
-    #endregion
-
-    #region FormatTitle
-
-    [Test]
-    public void FormatTitle_SubstitutesGameName()
-    {
-        Assert.That(PlayTimeSummaryHelper.FormatTitle("千恋万花", "游玩小结 - {0}"),
-            Is.EqualTo("游玩小结 - 千恋万花"));
-    }
-
-    [Test]
-    public void FormatTitle_EmptyGameName_UsesFallback()
-    {
-        Assert.That(PlayTimeSummaryHelper.FormatTitle(null, "{0} 游玩小结", "uuid-fallback"),
-            Is.EqualTo("uuid-fallback 游玩小结"));
-    }
-
-    [Test]
-    public void FormatTitle_OverMaxLength_TruncatedWithinWin32Limit()
-    {
-        // 游戏名 200 字符 + 一个同样很长的模板：标题必须收敛到 TitleMaxLength 以内
-        string result = PlayTimeSummaryHelper.FormatTitle(LongName(200), new string('题', 50) + "{0}");
-
-        Assert.That(result.Length, Is.EqualTo(PlayTimeSummaryHelper.TitleMaxLength));
-        Assert.That(result, Does.EndWith("..."));
-    }
-
-    [Test]
-    public void FormatTitle_Limits_AreWithinWin32Budgets()
-    {
-        Assert.That(PlayTimeSummaryHelper.TitleMaxLength, Is.LessThanOrEqualTo(60));
-        Assert.That(PlayTimeSummaryHelper.MessageMaxLength, Is.LessThanOrEqualTo(240));
-        Assert.That(PlayTimeSummaryHelper.GameNameMaxLength, Is.LessThan(PlayTimeSummaryHelper.TitleMaxLength));
+        // 这里钉住「不抛异常、无法识别的占位符原样保留」的行为。
+        Assert.That(PlayTimeSummaryHelper.FormatMessage(30, 90, true, "{0} {1} {9}", MinuteZh),
+            Is.EqualTo("30m 1h30m {9}"));
     }
 
     #endregion

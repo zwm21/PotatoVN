@@ -5170,6 +5170,6 @@
     <value>游玩小结</value>
   </data>
   <data name="RecordPlayTimeTask_PlayTimeSummary_Msg" xml:space="preserve">
-    <value>{0} 本次游玩 {1}，累计游玩 {2}</value>
+    <value>本次游玩 {0} · 累计 {1}</value>
   </data>
 </root>
